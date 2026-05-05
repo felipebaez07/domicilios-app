@@ -2,6 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const { createClient } = require('@supabase/supabase-js')
+const amqplib = require('amqplib')
 require('dotenv').config()
 
 const app = express()
@@ -9,6 +10,20 @@ app.use(cors())
 app.use(express.json())
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
+
+let channel = null
+
+async function conectarRabbitMQ() {
+  try {
+    const conn = await amqplib.connect(process.env.RABBITMQ_URL)
+    channel = await conn.createChannel()
+    await channel.assertQueue('pedidos_eventos', { durable: true })
+    console.log('RabbitMQ conectado en pedidos')
+  } catch (error) {
+    console.error('Error conectando RabbitMQ:', error)
+    setTimeout(conectarRabbitMQ, 5000)
+  }
+}
 
 const verificarToken = (req, res, next) => {
   const auth = req.headers.authorization
@@ -28,7 +43,7 @@ app.get('/health', (req, res) => {
 
 app.post('/pedidos', verificarToken, async (req, res) => {
   try {
-    const { direccion_origen, direccion_destino, descripcion, lat_origen, lng_origen, lat_destino, lng_destino } = req.body
+    const { direccion_origen, direccion_destino, descripcion, lat_origen, lng_origen, lat_destino, lng_destino, telefono_cliente } = req.body
 
     const { data, error } = await supabase
       .from('pedidos')
@@ -47,6 +62,18 @@ app.post('/pedidos', verificarToken, async (req, res) => {
       .single()
 
     if (error) throw error
+
+    if (channel) {
+      channel.sendToQueue(
+        'pedidos_eventos',
+        Buffer.from(JSON.stringify({
+          tipo: 'pedido_creado',
+          pedido_id: data.id,
+          telefono: telefono_cliente
+        }))
+      )
+    }
+
     res.status(201).json(data)
   } catch (error) {
     console.error(error)
@@ -76,7 +103,7 @@ app.get('/pedidos', verificarToken, async (req, res) => {
 
 app.patch('/pedidos/:id/estado', verificarToken, async (req, res) => {
   try {
-    const { estado } = req.body
+    const { estado, telefono_cliente } = req.body
     const estados = ['pendiente', 'asignado', 'en_camino', 'entregado', 'cancelado']
 
     if (!estados.includes(estado)) {
@@ -91,6 +118,19 @@ app.patch('/pedidos/:id/estado', verificarToken, async (req, res) => {
       .single()
 
     if (error) throw error
+
+    if (channel) {
+      channel.sendToQueue(
+        'pedidos_eventos',
+        Buffer.from(JSON.stringify({
+          tipo: 'estado_actualizado',
+          pedido_id: data.id,
+          estado: data.estado,
+          telefono: telefono_cliente
+        }))
+      )
+    }
+
     res.json(data)
   } catch (error) {
     console.error(error)
@@ -115,4 +155,7 @@ app.get('/pedidos/:id', verificarToken, async (req, res) => {
 })
 
 const PORT = process.env.PORT || 3002
-app.listen(PORT, () => console.log(`Pedidos service corriendo en puerto ${PORT}`))
+app.listen(PORT, () => {
+  console.log(`Pedidos service corriendo en puerto ${PORT}`)
+  conectarRabbitMQ()
+})
