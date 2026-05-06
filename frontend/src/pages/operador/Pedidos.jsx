@@ -4,13 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
 
 const API = import.meta.env.VITE_PEDIDOS_URL;
-const ESTADO = {
-  pendiente:  { label: 'Pendiente',  cls: 'badge-warn' },
-  asignado:   { label: 'Asignado',   cls: 'badge-info' },
-  en_camino:  { label: 'En camino',  cls: 'badge-info' },
-  entregado:  { label: 'Entregado',  cls: 'badge-ok'   },
-  cancelado:  { label: 'Cancelado',  cls: 'badge-err'  },
-};
+const ESTADO = { pendiente:{label:'PENDIENTE',cls:'badge-warn'}, asignado:{label:'ASIGNADO',cls:'badge-info'}, en_camino:{label:'EN CAMINO',cls:'badge-info'}, entregado:{label:'ENTREGADO',cls:'badge-ok'}, cancelado:{label:'CANCELADO',cls:'badge-err'} };
 
 export default function OperadorPedidos() {
   const { token } = useAuth();
@@ -18,16 +12,16 @@ export default function OperadorPedidos() {
   const [domis, setDomis]       = useState([]);
   const [loading, setLoading]   = useState(true);
   const [filter, setFilter]     = useState('todos');
-  const [asignando, setAsignando] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [asignando, setAsig]    = useState(false);
 
-  const headers = { Authorization: `Bearer ${token}` };
+  const h = { Authorization: `Bearer ${token}` };
 
   async function fetchData() {
     try {
       const [{ data: p }, { data: d }] = await Promise.all([
-        axios.get(`${API}/pedidos`, { headers }),
-        axios.get(`${API}/usuarios/domiciliarios`, { headers }).catch(() => ({ data: [] })),
+        axios.get(`${API}/pedidos`, { headers: h }),
+        axios.get(`${API}/usuarios/domiciliarios`, { headers: h }).catch(() => ({ data: [] })),
       ]);
       setPedidos(p); setDomis(d);
     } catch {} finally { setLoading(false); }
@@ -36,96 +30,64 @@ export default function OperadorPedidos() {
   useEffect(() => { fetchData(); }, []);
 
   async function asignar(pedidoId, domiciliarioId) {
-    setAsignando(pedidoId);
-    try {
-      await axios.patch(`${API}/pedidos/${pedidoId}/asignar`, { domiciliario_id: domiciliarioId }, { headers });
-      setSelected(null); fetchData();
-    } catch {} finally { setAsignando(null); }
+    setAsig(true);
+    try { await axios.patch(`${API}/pedidos/${pedidoId}/asignar`, { domiciliario_id: domiciliarioId }, { headers: h }); setSelected(null); fetchData(); }
+    catch {} finally { setAsig(false); }
   }
 
   const filtrados = filter === 'todos' ? pedidos : pedidos.filter(p => p.estado === filter);
 
   return (
     <DashboardLayout role="operador" pageTitle="Pedidos">
-      <div className="page-header flex-between">
+      <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 className="page-title">Gestión de pedidos</h1>
-          <p className="page-subtitle">{pedidos.length} pedidos · {pedidos.filter(p => p.estado === 'pendiente').length} pendientes de asignar</p>
+          <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--txt-1)' }}>Gestión de pedidos</div>
+          <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 2, letterSpacing: '0.08em' }}>{pedidos.length} PEDIDOS · {pedidos.filter(p => p.estado === 'pendiente').length} SIN ASIGNAR</div>
         </div>
-        <button className="btn btn-ghost" onClick={fetchData}>↺ Actualizar</button>
+        <button onClick={fetchData} style={{ padding: '5px 12px', fontSize: 7, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.08em', background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt-2)', cursor: 'pointer' }}>↺ SYNC</button>
       </div>
-
-      <div className="card">
-        <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-            {['todos', 'pendiente', 'asignado', 'en_camino', 'entregado'].map(f => (
-              <button key={f} onClick={() => setFilter(f)} style={{
-                padding: '3px 10px', borderRadius: 99, fontSize: '0.68rem', fontFamily: 'var(--font-mono)',
-                background: filter === f ? 'rgba(245,158,11,0.15)' : 'var(--bg-elevated)',
-                border: `1px solid ${filter === f ? 'rgba(245,158,11,0.3)' : 'var(--border-subtle)'}`,
-                color: filter === f ? '#fbbf24' : 'var(--text-tertiary)', cursor: 'pointer',
-              }}>
-                {f === 'todos' ? 'Todos' : ESTADO[f]?.label || f}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead><tr><th>#</th><th>Cliente</th><th>Descripción</th><th>Dirección</th><th>Estado</th><th>Domiciliario</th><th>Acción</th></tr></thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Cargando...</td></tr>
-              ) : filtrados.map(p => {
-                const est = ESTADO[p.estado] || { label: p.estado, cls: 'badge-neutral' };
-                return (
-                  <tr key={p.id}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>#{String(p.id).slice(-6)}</td>
-                    <td style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{p.cliente_nombre}</td>
-                    <td style={{ fontSize: '0.8rem' }}>{p.descripcion}</td>
-                    <td style={{ fontSize: '0.78rem', maxWidth: 160 }}>{p.direccion_entrega}</td>
-                    <td><span className={`badge ${est.cls}`}><span className="badge-dot" style={{ background: 'currentColor' }} />{est.label}</span></td>
-                    <td style={{ fontSize: '0.78rem', color: p.domiciliario_nombre ? '#34d399' : 'var(--text-tertiary)' }}>{p.domiciliario_nombre || '—'}</td>
-                    <td>
-                      {p.estado === 'pendiente' && (
-                        <button className="btn btn-ghost" style={{ fontSize: '0.72rem', padding: '3px 8px' }} onClick={() => setSelected(p)}>
-                          Asignar →
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
+        {['todos','pendiente','asignado','en_camino','entregado'].map(f => (
+          <button key={f} onClick={() => setFilter(f)} style={{ padding: '8px 10px', fontSize: 6, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: filter === f ? 'var(--bg-active)' : 'transparent', color: filter === f ? 'var(--accent)' : 'var(--txt-3)', border: 'none', borderRight: '1px solid var(--border)', cursor: 'pointer' }}>
+            {f === 'todos' ? 'TODOS' : ESTADO[f]?.label || f}
+          </button>
+        ))}
       </div>
-
-      {/* Modal asignación */}
+      <div style={{ overflowX: 'auto' }}>
+        <table className="rv-table">
+          <thead><tr><th>#</th><th>Cliente</th><th>Descripción</th><th>Dirección</th><th>Estado</th><th>Domiciliario</th><th></th></tr></thead>
+          <tbody>
+            {loading ? <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>CARGANDO...</td></tr>
+              : filtrados.map(p => { const est = ESTADO[p.estado] || {label:p.estado.toUpperCase(),cls:'badge-neutral'}; return (
+                <tr key={p.id}>
+                  <td className="m">#{String(p.id).slice(-6)}</td>
+                  <td className="p">{p.cliente_nombre}</td>
+                  <td>{p.descripcion}</td>
+                  <td style={{ maxWidth: 160 }}>{p.direccion_entrega}</td>
+                  <td><span className={`badge ${est.cls}`}>{est.label}</span></td>
+                  <td style={{ color: p.domiciliario_nombre ? 'var(--accent)' : 'var(--txt-3)' }}>{p.domiciliario_nombre || '—'}</td>
+                  <td>{p.estado === 'pendiente' && <button onClick={() => setSelected(p)} style={{ padding: '2px 8px', fontSize: 7, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.06em', background: 'transparent', border: '1px solid var(--border-md)', color: 'var(--txt-2)', cursor: 'pointer' }}>ASIGNAR →</button>}</td>
+                </tr>
+              );})}
+          </tbody>
+        </table>
+      </div>
       {selected && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
-          onClick={e => e.target === e.currentTarget && setSelected(null)}>
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-mid)', borderRadius: 'var(--radius-lg)', padding: '1.75rem', width: '100%', maxWidth: 420 }}>
-            <div className="flex-between mb-md">
-              <h2 style={{ fontSize: '1rem', fontWeight: 600 }}>Asignar domiciliario</h2>
-              <button className="icon-btn" onClick={() => setSelected(null)}>✕</button>
+        <div style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(10,25,50,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }} onClick={e => e.target === e.currentTarget && setSelected(null)}>
+          <div className="modal">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div className="modal-title">Asignar #{String(selected.id).slice(-6)}</div>
+              <button onClick={() => setSelected(null)} style={{ width: 26, height: 26, border: '1px solid var(--border-md)', background: 'transparent', color: 'var(--txt-2)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Pedido #{String(selected.id).slice(-6)} · {selected.descripcion}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {domis.length === 0 ? (
-                <p style={{ color: 'var(--text-tertiary)', fontSize: '0.82rem', fontFamily: 'var(--font-mono)', textAlign: 'center', padding: '1rem' }}>Sin domiciliarios disponibles</p>
-              ) : domis.map(d => (
-                <button key={d.id} onClick={() => asignar(selected.id, d.id)} disabled={!!asignando} style={{
-                  display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 0.9rem',
-                  background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)',
-                  cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s',
-                }}>
-                  <span style={{ fontSize: '1.2rem' }}>🛵</span>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)' }}>{d.nombre}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>→</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {domis.map(d => (
+                <button key={d.id} onClick={() => asignar(selected.id, d.id)} disabled={asignando} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem', background: 'var(--bg-hover)', border: '1px solid var(--border)', cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'all 0.15s' }}>
+                  <span style={{ fontSize: '1.1rem' }}>🛵</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt-1)' }}>{d.nombre}</div>
+                    <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', letterSpacing: '0.06em' }}>{d.email}</div>
+                  </div>
+                  <span style={{ color: 'var(--txt-3)', fontSize: 10 }}>→</span>
                 </button>
               ))}
             </div>

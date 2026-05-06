@@ -4,14 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
 
 const API = import.meta.env.VITE_PEDIDOS_URL;
-
-const ESTADO = {
-  pendiente:  { label: 'Pendiente',  cls: 'badge-warn' },
-  asignado:   { label: 'Asignado',   cls: 'badge-info' },
-  en_camino:  { label: 'En camino',  cls: 'badge-info' },
-  entregado:  { label: 'Entregado',  cls: 'badge-ok'   },
-  cancelado:  { label: 'Cancelado',  cls: 'badge-err'  },
-};
+const ESTADO = { pendiente:{label:'PENDIENTE',cls:'badge-warn'}, asignado:{label:'ASIGNADO',cls:'badge-info'}, en_camino:{label:'EN CAMINO',cls:'badge-info'}, entregado:{label:'ENTREGADO',cls:'badge-ok'}, cancelado:{label:'CANCELADO',cls:'badge-err'} };
 
 export default function DistribuidorHistorial() {
   const { token } = useAuth();
@@ -22,75 +15,51 @@ export default function DistribuidorHistorial() {
 
   useEffect(() => {
     axios.get(`${API}/pedidos/mis-pedidos`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => setPedidos(r.data))
-      .catch(() => setPedidos([]))
-      .finally(() => setLoading(false));
+      .then(r => setPedidos(r.data)).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const filtrados = pedidos.filter(p => {
-    const matchEstado = filter === 'todos' || p.estado === filter;
-    const matchSearch = !search || [p.cliente_nombre, p.descripcion, p.direccion_entrega].some(v => v?.toLowerCase().includes(search.toLowerCase()));
-    return matchEstado && matchSearch;
+    const ok = filter === 'todos' || p.estado === filter;
+    const s  = !search || [p.cliente_nombre, p.descripcion, p.direccion_entrega].some(v => v?.toLowerCase().includes(search.toLowerCase()));
+    return ok && s;
   });
 
   return (
     <DashboardLayout role="distribuidor" pageTitle="Historial">
-      <div className="page-header flex-between">
+      <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 className="page-title">Historial de pedidos</h1>
-          <p className="page-subtitle">{pedidos.length} pedidos registrados</p>
+          <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--txt-1)' }}>Historial de pedidos</div>
+          <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 2, letterSpacing: '0.08em' }}>{pedidos.length} PEDIDOS REGISTRADOS</div>
         </div>
       </div>
-
-      <div className="card">
-        <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-            {['todos', 'pendiente', 'asignado', 'en_camino', 'entregado', 'cancelado'].map(f => (
-              <button key={f} onClick={() => setFilter(f)} style={{
-                padding: '3px 10px', borderRadius: 99, fontSize: '0.68rem', fontFamily: 'var(--font-mono)',
-                background: filter === f ? 'rgba(59,130,246,0.15)' : 'var(--bg-elevated)',
-                border: `1px solid ${filter === f ? 'rgba(59,130,246,0.3)' : 'var(--border-subtle)'}`,
-                color: filter === f ? '#60a5fa' : 'var(--text-tertiary)', cursor: 'pointer',
-              }}>
-                {f === 'todos' ? 'Todos' : ESTADO[f]?.label || f}
-              </button>
-            ))}
-          </div>
-          <input
-            type="search" placeholder="Buscar..." value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ width: 180, height: 30, fontSize: '0.78rem', padding: '0 0.75rem' }}
-          />
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
+        {['todos','pendiente','asignado','en_camino','entregado','cancelado'].map(f => (
+          <button key={f} onClick={() => setFilter(f)} style={{ padding: '8px 10px', fontSize: 6, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: filter === f ? 'var(--bg-active)' : 'transparent', color: filter === f ? 'var(--accent)' : 'var(--txt-3)', border: 'none', borderRight: '1px solid var(--border)', cursor: 'pointer' }}>
+            {f === 'todos' ? 'TODOS' : ESTADO[f]?.label || f}
+          </button>
+        ))}
+        <div style={{ flex: 1, borderLeft: '1px solid var(--border)' }}>
+          <input type="search" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} style={{ border: 'none', height: 32, background: 'transparent', fontSize: 9 }} />
         </div>
-
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr><th>#</th><th>Cliente</th><th>Dirección</th><th>Descripción</th><th>Estado</th><th>Fecha</th></tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Cargando...</td></tr>
-              ) : filtrados.length === 0 ? (
-                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Sin resultados</td></tr>
-              ) : filtrados.map(p => {
-                const est = ESTADO[p.estado] || { label: p.estado, cls: 'badge-neutral' };
-                return (
-                  <tr key={p.id}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>#{String(p.id).slice(-6)}</td>
-                    <td style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{p.cliente_nombre}</td>
-                    <td style={{ fontSize: '0.8rem' }}>{p.direccion_entrega}</td>
-                    <td style={{ fontSize: '0.8rem' }}>{p.descripcion}</td>
-                    <td><span className={`badge ${est.cls}`}><span className="badge-dot" style={{ background: 'currentColor' }} />{est.label}</span></td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>
-                      {p.created_at ? new Date(p.created_at).toLocaleDateString('es-CO') : '—'}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      </div>
+      <div style={{ overflowX: 'auto' }}>
+        <table className="rv-table">
+          <thead><tr><th>#</th><th>Cliente</th><th>Dirección</th><th>Descripción</th><th>Estado</th><th>Fecha</th></tr></thead>
+          <tbody>
+            {loading ? <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>CARGANDO...</td></tr>
+              : filtrados.length === 0 ? <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>SIN RESULTADOS</td></tr>
+              : filtrados.map(p => { const est = ESTADO[p.estado] || {label:p.estado.toUpperCase(),cls:'badge-neutral'}; return (
+                <tr key={p.id}>
+                  <td className="m">#{String(p.id).slice(-6)}</td>
+                  <td className="p">{p.cliente_nombre}</td>
+                  <td>{p.direccion_entrega}</td>
+                  <td>{p.descripcion}</td>
+                  <td><span className={`badge ${est.cls}`}>{est.label}</span></td>
+                  <td className="m">{p.created_at ? new Date(p.created_at).toLocaleDateString('es-CO') : '—'}</td>
+                </tr>
+              );})}
+          </tbody>
+        </table>
       </div>
     </DashboardLayout>
   );

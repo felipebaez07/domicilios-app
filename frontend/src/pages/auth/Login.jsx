@@ -2,22 +2,21 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import ravenLogo  from '../../assets/raven_logo.png';
+import ilDist     from '../../assets/rol_distribuidor.png';
+import ilCliente  from '../../assets/rol_cliente.png';
+import ilDomi     from '../../assets/rol_domiciliario.png';
+import ilOper     from '../../assets/rol_operador.png';
+import ilAdmin    from '../../assets/rol_admin.png';
 import './Login.css';
 
 const ROLES = [
-  { id: 'distribuidor', emoji: '📦', name: 'Distribuidor', color: '#3b82f6', desc: 'Crea y gestiona pedidos de entrega' },
-  { id: 'cliente',      emoji: '👤', name: 'Cliente',      color: '#8b5cf6', desc: 'Rastrea tus pedidos en tiempo real' },
-  { id: 'domiciliario', emoji: '🛵', name: 'Domiciliario', color: '#10b981', desc: 'Activa GPS y actualiza entregas' },
-  { id: 'operador',     emoji: '🗺️', name: 'Operador',     color: '#f59e0b', desc: 'Centro de control y asignación' },
-  { id: 'admin',        emoji: '⚡', name: 'Admin',        color: '#ef4444', desc: 'Métricas globales del sistema' },
+  { id: 'distribuidor', code: 'D', label: 'Distribuidor', desc: 'Crear y despachar pedidos',  img: ilDist    },
+  { id: 'cliente',      code: 'C', label: 'Cliente',      desc: 'Rastrear mis pedidos',        img: ilCliente },
+  { id: 'domiciliario', code: 'M', label: 'Domiciliario', desc: 'Gestionar entregas en ruta',  img: ilDomi    },
+  { id: 'operador',     code: 'O', label: 'Operador',     desc: 'Centro de control en vivo',   img: ilOper    },
+  { id: 'admin',        code: 'A', label: 'Admin',        desc: 'Métricas globales',            img: ilAdmin   },
 ];
-
-function hex2rgba(hex, alpha) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
 
 export default function Login() {
   const [role, setRole]         = useState(null);
@@ -30,168 +29,99 @@ export default function Login() {
   const navigate                = useNavigate();
 
   const selected = ROLES.find(r => r.id === role);
-  const c = selected?.color || '#3b82f6';
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!role) { setError('Selecciona tu rol primero'); return; }
-    setError('');
-    setLoading(true);
+    if (!role) { setError('Selecciona tu rol'); return; }
+    setError(''); setLoading(true);
     try {
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_AUTH_URL}/login`,
-        { email, password }
-      );
+      const { data } = await axios.post(`${import.meta.env.VITE_AUTH_URL}/login`, { email, password });
       login(data.token, data.usuario);
       navigate(`/${data.usuario.rol}`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Credenciales incorrectas');
-    } finally {
-      setLoading(false);
-    }
+      setError(err.response?.data?.error || 'Credenciales incorrectas');
+    } finally { setLoading(false); }
   }
 
   return (
-    <div className="login-root">
-      <div className="login-grid-bg" />
+    <div className="rv-root">
+      {/* Patrón de fondo */}
+      <div className="rv-bg-grid" />
 
-      <div
-        className="login-card"
-        style={{ borderColor: selected ? hex2rgba(c, 0.2) : 'rgba(255,255,255,0.08)' }}
-      >
-        <div className="login-logo-row">
-          <div
-            className="login-logo-box"
-            style={{ background: hex2rgba(c, 0.12), borderColor: hex2rgba(c, 0.25) }}
-          >
-            ⚡
-          </div>
-          <div>
-            <div className="login-app-name">DomiciliosApp</div>
-            <div className="login-app-ver">v2.0 · microservices</div>
-          </div>
+      {/* Ilustración de rol como fondo suave */}
+      <div className="rv-bg-il">
+        {ROLES.map(r => (
+          <img key={r.id} src={r.img} alt="" className={`rv-bg-il-img ${selected?.id === r.id ? 'vis' : ''}`} />
+        ))}
+      </div>
+
+      {/* Tarjeta centrada */}
+      <div className="rv-card">
+        {/* Logo protagonista */}
+        <div className="rv-card-logo">
+          <img src={ravenLogo} alt="Raven" className="rv-logo-img" />
+          <div className="rv-logo-name">RAVEN</div>
+          <div className="rv-logo-tag">Plataforma de domicilios · Ibagué</div>
         </div>
 
-        <div className="login-head">
-          <h1 className="login-title" style={{ color: selected ? c : 'var(--text-primary)' }}>
-            {selected ? `Hola, ${selected.name}` : 'Bienvenido'}
-          </h1>
-          <p className="login-subtitle">
-            {selected ? 'Ingresa tus credenciales para acceder' : 'Selecciona tu rol para continuar'}
-          </p>
+        {/* Roles */}
+        <div className="rv-roles">
+          {ROLES.map(r => (
+            <button
+              key={r.id}
+              className={`rv-role-row ${role === r.id ? 'active' : ''}`}
+              onClick={() => { setRole(r.id); setError(''); }}
+              type="button"
+            >
+              <div className="rv-role-code">{r.code}</div>
+              <div className="rv-role-label">{r.label}</div>
+              <div className="rv-role-desc">{r.desc}</div>
+              <div className="rv-role-arr">{role === r.id ? '●' : '→'}</div>
+            </button>
+          ))}
         </div>
 
-        <div className="login-roles-label">¿Quién eres?</div>
-        <div className="login-roles-track">
-          {ROLES.map(r => {
-            const active = role === r.id;
-            return (
-              <button
-                key={r.id}
-                type="button"
-                className={`login-role-pill ${active ? 'active' : ''}`}
-                style={active ? {
-                  borderColor: hex2rgba(r.color, 0.4),
-                  background:  hex2rgba(r.color, 0.1),
-                } : {}}
-                onClick={() => { setRole(r.id); setError(''); }}
-              >
-                {active && <span className="login-role-shine" style={{ background: hex2rgba(r.color, 0.06) }} />}
-                <span className="login-role-emoji">{r.emoji}</span>
-                <span className="login-role-name" style={{ color: active ? r.color : undefined }}>
-                  {r.name}
-                </span>
-                {active && <span className="login-role-check" style={{ color: r.color }}>✓</span>}
-              </button>
-            );
-          })}
-        </div>
-
-        <div
-          className="login-desc-bar"
-          style={{ background: hex2rgba(c, 0.06), borderColor: hex2rgba(c, 0.14) }}
-        >
-          <span className="login-desc-icon">{selected ? selected.emoji : '👋'}</span>
-          <span className="login-desc-text" style={{ color: selected ? c : 'var(--text-tertiary)' }}>
-            {selected ? selected.desc : 'Elige un rol para ver tu acceso al sistema'}
-          </span>
-        </div>
-
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div className="login-field">
-            <label className="login-field-label">Correo electrónico</label>
-            <div className="login-field-wrap">
-              <span className="login-field-icon">✉</span>
+        {/* Formulario */}
+        <form className="rv-form" onSubmit={handleSubmit}>
+          <div className="rv-fields">
+            <div className="rv-field">
+              <span className="rv-ftag">Email</span>
               <input
-                type="email"
-                className="login-field-input"
-                placeholder="usuario@empresa.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                onFocus={e => selected && (e.target.style.borderColor = hex2rgba(c, 0.45))}
-                onBlur={e  => (e.target.style.borderColor = '')}
+                type="email" className="rv-fin"
+                placeholder="usuario@raven.co"
+                value={email} onChange={e => setEmail(e.target.value)}
+                required autoComplete="email"
               />
             </div>
-          </div>
-
-          <div className="login-field">
-            <label className="login-field-label">Contraseña</label>
-            <div className="login-field-wrap">
-              <span className="login-field-icon">🔒</span>
+            <div className="rv-field">
+              <span className="rv-ftag">Pass</span>
               <input
-                type={showPw ? 'text' : 'password'}
-                className="login-field-input"
+                type={showPw ? 'text' : 'password'} className="rv-fin"
                 placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                onFocus={e => selected && (e.target.style.borderColor = hex2rgba(c, 0.45))}
-                onBlur={e  => (e.target.style.borderColor = '')}
+                value={password} onChange={e => setPassword(e.target.value)}
+                required autoComplete="current-password"
               />
-              <button
-                type="button"
-                className="login-pw-toggle"
-                onClick={() => setShowPw(v => !v)}
-                aria-label={showPw ? 'Ocultar' : 'Mostrar'}
-                style={{ opacity: showPw ? 0.7 : 0.3 }}
-              >
-                {showPw ? '🙈' : '👁'}
+              <button type="button" className="rv-pw" onClick={() => setShowPw(v => !v)}>
+                {showPw ? '○' : '●'}
               </button>
             </div>
           </div>
 
-          {error && (
-            <div className="login-error" role="alert">
-              <span>⚠</span> {error}
-            </div>
-          )}
+          {error && <div className="rv-error">⚠ {error}</div>}
 
           <button
             type="submit"
-            className="login-submit"
-            disabled={loading || !role}
-            style={{
-              background: c,
-              boxShadow:  selected ? `0 4px 24px ${hex2rgba(c, 0.3)}` : 'none',
-              opacity:    !role ? 0.45 : 1,
-              cursor:     !role ? 'not-allowed' : 'pointer',
-            }}
+            className={`rv-submit ${!role || loading ? 'off' : ''}`}
+            disabled={!role || loading}
           >
-            {loading ? (
-              <span className="login-spinner" />
-            ) : (
-              <>
-                <span>{selected ? `Entrar como ${selected.name}` : 'Selecciona un rol'}</span>
-                <span className="login-arrow">→</span>
-              </>
-            )}
+            {loading
+              ? <span className="rv-spinner" />
+              : <><span>{selected ? `Entrar como ${selected.label}` : 'Selecciona un rol'}</span><span className="rv-arr">→</span></>
+            }
           </button>
         </form>
 
-        <p className="login-footer-note">Proyecto final · Arquitectura de Software · 2025</p>
+        <div className="rv-footer">RAVEN · Arquitectura de Software · 2025</div>
       </div>
     </div>
   );

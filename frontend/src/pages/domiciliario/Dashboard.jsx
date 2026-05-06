@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -12,7 +12,7 @@ const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
 
 const myIcon = new L.DivIcon({
-  html: `<div style="width:40px;height:40px;border-radius:50%;background:#10b981;border:3px solid rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;font-size:20px;">🛵</div>`,
+  html: `<div style="width:40px;height:40px;border-radius:50%;background:#8aaac8;border:3px solid rgba(138,170,200,0.4);display:flex;align-items:center;justify-content:center;font-size:20px;">🛵</div>`,
   iconSize: [40, 40], iconAnchor: [20, 20], className: '',
 });
 
@@ -24,9 +24,8 @@ const ESTADOS_SIG = {
 export default function DomiciliarioDashboard() {
   const { token, user } = useAuth();
 
-  // Persistencia: GPS on/off y última posición sobreviven al reload
-  const [gpsOn,   setGpsOn,  ] = usePersistentState('dom_gps_active', false);
-  const [lastPos, setLastPos, ] = usePersistentState('dom_last_pos',   null);
+  const [gpsOn,   setGpsOn  ] = usePersistentState('dom_gps_active', false);
+  const [lastPos, setLastPos] = usePersistentState('dom_last_pos',   null);
 
   const [pedidoActivo, setPedidoActivo] = useState(null);
   const [pedidosHoy,   setPedidosHoy]   = useState([]);
@@ -35,8 +34,17 @@ export default function DomiciliarioDashboard() {
   const [updating,     setUpdating]     = useState(false);
   const [loading,      setLoading]      = useState(true);
 
-  const socketRef = useRef(null);
-  const watchRef  = useRef(null);
+  // Refs para evitar closures desactualizados
+  const socketRef      = useRef(null);
+  const watchRef       = useRef(null);
+  const gpsOnRef       = useRef(gpsOn);
+  const pedidoRef      = useRef(pedidoActivo);
+  const userRef        = useRef(user);
+
+  // Mantener refs sincronizados con state
+  useEffect(() => { gpsOnRef.current = gpsOn; },       [gpsOn]);
+  useEffect(() => { pedidoRef.current = pedidoActivo; }, [pedidoActivo]);
+  useEffect(() => { userRef.current = user; },          [user]);
 
   async function fetchData() {
     try {
@@ -53,29 +61,39 @@ export default function DomiciliarioDashboard() {
     } catch {} finally { setLoading(false); }
   }
 
-  function startWatch(pedido) {
-    if (!navigator.geolocation) { setGpsErr('GPS no disponible en este dispositivo'); return; }
+  // startWatch siempre lee desde los refs — nunca tiene closures viejos
+  function startWatch() {
+    if (!navigator.geolocation) {
+      setGpsErr('GPS no disponible en este dispositivo');
+      return;
+    }
+    if (watchRef.current) {
+      navigator.geolocation.clearWatch(watchRef.current);
+    }
     setGpsErr('');
+
     watchRef.current = navigator.geolocation.watchPosition(
       pos => {
         const { latitude: lat, longitude: lng } = pos.coords;
         const arr = [lat, lng];
         setMyPos(arr);
-        setLastPos(arr); // persiste en localStorage
+        setLastPos(arr);
         socketRef.current?.emit('location_update', {
           lat, lng,
-          domiciliario_id: user?.id,
-          pedido_id: pedido?.id,
-          nombre: user?.nombre,
+          domiciliario_id: userRef.current?.id,
+          pedido_id:       pedidoRef.current?.id,
+          nombre:          userRef.current?.nombre,
         });
       },
       err => {
         setGpsErr(err.message);
         setGpsOn(false);
+        gpsOnRef.current = false;
       },
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
     );
     setGpsOn(true);
+    gpsOnRef.current = true;
   }
 
   function stopWatch() {
@@ -84,34 +102,37 @@ export default function DomiciliarioDashboard() {
       watchRef.current = null;
     }
     setGpsOn(false);
-    socketRef.current?.emit('gps_off', { domiciliario_id: user?.id });
+    gpsOnRef.current = false;
+    socketRef.current?.emit('gps_off', { domiciliario_id: userRef.current?.id });
   }
 
-  const toggleGPS = useCallback(() => {
-    if (gpsOn) { stopWatch(); } else { startWatch(pedidoActivo); }
-  }, [gpsOn, pedidoActivo, user]);
+  // Toggle sin useCallback — lee de ref para evitar stale closure
+  function toggleGPS() {
+    if (gpsOnRef.current) {
+      stopWatch();
+    } else {
+      startWatch();
+    }
+  }
 
   useEffect(() => {
     fetchData();
-    socketRef.current = io(TRACKING_URL, { auth: { token }, transports: ['websocket'] });
 
-    // Si el GPS estaba activo antes del reload, lo reanuda
-    if (gpsOn) {
-      setTimeout(() => startWatch(null), 500);
+    socketRef.current = io(TRACKING_URL, {
+      auth: { token },
+      transports: ['websocket'],
+    });
+
+    // Si el GPS estaba activo antes de recargar, reanudarlo
+    if (localStorage.getItem('dom_gps_active') === 'true') {
+      setTimeout(() => startWatch(), 600);
     }
 
     return () => {
       socketRef.current?.disconnect();
       if (watchRef.current) navigator.geolocation.clearWatch(watchRef.current);
     };
-  }, []);
-
-  // Cuando cargue pedidoActivo y GPS esté on, actualiza el pedido_id en los emits
-  useEffect(() => {
-    if (gpsOn && pedidoActivo && watchRef.current) {
-      // el siguiente emit de watchPosition ya llevará el pedido_id correcto
-    }
-  }, [pedidoActivo]);
+  }, []); // solo al montar
 
   async function actualizarEstado(nuevoEstado) {
     if (!pedidoActivo) return;
@@ -129,148 +150,165 @@ export default function DomiciliarioDashboard() {
   const accion = pedidoActivo ? ESTADOS_SIG[pedidoActivo.estado] : null;
 
   return (
-    <DashboardLayout role="domiciliario" pageTitle="Mi turno" pageSubtitle={gpsOn ? 'GPS activo' : 'GPS inactivo'}>
-      <div className="page-header flex-between">
+    <DashboardLayout role="domiciliario" pageTitle="Mi turno">
+      <div style={{ padding: '1.25rem', borderBottom: '1px solid rgba(184,207,232,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 className="page-title">Centro de entregas</h1>
-          <p className="page-subtitle">Gestiona tu ruta y comparte tu ubicación GPS</p>
+          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--blue2)', letterSpacing: '-0.02em' }}>Centro de entregas</div>
+          <div style={{ fontSize: '8px', fontFamily: 'var(--font-mono)', color: 'var(--dim)', letterSpacing: '0.08em', marginTop: 2 }}>
+            GESTIONA TU RUTA Y COMPARTE TU UBICACIÓN GPS
+          </div>
         </div>
-        <button onClick={toggleGPS} style={{
-          display: 'flex', alignItems: 'center', gap: '0.5rem',
-          padding: '0.55rem 1.1rem', borderRadius: 'var(--radius-md)',
-          fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 500,
-          background: gpsOn ? 'rgba(16,185,129,0.12)' : 'var(--bg-surface)',
-          border: `1px solid ${gpsOn ? 'rgba(16,185,129,0.35)' : 'var(--border-mid)'}`,
-          color: gpsOn ? '#34d399' : 'var(--text-secondary)',
-          cursor: 'pointer', transition: 'all 0.2s',
-        }}>
-          {gpsOn ? <><span className="pulse-dot live" /> GPS activo</> : <>📍 Activar GPS</>}
+        <button
+          onClick={toggleGPS}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            padding: '8px 14px',
+            background: gpsOn ? 'rgba(184,207,232,0.1)' : 'transparent',
+            border: `1px solid ${gpsOn ? 'rgba(184,207,232,0.3)' : 'rgba(184,207,232,0.15)'}`,
+            color: gpsOn ? 'var(--blue)' : 'var(--dim)',
+            fontSize: '8px', fontFamily: 'var(--font-mono)', fontWeight: 700,
+            letterSpacing: '0.08em', textTransform: 'uppercase',
+            cursor: 'pointer', transition: 'all 0.2s',
+          }}
+        >
+          {gpsOn
+            ? <><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--blue)', display: 'inline-block', animation: 'pulse 2s infinite' }} /> GPS ACTIVO</>
+            : <>📍 ACTIVAR GPS</>
+          }
         </button>
       </div>
 
       {gpsErr && (
-        <div style={{ marginBottom: '1rem', padding: '0.65rem', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', color: '#f87171', fontSize: '0.78rem', fontFamily: 'var(--font-mono)' }}>
+        <div style={{ margin: '0.75rem 1.25rem 0', padding: '8px 12px', background: 'rgba(180,50,50,0.08)', border: '1px solid rgba(180,50,50,0.2)', color: '#c07070', fontSize: '10px', fontFamily: 'var(--font-mono)' }}>
           ⚠ {gpsErr}
         </div>
       )}
 
-      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', borderBottom: '1px solid rgba(184,207,232,0.08)' }}>
         {[
-          { label: 'GPS', value: gpsOn ? 'Activo' : 'Inactivo', accent: gpsOn ? '#10b981' : 'var(--border-subtle)', color: gpsOn ? '#34d399' : 'var(--text-tertiary)', small: true },
-          { label: 'Pedido activo',  value: loading ? '—' : pedidoActivo ? 1 : 0, accent: '#10b981' },
-          { label: 'Entregas hoy',   value: loading ? '—' : pedidosHoy.length,    accent: '#10b981' },
-        ].map(s => (
-          <div className="stat-card" key={s.label}>
-            <div className="stat-label">{s.label}</div>
-            <div className="stat-value" style={{ fontSize: s.small ? '1.3rem' : undefined, color: s.color || undefined }}>{s.value}</div>
-            <div className="stat-accent-line" style={{ background: s.accent }} />
+          { label: 'GPS', value: gpsOn ? 'ACTIVO' : 'INACTIVO', highlight: gpsOn },
+          { label: 'Pedido activo', value: loading ? '—' : pedidoActivo ? '01' : '00' },
+          { label: 'Entregas hoy',  value: loading ? '—' : String(pedidosHoy.length).padStart(2,'0') },
+        ].map((s, i) => (
+          <div key={s.label} style={{
+            padding: '0.85rem 1.1rem',
+            borderRight: i < 2 ? '1px solid rgba(184,207,232,0.08)' : 'none',
+          }}>
+            <div style={{ fontSize: '7px', fontFamily: 'var(--font-mono)', color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
+            <div style={{ fontSize: s.label === 'GPS' ? '1rem' : '1.6rem', fontWeight: 700, color: s.highlight ? 'var(--blue)' : 'rgba(184,207,232,0.7)', letterSpacing: '-0.04em', lineHeight: 1 }}>{s.value}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1rem', marginTop: '1rem', alignItems: 'start' }}>
+      {/* Split mapa / panel */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 'calc(100vh - 280px)', minHeight: 300 }}>
         {/* Mapa */}
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '0.85rem 1.1rem', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="card-title">MI POSICIÓN</span>
-            {myPos && <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>{myPos[0].toFixed(4)}, {myPos[1].toFixed(4)}</span>}
+        <div style={{ borderRight: '1px solid rgba(184,207,232,0.08)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 10, left: 12, fontSize: '7px', fontFamily: 'var(--font-mono)', color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase', zIndex: 10 }}>
+            MI POSICIÓN
           </div>
-          <div style={{ height: 380 }}>
+          {myPos && (
+            <div style={{ position: 'absolute', bottom: 10, right: 10, fontSize: '7px', fontFamily: 'var(--font-mono)', color: 'var(--dim)', zIndex: 10, letterSpacing: '0.04em' }}>
+              {myPos[0].toFixed(4)}°N · {myPos[1].toFixed(4)}°W
+            </div>
+          )}
+          <div style={{ width: '100%', height: '100%' }}>
             <AppMap center={myPos || [4.4389, -75.2322]} zoom={14}>
               {myPos && <Marker position={myPos} icon={myIcon}><Popup>📍 Tu ubicación actual</Popup></Marker>}
             </AppMap>
           </div>
           {!myPos && (
-            <div style={{ padding: '0.6rem 1.1rem', borderTop: '1px solid var(--border-subtle)', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>
-              📍 Activa el GPS para ver tu posición en el mapa
+            <div style={{
+              position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(15,27,45,0.6)', zIndex: 5,
+            }}>
+              <div style={{ textAlign: 'center', color: 'var(--dim)', fontSize: '10px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>
+                <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>📍</div>
+                ACTIVA EL GPS
+              </div>
             </div>
           )}
         </div>
 
-        {/* Panel lateral */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div className="card">
-            <div className="card-header"><span className="card-title">PEDIDO ACTIVO</span></div>
+        {/* Panel pedido */}
+        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* Pedido activo */}
+          <div style={{ flex: 1, padding: '1rem 1.25rem', borderBottom: '1px solid rgba(184,207,232,0.08)', overflow: 'auto' }}>
+            <div style={{ fontSize: '7px', fontFamily: 'var(--font-mono)', color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
+              PEDIDO ACTIVO
+            </div>
             {loading ? (
-              <p style={{ color: 'var(--text-tertiary)', fontSize: '0.82rem', fontFamily: 'var(--font-mono)' }}>Cargando...</p>
+              <p style={{ color: 'var(--dim)', fontSize: '10px', fontFamily: 'var(--font-mono)' }}>Cargando...</p>
             ) : !pedidoActivo ? (
-              <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✓</div>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 500 }}>Sin pedidos asignados</p>
-                <p style={{ color: 'var(--text-tertiary)', fontSize: '0.72rem', marginTop: '0.25rem' }}>Espera asignación del operador</p>
+              <div style={{ textAlign: 'center', padding: '1.5rem 0', color: 'var(--dim)' }}>
+                <div style={{ fontSize: '1.5rem', marginBottom: 6 }}>✓</div>
+                <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>SIN PEDIDOS ASIGNADOS</div>
+                <div style={{ fontSize: '8px', fontFamily: 'var(--font-mono)', color: 'rgba(184,207,232,0.2)', marginTop: 4 }}>ESPERA ASIGNACIÓN DEL OPERADOR</div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>
-                    #{String(pedidoActivo.id).slice(-6)}
-                  </span>
-                  <span className={`badge ${pedidoActivo.estado === 'en_camino' ? 'badge-info' : 'badge-warn'}`}>
-                    <span className="badge-dot" style={{ background: 'currentColor' }} />
-                    {pedidoActivo.estado === 'en_camino' ? 'En camino' : 'Asignado'}
+                  <span style={{ fontSize: '8px', fontFamily: 'var(--font-mono)', color: 'rgba(184,207,232,0.2)' }}>#{String(pedidoActivo.id).slice(-6)}</span>
+                  <span style={{
+                    padding: '1px 7px', fontSize: '7px', fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.06em',
+                    background: pedidoActivo.estado === 'en_camino' ? 'var(--blue)' : 'transparent',
+                    color: pedidoActivo.estado === 'en_camino' ? 'var(--ink)' : 'var(--mid)',
+                    border: pedidoActivo.estado === 'en_camino' ? 'none' : '1px solid var(--mid)',
+                  }}>
+                    {pedidoActivo.estado === 'en_camino' ? 'EN CAMINO' : 'ASIGNADO'}
                   </span>
                 </div>
                 {[
-                  { icon: '👤', label: 'Cliente',    value: pedidoActivo.cliente_nombre },
-                  { icon: '📍', label: 'Dirección',  value: pedidoActivo.direccion_entrega },
-                  { icon: '📦', label: 'Pedido',     value: pedidoActivo.descripcion },
-                  { icon: '📞', label: 'Teléfono',   value: pedidoActivo.telefono },
+                  { label: 'Cliente',    value: pedidoActivo.cliente_nombre },
+                  { label: 'Dirección',  value: pedidoActivo.direccion_entrega },
+                  { label: 'Pedido',     value: pedidoActivo.descripcion },
+                  { label: 'Teléfono',   value: pedidoActivo.telefono },
                 ].map(r => (
-                  <div key={r.label} style={{ display: 'flex', gap: '0.6rem', fontSize: '0.82rem' }}>
-                    <span style={{ width: 22, textAlign: 'center', flexShrink: 0 }}>{r.icon}</span>
-                    <div>
-                      <div style={{ fontSize: '0.62rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1 }}>{r.label}</div>
-                      <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{r.value || '—'}</div>
-                    </div>
+                  <div key={r.label}>
+                    <div style={{ fontSize: '7px', fontFamily: 'var(--font-mono)', color: 'rgba(184,207,232,0.2)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>{r.label}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--blue2)', fontWeight: 500 }}>{r.value || '—'}</div>
                   </div>
                 ))}
                 {accion && (
-                  <>
-                    <div className="divider" />
-                    <button
-                      className="btn btn-primary w-full"
-                      style={{ '--role-color': '#10b981', justifyContent: 'center' }}
-                      onClick={() => actualizarEstado(accion.next)}
-                      disabled={updating}
-                    >
-                      {updating ? 'Actualizando...' : accion.label}
-                    </button>
-                  </>
+                  <button
+                    onClick={() => actualizarEstado(accion.next)}
+                    disabled={updating}
+                    style={{
+                      marginTop: '0.5rem', height: 38, background: 'var(--blue)',
+                      border: 'none', cursor: 'pointer',
+                      fontFamily: 'var(--font-mono)', fontSize: '8px', fontWeight: 700,
+                      color: 'var(--ink)', letterSpacing: '0.08em', textTransform: 'uppercase',
+                      transition: 'all 0.2s', opacity: updating ? 0.5 : 1,
+                    }}
+                  >
+                    {updating ? 'ACTUALIZANDO...' : accion.label}
+                  </button>
                 )}
               </div>
             )}
           </div>
 
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">ENTREGAS HOY</span>
-              <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>
-                {pedidosHoy.length} completadas
-              </span>
+          {/* Entregas del día */}
+          <div style={{ padding: '0.75rem 1.25rem', overflow: 'auto', flex: 1 }}>
+            <div style={{ fontSize: '7px', fontFamily: 'var(--font-mono)', color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+              ENTREGAS HOY — {pedidosHoy.length}
             </div>
             {pedidosHoy.length === 0 ? (
-              <p style={{ color: 'var(--text-tertiary)', fontSize: '0.78rem', fontFamily: 'var(--font-mono)' }}>
-                Sin entregas completadas aún
+              <p style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'rgba(184,207,232,0.15)', letterSpacing: '0.04em' }}>
+                SIN ENTREGAS COMPLETADAS AÚN
               </p>
-            ) : (
-              <div className="timeline">
-                {pedidosHoy.slice(0, 5).map((p, i) => (
-                  <div className="timeline-item" key={p.id}>
-                    <div className="timeline-dot-col">
-                      <div className="timeline-dot" style={{ background: '#10b981' }} />
-                      {i < Math.min(pedidosHoy.length - 1, 4) && <div className="timeline-line" />}
-                    </div>
-                    <div className="timeline-content">
-                      <div className="timeline-event">{p.cliente_nombre}</div>
-                      <div className="timeline-time">{p.direccion_entrega}</div>
-                    </div>
-                  </div>
-                ))}
+            ) : pedidosHoy.slice(0, 4).map(p => (
+              <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid rgba(184,207,232,0.05)' }}>
+                <span style={{ fontSize: '10px', color: 'var(--blue2)', fontWeight: 500 }}>{p.cliente_nombre}</span>
+                <span style={{ fontSize: '8px', fontFamily: 'var(--font-mono)', color: 'var(--dim)' }}>✓</span>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
+
+      <style>{`@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(184,207,232,0.4)}50%{box-shadow:0 0 0 5px rgba(184,207,232,0)}}`}</style>
     </DashboardLayout>
   );
 }

@@ -3,340 +3,189 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
 
-const PEDIDOS_URL = import.meta.env.VITE_PEDIDOS_URL;
+const API = import.meta.env.VITE_PEDIDOS_URL;
 
-const ESTADO_CONFIG = {
-  pendiente:  { label: 'Pendiente',  cls: 'badge-warn',    color: '#f59e0b' },
-  asignado:   { label: 'Asignado',   cls: 'badge-info',    color: '#3b82f6' },
-  en_camino:  { label: 'En camino',  cls: 'badge-info',    color: '#6366f1' },
-  entregado:  { label: 'Entregado',  cls: 'badge-ok',      color: '#10b981' },
-  cancelado:  { label: 'Cancelado',  cls: 'badge-err',     color: '#ef4444' },
+const ESTADO = {
+  pendiente: { label: 'PENDIENTE', cls: 'badge-warn', color: 'rgba(184,207,232,0.3)' },
+  asignado:  { label: 'ASIGNADO',  cls: 'badge-info', color: 'var(--mid)'            },
+  en_camino: { label: 'EN CAMINO', cls: 'badge-info', color: 'var(--mid)'            },
+  entregado: { label: 'ENTREGADO', cls: 'badge-ok',   color: 'var(--blue)'           },
+  cancelado: { label: 'CANCELADO', cls: 'badge-err',  color: 'rgba(200,100,100,0.6)' },
 };
 
-// Mini gráfica de barras con SVG inline
-function BarChart({ data, height = 120 }) {
-  if (!data || data.length === 0) return null;
-  const max = Math.max(...data.map(d => d.value), 1);
-  const barW = Math.floor(480 / data.length) - 6;
-
+function MiniBar({ data, max }) {
   return (
-    <svg width="100%" viewBox={`0 0 480 ${height + 30}`} style={{ display: 'block' }}>
-      {data.map((d, i) => {
-        const barH = Math.max((d.value / max) * height, 2);
-        const x = i * (barW + 6) + 3;
-        const y = height - barH;
-        return (
-          <g key={d.label}>
-            <rect
-              x={x} y={y} width={barW} height={barH}
-              rx={3}
-              fill={d.color || '#ef4444'}
-              opacity={0.85}
-            />
-            <text
-              x={x + barW / 2} y={height + 16}
-              textAnchor="middle"
-              fontSize="10"
-              fill="#4a5570"
-              fontFamily="'DM Mono', monospace"
-            >
-              {d.label}
-            </text>
-            {d.value > 0 && (
-              <text
-                x={x + barW / 2} y={y - 5}
-                textAnchor="middle"
-                fontSize="11"
-                fill="#8b9ab8"
-                fontFamily="'DM Mono', monospace"
-                fontWeight="500"
-              >
-                {d.value}
-              </text>
-            )}
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
-// Donut SVG
-function DonutChart({ data, size = 100 }) {
-  const total = data.reduce((s, d) => s + d.value, 0);
-  if (total === 0) return null;
-
-  const r = 38, cx = size / 2, cy = size / 2;
-  const circumference = 2 * Math.PI * r;
-
-  let cumulative = 0;
-  const segments = data.map(d => {
-    const pct    = d.value / total;
-    const offset = cumulative * circumference;
-    const dash   = pct * circumference;
-    cumulative  += pct;
-    return { ...d, offset, dash };
-  });
-
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
-      {segments.map(s => (
-        <circle
-          key={s.label}
-          cx={cx} cy={cy} r={r}
-          fill="none"
-          stroke={s.color}
-          strokeWidth={14}
-          strokeDasharray={`${s.dash} ${circumference - s.dash}`}
-          strokeDashoffset={-s.offset}
-          opacity={0.9}
-        />
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 60, padding: '0 0.25rem' }}>
+      {data.map(d => (
+        <div key={d.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'rgba(184,207,232,0.2)', letterSpacing: '0.04em' }}>{d.value || ''}</div>
+          <div style={{ width: '100%', background: 'var(--blue)', opacity: d.value ? 0.7 : 0.1, height: max > 0 ? `${(d.value / max) * 44 + 4}px` : '4px', transition: 'height 0.4s ease', minHeight: 4 }} />
+          <div style={{ fontSize: 6, fontFamily: 'var(--font-mono)', color: 'rgba(184,207,232,0.2)', letterSpacing: '0.04em' }}>{d.label}</div>
+        </div>
       ))}
-      <circle cx={cx} cy={cy} r={28} fill="var(--bg-surface, #111827)" />
-    </svg>
+    </div>
   );
 }
 
 export default function AdminDashboard() {
   const { token } = useAuth();
-  const [pedidos, setPedidos]   = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [page, setPage]         = useState(1);
-  const [search, setSearch]     = useState('');
-  const PER_PAGE = 15;
+  const [pedidos, setPedidos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search,  setSearch]  = useState('');
+  const [filter,  setFilter]  = useState('todos');
+  const [page,    setPage]    = useState(1);
+  const PER = 12;
 
-  const headers = { Authorization: `Bearer ${token}` };
+  useEffect(() => {
+    axios.get(`${API}/pedidos/todos`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => setPedidos(r.data)).catch(() => {}).finally(() => setLoading(false));
+  }, []);
 
-  async function fetchPedidos() {
-    try {
-      const { data } = await axios.get(`${PEDIDOS_URL}/pedidos/todos`, { headers });
-      setPedidos(data);
-    } catch { setPedidos([]); }
-    finally { setLoading(false); }
-  }
+  const counts = Object.fromEntries(Object.keys(ESTADO).map(k => [k, pedidos.filter(p => p.estado === k).length]));
+  const total  = pedidos.length;
+  const tasa   = total > 0 ? Math.round((counts.entregado / total) * 100) : 0;
 
-  useEffect(() => { fetchPedidos(); }, []);
-
-  // Métricas derivadas
-  const counts = Object.fromEntries(
-    Object.keys(ESTADO_CONFIG).map(k => [k, pedidos.filter(p => p.estado === k).length])
-  );
-
-  const total      = pedidos.length;
-  const tasaExito  = total > 0 ? Math.round((counts.entregado / total) * 100) : 0;
-
-  // Datos para gráfica de últimos 7 días
   const last7 = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    const key = d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
-    const count = pedidos.filter(p => {
-      if (!p.created_at) return false;
-      const pd = new Date(p.created_at);
-      return pd.toDateString() === d.toDateString();
-    }).length;
-    return { label: key.split(' ')[0], value: count, color: '#ef4444' };
+    const d = new Date(); d.setDate(d.getDate() - (6 - i));
+    return {
+      label: d.toLocaleDateString('es-CO', { day: '2-digit' }),
+      value: pedidos.filter(p => p.created_at && new Date(p.created_at).toDateString() === d.toDateString()).length,
+    };
   });
+  const barMax = Math.max(...last7.map(d => d.value), 1);
 
-  const donutData = Object.entries(ESTADO_CONFIG).map(([k, v]) => ({
-    label: v.label, value: counts[k] || 0, color: v.color,
-  }));
-
-  // Tabla con búsqueda y paginación
-  const filtered = pedidos.filter(p =>
-    !search ||
-    p.cliente_nombre?.toLowerCase().includes(search.toLowerCase()) ||
-    p.descripcion?.toLowerCase().includes(search.toLowerCase()) ||
-    p.direccion_entrega?.toLowerCase().includes(search.toLowerCase()) ||
-    String(p.id).includes(search)
-  );
-  const pages     = Math.ceil(filtered.length / PER_PAGE);
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const filtrados = pedidos.filter(p => {
+    const ok = filter === 'todos' || p.estado === filter;
+    const s  = !search || [p.cliente_nombre, p.descripcion, p.direccion_entrega, String(p.id)].some(v => v?.toLowerCase().includes(search.toLowerCase()));
+    return ok && s;
+  });
+  const pages     = Math.ceil(filtrados.length / PER) || 1;
+  const paginated = filtrados.slice((page - 1) * PER, page * PER);
 
   return (
-    <DashboardLayout
-      role="admin"
-      pageTitle="Panel administrativo"
-      pageSubtitle="Métricas globales"
-    >
-      <div className="page-header flex-between">
+    <DashboardLayout role="admin" pageTitle="Métricas">
+      {/* Header */}
+      <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid rgba(184,207,232,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 className="page-title">Panel de métricas</h1>
-          <p className="page-subtitle">Vista global del sistema · {total} pedidos registrados</p>
+          <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--blue2)', letterSpacing: '-0.02em' }}>Panel de métricas</div>
+          <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--dim)', letterSpacing: '0.08em', marginTop: 2 }}>VISTA GLOBAL · {total} PEDIDOS REGISTRADOS</div>
         </div>
-        <button className="btn btn-ghost" onClick={fetchPedidos}>↺ Actualizar</button>
+        <button onClick={() => { setLoading(true); axios.get(`${API}/pedidos/todos`, { headers: { Authorization: `Bearer ${token}` } }).then(r => setPedidos(r.data)).finally(() => setLoading(false)); }}
+          style={{ height: 30, padding: '0 12px', background: 'transparent', border: '1px solid rgba(184,207,232,0.15)', color: 'var(--dim)', fontSize: 8, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer' }}>
+          ↺ SYNC
+        </button>
       </div>
 
       {/* KPIs */}
-      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', borderBottom: '1px solid rgba(184,207,232,0.08)' }}>
         {[
-          { label: 'Total',      value: total,              accent: '#ef4444' },
-          { label: 'Pendientes', value: counts.pendiente,   accent: '#f59e0b' },
-          { label: 'En camino',  value: counts.en_camino,   accent: '#6366f1' },
-          { label: 'Entregados', value: counts.entregado,   accent: '#10b981' },
-          { label: 'Tasa éxito', value: `${tasaExito}%`,   accent: '#ef4444', delta: tasaExito > 80 ? '↑ bueno' : '↓ mejorar' },
-        ].map(s => (
-          <div className="stat-card" key={s.label}>
-            <div className="stat-label">{s.label}</div>
-            <div className="stat-value" style={{ fontSize: '1.6rem' }}>{loading ? '—' : s.value}</div>
-            {s.delta && <div className={`stat-delta ${tasaExito > 80 ? 'up' : 'down'}`}>{s.delta}</div>}
-            <div className="stat-accent-line" style={{ background: s.accent }} />
+          { label: 'Total',      value: total },
+          { label: 'Pendientes', value: counts.pendiente },
+          { label: 'En camino',  value: counts.en_camino },
+          { label: 'Entregados', value: counts.entregado },
+          { label: 'Tasa éxito', value: `${tasa}%` },
+        ].map((s, i) => (
+          <div key={s.label} style={{ padding: '0.85rem 1rem', borderRight: i < 4 ? '1px solid rgba(184,207,232,0.08)' : 'none', transition: 'background 0.15s', cursor: 'default' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(184,207,232,0.04)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+            <div style={{ fontSize: 6, fontFamily: 'var(--font-mono)', color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 3 }}>{s.label}</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'rgba(184,207,232,0.7)', letterSpacing: '-0.05em', lineHeight: 1 }}>{loading ? '—' : s.value}</div>
           </div>
         ))}
       </div>
 
       {/* Gráficas */}
-      <div className="grid-2 mb-md">
-        {/* Barras - pedidos por día */}
-        <div className="card">
-          <div className="card-header">
-            <span className="card-title">PEDIDOS ÚLTIMOS 7 DÍAS</span>
-          </div>
-          {loading ? (
-            <div style={{ height: 150, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>
-              Cargando...
-            </div>
-          ) : (
-            <BarChart data={last7} height={120} />
-          )}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid rgba(184,207,232,0.08)' }}>
+        {/* Barras últimos 7 días */}
+        <div style={{ padding: '1rem 1.25rem', borderRight: '1px solid rgba(184,207,232,0.08)' }}>
+          <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>PEDIDOS ÚLTIMOS 7 DÍAS</div>
+          <MiniBar data={last7} max={barMax} />
         </div>
 
-        {/* Donut - distribución por estado */}
-        <div className="card">
-          <div className="card-header">
-            <span className="card-title">DISTRIBUCIÓN POR ESTADO</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <div style={{ flexShrink: 0 }}>
-              {!loading && <DonutChart data={donutData} size={100} />}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
-              {donutData.map(d => (
-                <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', flex: 1 }}>{d.label}</span>
-                  <span style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: 500 }}>
-                    {loading ? '—' : d.value}
-                  </span>
-                  <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)', minWidth: 32, textAlign: 'right' }}>
-                    {total > 0 ? `${Math.round(d.value / total * 100)}%` : '0%'}
-                  </span>
+        {/* Distribución por estado */}
+        <div style={{ padding: '1rem 1.25rem' }}>
+          <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--dim)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>DISTRIBUCIÓN POR ESTADO</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            {Object.entries(ESTADO).map(([k, v]) => {
+              const n = counts[k] || 0;
+              const pct = total > 0 ? (n / total) * 100 : 0;
+              return (
+                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--dim)', width: 72, flexShrink: 0, letterSpacing: '0.04em' }}>{v.label}</div>
+                  <div style={{ flex: 1, height: 4, background: 'rgba(184,207,232,0.08)', position: 'relative' }}>
+                    <div style={{ position: 'absolute', inset: 0, width: `${pct}%`, background: v.color, transition: 'width 0.4s ease' }} />
+                  </div>
+                  <div style={{ fontSize: 8, fontFamily: 'var(--font-mono)', color: 'rgba(184,207,232,0.35)', width: 28, textAlign: 'right' }}>{n}</div>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Barra búsqueda y filtros */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0, borderBottom: '1px solid rgba(184,207,232,0.08)' }}>
+        {['todos', 'pendiente', 'asignado', 'en_camino', 'entregado', 'cancelado'].map(f => (
+          <button key={f} onClick={() => { setFilter(f); setPage(1); }} style={{
+            padding: '8px 10px', fontSize: 6, fontFamily: 'var(--font-mono)', fontWeight: 700,
+            letterSpacing: '0.08em', textTransform: 'uppercase',
+            background: filter === f ? 'rgba(184,207,232,0.07)' : 'transparent',
+            color: filter === f ? 'var(--blue)' : 'var(--dim)',
+            border: 'none', borderRight: '1px solid rgba(184,207,232,0.06)', cursor: 'pointer',
+          }}>
+            {f === 'todos' ? 'TODOS' : ESTADO[f]?.label || f}
+          </button>
+        ))}
+        <div style={{ flex: 1, borderLeft: '1px solid rgba(184,207,232,0.08)' }}>
+          <input type="search" placeholder="Buscar cliente, pedido..." value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            style={{ border: 'none', borderRadius: 0, height: 32, background: 'transparent', fontSize: 9 }} />
+        </div>
+      </div>
+
+      {/* Tabla */}
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              {['#', 'Cliente', 'Descripción', 'Dirección', 'Domiciliario', 'Estado', 'Fecha'].map(h => (
+                <th key={h} style={{ padding: '5px 1rem', textAlign: 'left', fontSize: 6, fontFamily: 'var(--font-mono)', color: 'rgba(184,207,232,0.2)', letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: '1px solid rgba(184,207,232,0.07)', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
-            </div>
-          </div>
-        </div>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={7} style={{ padding: '2.5rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'rgba(184,207,232,0.15)', letterSpacing: '0.06em' }}>CARGANDO...</td></tr>
+            ) : paginated.map(p => {
+              const est = ESTADO[p.estado] || { label: p.estado.toUpperCase(), cls: 'badge-neutral' };
+              return (
+                <tr key={p.id} style={{ borderBottom: '1px solid rgba(184,207,232,0.05)', transition: 'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(184,207,232,0.04)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <td style={{ padding: '6px 1rem', fontSize: 8, fontFamily: 'var(--font-mono)', color: 'rgba(184,207,232,0.2)' }}>#{String(p.id).slice(-6)}</td>
+                  <td style={{ padding: '6px 1rem', fontSize: 11, fontWeight: 600, color: 'var(--blue2)' }}>{p.cliente_nombre}</td>
+                  <td style={{ padding: '6px 1rem', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--dim)' }}>{p.descripcion}</td>
+                  <td style={{ padding: '6px 1rem', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--dim)', maxWidth: 160 }}>{p.direccion_entrega}</td>
+                  <td style={{ padding: '6px 1rem', fontSize: 10, color: p.domiciliario_nombre ? 'var(--blue)' : 'rgba(184,207,232,0.2)' }}>{p.domiciliario_nombre || '—'}</td>
+                  <td style={{ padding: '6px 1rem' }}><span className={`badge ${est.cls}`}>{est.label}</span></td>
+                  <td style={{ padding: '6px 1rem', fontSize: 8, fontFamily: 'var(--font-mono)', color: 'rgba(184,207,232,0.2)', whiteSpace: 'nowrap' }}>{p.created_at ? new Date(p.created_at).toLocaleDateString('es-CO') : '—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
-      {/* Tabla completa */}
-      <div className="card">
-        <div className="card-header">
-          <span className="card-title">TODOS LOS PEDIDOS</span>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input
-              type="search"
-              placeholder="Buscar..."
-              value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1); }}
-              style={{ width: 200, height: 32, fontSize: '0.78rem', padding: '0 0.75rem' }}
-            />
-            <span style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
-              {filtered.length} resultados
-            </span>
+      {/* Paginación */}
+      {pages > 1 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1.25rem', borderTop: '1px solid rgba(184,207,232,0.08)' }}>
+          <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', color: 'rgba(184,207,232,0.2)' }}>PÁG {page} / {pages}</span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button onClick={() => setPage(v => v - 1)} disabled={page === 1} style={{ padding: '4px 10px', fontSize: 8, fontFamily: 'var(--font-mono)', background: 'transparent', border: '1px solid rgba(184,207,232,0.12)', color: 'var(--dim)', cursor: 'pointer', opacity: page === 1 ? 0.3 : 1 }}>← ANT</button>
+            <button onClick={() => setPage(v => v + 1)} disabled={page === pages} style={{ padding: '4px 10px', fontSize: 8, fontFamily: 'var(--font-mono)', background: 'transparent', border: '1px solid rgba(184,207,232,0.12)', color: 'var(--dim)', cursor: 'pointer', opacity: page === pages ? 0.3 : 1 }}>SIG →</button>
           </div>
         </div>
-
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>#ID</th>
-                <th>Cliente</th>
-                <th>Descripción</th>
-                <th>Dirección</th>
-                <th>Domiciliario</th>
-                <th>Estado</th>
-                <th>Fecha</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Cargando datos...</td></tr>
-              ) : paginated.length === 0 ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Sin resultados</td></tr>
-              ) : paginated.map(p => {
-                const est = ESTADO_CONFIG[p.estado] || { label: p.estado, cls: 'badge-neutral' };
-                return (
-                  <tr key={p.id}>
-                    <td><span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>#{String(p.id).slice(-6)}</span></td>
-                    <td style={{ color: 'var(--text-primary)', fontWeight: 500, fontSize: '0.85rem' }}>{p.cliente_nombre}</td>
-                    <td style={{ fontSize: '0.8rem', maxWidth: 160 }}>{p.descripcion}</td>
-                    <td style={{ fontSize: '0.75rem', maxWidth: 180 }}>{p.direccion_entrega}</td>
-                    <td style={{ fontSize: '0.8rem', color: p.domiciliario_nombre ? '#34d399' : 'var(--text-tertiary)' }}>
-                      {p.domiciliario_nombre || '—'}
-                    </td>
-                    <td>
-                      <span className={`badge ${est.cls}`}>
-                        <span className="badge-dot" style={{ background: 'currentColor' }} />
-                        {est.label}
-                      </span>
-                    </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
-                      {p.created_at ? new Date(p.created_at).toLocaleDateString('es-CO') : '—'}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Paginación */}
-        {pages > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 0.5rem 0', borderTop: '1px solid var(--border-subtle)', marginTop: '0.75rem' }}>
-            <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>
-              Página {page} de {pages}
-            </span>
-            <div style={{ display: 'flex', gap: '0.35rem' }}>
-              <button
-                className="btn btn-ghost"
-                style={{ padding: '3px 10px', fontSize: '0.75rem' }}
-                disabled={page === 1}
-                onClick={() => setPage(v => v - 1)}
-              >
-                ← Ant
-              </button>
-              {Array.from({ length: Math.min(pages, 5) }, (_, i) => {
-                const p = i + 1;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    style={{
-                      padding: '3px 8px', fontSize: '0.75rem', borderRadius: 'var(--radius-sm)',
-                      background: page === p ? 'rgba(239,68,68,0.12)' : 'transparent',
-                      border: `1px solid ${page === p ? 'rgba(239,68,68,0.25)' : 'transparent'}`,
-                      color: page === p ? '#f87171' : 'var(--text-secondary)',
-                      cursor: 'pointer',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-              <button
-                className="btn btn-ghost"
-                style={{ padding: '3px 10px', fontSize: '0.75rem' }}
-                disabled={page === pages}
-                onClick={() => setPage(v => v + 1)}
-              >
-                Sig →
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </DashboardLayout>
   );
 }

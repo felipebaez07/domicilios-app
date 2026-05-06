@@ -4,8 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
 
 const API = import.meta.env.VITE_AUTH_URL;
-const ROL_COLOR = { distribuidor: '#3b82f6', cliente: '#8b5cf6', domiciliario: '#10b981', operador: '#f59e0b', admin: '#ef4444' };
-const ROL_EMOJI = { distribuidor: '📦', cliente: '👤', domiciliario: '🛵', operador: '🗺️', admin: '⚡' };
+const ROLES = ['distribuidor','cliente','domiciliario','operador','admin'];
 
 export default function AdminUsuarios() {
   const { token } = useAuth();
@@ -20,82 +19,56 @@ export default function AdminUsuarios() {
   }, []);
 
   const filtrados = usuarios.filter(u => {
-    const matchRol    = filterRol === 'todos' || u.rol === filterRol;
-    const matchSearch = !search || [u.nombre, u.email, u.rol].some(v => v?.toLowerCase().includes(search.toLowerCase()));
-    return matchRol && matchSearch;
+    const ok = filterRol === 'todos' || u.rol === filterRol;
+    const s  = !search || [u.nombre, u.email, u.rol].some(v => v?.toLowerCase().includes(search.toLowerCase()));
+    return ok && s;
   });
 
-  const conteo = Object.fromEntries(['distribuidor','cliente','domiciliario','operador','admin'].map(r => [r, usuarios.filter(u => u.rol === r).length]));
+  const conteo = Object.fromEntries(ROLES.map(r => [r, usuarios.filter(u => u.rol === r).length]));
 
   return (
     <DashboardLayout role="admin" pageTitle="Usuarios">
-      <div className="page-header">
-        <h1 className="page-title">Usuarios del sistema</h1>
-        <p className="page-subtitle">{usuarios.length} registrados</p>
+      <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--txt-1)' }}>Usuarios del sistema</div>
+        <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 2, letterSpacing: '0.08em' }}>{usuarios.length} REGISTRADOS</div>
       </div>
-
-      <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
-        {['distribuidor','cliente','domiciliario','operador','admin'].map(r => (
-          <div className="stat-card" key={r}>
-            <div className="stat-label">{ROL_EMOJI[r]} {r}</div>
-            <div className="stat-value" style={{ fontSize: '1.6rem' }}>{loading ? '—' : conteo[r]}</div>
-            <div className="stat-accent-line" style={{ background: ROL_COLOR[r] }} />
+      {/* Stats por rol */}
+      <div className="stats-row" style={{ gridTemplateColumns: 'repeat(5,1fr)' }}>
+        {ROLES.map((r, i) => (
+          <div key={r} className="stat-cell" style={{ borderRight: i < 4 ? '1px solid var(--border)' : 'none' }}>
+            <div className="stat-lbl">{r}</div>
+            <div className="stat-val">{loading ? '—' : String(conteo[r] || 0).padStart(2,'0')}</div>
           </div>
         ))}
       </div>
-
-      <div className="card">
-        <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-            {['todos','distribuidor','cliente','domiciliario','operador','admin'].map(r => (
-              <button key={r} onClick={() => setFilterRol(r)} style={{
-                padding: '3px 10px', borderRadius: 99, fontSize: '0.68rem', fontFamily: 'var(--font-mono)',
-                background: filterRol === r ? `${ROL_COLOR[r] || '#ef4444'}22` : 'var(--bg-elevated)',
-                border: `1px solid ${filterRol === r ? `${ROL_COLOR[r] || '#ef4444'}55` : 'var(--border-subtle)'}`,
-                color: filterRol === r ? (ROL_COLOR[r] || '#f87171') : 'var(--text-tertiary)', cursor: 'pointer',
-              }}>
-                {r === 'todos' ? 'Todos' : `${ROL_EMOJI[r] || ''} ${r}`}
-              </button>
-            ))}
-          </div>
-          <input
-            type="search" placeholder="Buscar nombre o email..." value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ width: 220, height: 30, fontSize: '0.78rem', padding: '0 0.75rem' }}
-          />
+      {/* Filtros */}
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
+        {['todos', ...ROLES].map(r => (
+          <button key={r} onClick={() => setFilterRol(r)} style={{ padding: '8px 9px', fontSize: 6, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', background: filterRol === r ? 'var(--bg-active)' : 'transparent', color: filterRol === r ? 'var(--accent)' : 'var(--txt-3)', border: 'none', borderRight: '1px solid var(--border)', cursor: 'pointer' }}>
+            {r === 'todos' ? 'TODOS' : r.slice(0,4).toUpperCase()}
+          </button>
+        ))}
+        <div style={{ flex: 1, borderLeft: '1px solid var(--border)' }}>
+          <input type="search" placeholder="Buscar nombre o email..." value={search} onChange={e => setSearch(e.target.value)} style={{ border: 'none', height: 32, background: 'transparent', fontSize: 9 }} />
         </div>
-
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead><tr><th>#</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Registro</th></tr></thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Cargando...</td></tr>
-              ) : filtrados.length === 0 ? (
-                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Sin resultados</td></tr>
-              ) : filtrados.map((u, i) => (
+      </div>
+      <div style={{ overflowX: 'auto' }}>
+        <table className="rv-table">
+          <thead><tr><th>#</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Registro</th></tr></thead>
+          <tbody>
+            {loading ? <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>CARGANDO...</td></tr>
+              : filtrados.length === 0 ? <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>SIN RESULTADOS</td></tr>
+              : filtrados.map((u, i) => (
                 <tr key={u.id}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>{i + 1}</td>
-                  <td style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{u.nombre}</td>
-                  <td style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>{u.email}</td>
-                  <td>
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px',
-                      borderRadius: 99, fontSize: '0.68rem', fontFamily: 'var(--font-mono)', fontWeight: 500,
-                      background: `${ROL_COLOR[u.rol] || '#888'}18`,
-                      color: ROL_COLOR[u.rol] || 'var(--text-secondary)',
-                    }}>
-                      {ROL_EMOJI[u.rol]} {u.rol}
-                    </span>
-                  </td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>
-                    {u.created_at ? new Date(u.created_at).toLocaleDateString('es-CO') : '—'}
-                  </td>
+                  <td className="m">{i+1}</td>
+                  <td className="p">{u.nombre}</td>
+                  <td style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-2)' }}>{u.email}</td>
+                  <td><span className="badge badge-info">{u.rol?.toUpperCase()}</span></td>
+                  <td className="m">{u.created_at ? new Date(u.created_at).toLocaleDateString('es-CO') : '—'}</td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
+          </tbody>
+        </table>
       </div>
     </DashboardLayout>
   );

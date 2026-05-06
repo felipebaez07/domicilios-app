@@ -4,13 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
 
 const API = import.meta.env.VITE_PEDIDOS_URL;
-const ESTADO = {
-  pendiente: { label: 'Pendiente', cls: 'badge-warn' },
-  asignado:  { label: 'Asignado',  cls: 'badge-info' },
-  en_camino: { label: 'En camino', cls: 'badge-info' },
-  entregado: { label: 'Entregado', cls: 'badge-ok'   },
-  cancelado: { label: 'Cancelado', cls: 'badge-err'  },
-};
+const ESTADO = { pendiente:{label:'PENDIENTE',cls:'badge-warn'}, asignado:{label:'ASIGNADO',cls:'badge-info'}, en_camino:{label:'EN CAMINO',cls:'badge-info'}, entregado:{label:'ENTREGADO',cls:'badge-ok'}, cancelado:{label:'CANCELADO',cls:'badge-err'} };
 
 export default function ClienteHistorial() {
   const { token } = useAuth();
@@ -24,35 +18,28 @@ export default function ClienteHistorial() {
 
   return (
     <DashboardLayout role="cliente" pageTitle="Historial">
-      <div className="page-header">
-        <h1 className="page-title">Mis pedidos</h1>
-        <p className="page-subtitle">{pedidos.length} pedidos en total</p>
+      <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--txt-1)' }}>Mis pedidos</div>
+        <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 2, letterSpacing: '0.08em' }}>{pedidos.length} PEDIDOS EN TOTAL</div>
       </div>
-      <div className="card">
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead><tr><th>#</th><th>Descripción</th><th>Dirección</th><th>Domiciliario</th><th>Estado</th><th>Fecha</th></tr></thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Cargando...</td></tr>
-              ) : pedidos.length === 0 ? (
-                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Sin pedidos</td></tr>
-              ) : pedidos.map(p => {
-                const est = ESTADO[p.estado] || { label: p.estado, cls: 'badge-neutral' };
-                return (
-                  <tr key={p.id}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>#{String(p.id).slice(-6)}</td>
-                    <td style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{p.descripcion}</td>
-                    <td style={{ fontSize: '0.8rem' }}>{p.direccion_entrega}</td>
-                    <td style={{ fontSize: '0.8rem', color: p.domiciliario_nombre ? '#34d399' : 'var(--text-tertiary)' }}>{p.domiciliario_nombre || '—'}</td>
-                    <td><span className={`badge ${est.cls}`}><span className="badge-dot" style={{ background: 'currentColor' }} />{est.label}</span></td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>{p.created_at ? new Date(p.created_at).toLocaleDateString('es-CO') : '—'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      <div style={{ overflowX: 'auto' }}>
+        <table className="rv-table">
+          <thead><tr><th>#</th><th>Descripción</th><th>Dirección</th><th>Domiciliario</th><th>Estado</th><th>Fecha</th></tr></thead>
+          <tbody>
+            {loading ? <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>CARGANDO...</td></tr>
+              : pedidos.length === 0 ? <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>SIN PEDIDOS</td></tr>
+              : pedidos.map(p => { const est = ESTADO[p.estado] || {label:p.estado.toUpperCase(),cls:'badge-neutral'}; return (
+                <tr key={p.id}>
+                  <td className="m">#{String(p.id).slice(-6)}</td>
+                  <td className="p">{p.descripcion}</td>
+                  <td>{p.direccion_entrega}</td>
+                  <td style={{ color: p.domiciliario_nombre ? 'var(--accent)' : 'var(--txt-3)' }}>{p.domiciliario_nombre || '—'}</td>
+                  <td><span className={`badge ${est.cls}`}>{est.label}</span></td>
+                  <td className="m">{p.created_at ? new Date(p.created_at).toLocaleDateString('es-CO') : '—'}</td>
+                </tr>
+              );})}
+          </tbody>
+        </table>
       </div>
     </DashboardLayout>
   );

@@ -12,59 +12,44 @@ export default function DomiciliarioHistorial() {
 
   useEffect(() => {
     axios.get(`${API}/pedidos/mis-entregas`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => setPedidos(r.data.filter(p => p.estado === 'entregado')))
-      .catch(() => {}).finally(() => setLoading(false));
+      .then(r => setPedidos(r.data.filter(p => p.estado === 'entregado'))).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  const hoy = pedidos.filter(p => {
-    if (!p.created_at) return false;
-    return new Date(p.created_at).toDateString() === new Date().toDateString();
-  }).length;
+  const hoy = pedidos.filter(p => p.created_at && new Date(p.created_at).toDateString() === new Date().toDateString()).length;
 
   return (
     <DashboardLayout role="domiciliario" pageTitle="Entregas">
-      <div className="page-header">
-        <h1 className="page-title">Mis entregas</h1>
-        <p className="page-subtitle">{hoy} hoy · {pedidos.length} en total</p>
+      <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--txt-1)' }}>Mis entregas</div>
+          <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 2, letterSpacing: '0.08em' }}>{hoy} HOY · {pedidos.length} TOTAL</div>
+        </div>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          {[{ l: 'Hoy', v: hoy }, { l: 'Total', v: pedidos.length }].map(s => (
+            <div key={s.l} style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{s.l}</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--txt-1)', letterSpacing: '-0.04em', lineHeight: 1 }}>{loading ? '—' : s.v}</div>
+            </div>
+          ))}
+        </div>
       </div>
-
-      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: '1.5rem' }}>
-        {[
-          { label: 'Entregas hoy',  value: hoy },
-          { label: 'Esta semana',   value: pedidos.filter(p => { const d = new Date(p.created_at); const now = new Date(); return (now - d) < 7*24*60*60*1000; }).length },
-          { label: 'Total histórico', value: pedidos.length },
-        ].map(s => (
-          <div className="stat-card" key={s.label}>
-            <div className="stat-label">{s.label}</div>
-            <div className="stat-value">{loading ? '—' : s.value}</div>
-            <div className="stat-accent-line" style={{ background: '#10b981' }} />
-          </div>
-        ))}
-      </div>
-
-      <div className="card">
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead><tr><th>#</th><th>Cliente</th><th>Dirección</th><th>Descripción</th><th>Fecha</th></tr></thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Cargando...</td></tr>
-              ) : pedidos.length === 0 ? (
-                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Sin entregas completadas</td></tr>
-              ) : pedidos.map(p => (
+      <div style={{ overflowX: 'auto' }}>
+        <table className="rv-table">
+          <thead><tr><th>#</th><th>Cliente</th><th>Dirección</th><th>Descripción</th><th>Fecha</th></tr></thead>
+          <tbody>
+            {loading ? <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>CARGANDO...</td></tr>
+              : pedidos.length === 0 ? <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>SIN ENTREGAS</td></tr>
+              : pedidos.map(p => (
                 <tr key={p.id}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>#{String(p.id).slice(-6)}</td>
-                  <td style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{p.cliente_nombre}</td>
-                  <td style={{ fontSize: '0.8rem' }}>{p.direccion_entrega}</td>
-                  <td style={{ fontSize: '0.8rem' }}>{p.descripcion}</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>
-                    {p.created_at ? new Date(p.created_at).toLocaleDateString('es-CO') : '—'}
-                  </td>
+                  <td className="m">#{String(p.id).slice(-6)}</td>
+                  <td className="p">{p.cliente_nombre}</td>
+                  <td>{p.direccion_entrega}</td>
+                  <td>{p.descripcion}</td>
+                  <td className="m">{p.created_at ? new Date(p.created_at).toLocaleDateString('es-CO') : '—'}</td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
+          </tbody>
+        </table>
       </div>
     </DashboardLayout>
   );
