@@ -3,7 +3,7 @@ const { createServer } = require('http')
 const { Server } = require('socket.io')
 const cors = require('cors')
 const jwt = require('jsonwebtoken')
-const { Redis } = require('ioredis')
+const { Redis } = require('@upstash/redis')
 require('dotenv').config()
 
 const app = express()
@@ -15,7 +15,10 @@ const io = new Server(httpServer, {
   cors: { origin: '*', methods: ['GET', 'POST'] }
 })
 
-const redis = new Redis(process.env.REDIS_URL)
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN
+})
 
 const verificarToken = (req, res, next) => {
   const auth = req.headers.authorization
@@ -37,7 +40,7 @@ app.get('/ubicacion/:domiciliario_id', verificarToken, async (req, res) => {
   try {
     const data = await redis.get(`ubicacion:${req.params.domiciliario_id}`)
     if (!data) return res.status(404).json({ error: 'Domiciliario no encontrado' })
-    res.json(JSON.parse(data))
+    res.json(data)
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Error interno' })
@@ -50,7 +53,7 @@ app.get('/domiciliarios/activos', verificarToken, async (req, res) => {
     const activos = []
     for (const key of keys) {
       const data = await redis.get(key)
-      if (data) activos.push(JSON.parse(data))
+      if (data) activos.push(data)
     }
     res.json(activos)
   } catch (error) {
