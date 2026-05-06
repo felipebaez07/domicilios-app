@@ -1,31 +1,76 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import Login from './pages/auth/Login'
-import DashboardDistribuidor from './pages/distribuidor/Dashboard'
-import DashboardCliente from './pages/cliente/Dashboard'
-import DashboardDomiciliario from './pages/domiciliario/Dashboard'
-import DashboardOperador from './pages/operador/Dashboard'
-import DashboardAdmin from './pages/admin/Dashboard'
-import { useAuth } from './context/AuthContext'
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
-function App() {
-  const { usuario } = useAuth()
+import Login from './pages/auth/Login';
 
-  if (!usuario) return <Routes><Route path="*" element={<Login />} /></Routes>
+import DistribuidorDashboard from './pages/distribuidor/Dashboard';
+import DistribuidorNuevo     from './pages/distribuidor/NuevoPedido';
+import DistribuidorHistorial from './pages/distribuidor/Historial';
 
-  const dashboards = {
-    distribuidor: <DashboardDistribuidor />,
-    cliente: <DashboardCliente />,
-    domiciliario: <DashboardDomiciliario />,
-    operador: <DashboardOperador />,
-    admin: <DashboardAdmin />
-  }
+import ClienteDashboard  from './pages/cliente/Dashboard';
+import ClienteRastreo    from './pages/cliente/Rastreo';
+import ClienteHistorial  from './pages/cliente/Historial';
 
-  return (
-    <Routes>
-      <Route path="/" element={dashboards[usuario.rol] || <Login />} />
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
-  )
+import DomiciliarioDashboard from './pages/domiciliario/Dashboard';
+import DomiciliarioRuta      from './pages/domiciliario/Ruta';
+import DomiciliarioHistorial from './pages/domiciliario/Historial';
+
+import OperadorDashboard     from './pages/operador/Dashboard';
+import OperadorPedidos       from './pages/operador/Pedidos';
+import OperadorDomiciliarios from './pages/operador/Domiciliarios';
+
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminPedidos   from './pages/admin/Pedidos';
+import AdminUsuarios  from './pages/admin/Usuarios';
+
+function ProtectedRoute({ children, allowedRole }) {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (allowedRole && user?.rol !== allowedRole) return <Navigate to="/login" replace />;
+  return children;
 }
 
-export default App
+function PublicRoute({ children }) {
+  const { isAuthenticated, user } = useAuth();
+  if (isAuthenticated && user?.rol) return <Navigate to={`/${user.rol}`} replace />;
+  return children;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+
+      <Route path="/distribuidor"          element={<ProtectedRoute allowedRole="distribuidor"><DistribuidorDashboard /></ProtectedRoute>} />
+      <Route path="/distribuidor/nuevo"    element={<ProtectedRoute allowedRole="distribuidor"><DistribuidorNuevo /></ProtectedRoute>} />
+      <Route path="/distribuidor/historial" element={<ProtectedRoute allowedRole="distribuidor"><DistribuidorHistorial /></ProtectedRoute>} />
+
+      <Route path="/cliente"           element={<ProtectedRoute allowedRole="cliente"><ClienteDashboard /></ProtectedRoute>} />
+      <Route path="/cliente/rastreo"   element={<ProtectedRoute allowedRole="cliente"><ClienteRastreo /></ProtectedRoute>} />
+      <Route path="/cliente/historial" element={<ProtectedRoute allowedRole="cliente"><ClienteHistorial /></ProtectedRoute>} />
+
+      <Route path="/domiciliario"           element={<ProtectedRoute allowedRole="domiciliario"><DomiciliarioDashboard /></ProtectedRoute>} />
+      <Route path="/domiciliario/ruta"      element={<ProtectedRoute allowedRole="domiciliario"><DomiciliarioRuta /></ProtectedRoute>} />
+      <Route path="/domiciliario/historial" element={<ProtectedRoute allowedRole="domiciliario"><DomiciliarioHistorial /></ProtectedRoute>} />
+
+      <Route path="/operador"               element={<ProtectedRoute allowedRole="operador"><OperadorDashboard /></ProtectedRoute>} />
+      <Route path="/operador/pedidos"       element={<ProtectedRoute allowedRole="operador"><OperadorPedidos /></ProtectedRoute>} />
+      <Route path="/operador/domiciliarios" element={<ProtectedRoute allowedRole="operador"><OperadorDomiciliarios /></ProtectedRoute>} />
+
+      <Route path="/admin"          element={<ProtectedRoute allowedRole="admin"><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/admin/pedidos"  element={<ProtectedRoute allowedRole="admin"><AdminPedidos /></ProtectedRoute>} />
+      <Route path="/admin/usuarios" element={<ProtectedRoute allowedRole="admin"><AdminUsuarios /></ProtectedRoute>} />
+
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
+}

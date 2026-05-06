@@ -15,11 +15,11 @@ const domiIcon = new L.DivIcon({
   iconSize: [36, 36], iconAnchor: [18, 18], className: '',
 });
 
-const PASOS  = ['pendiente', 'asignado', 'en_camino', 'entregado'];
-const LABELS = { pendiente: 'Pendiente', asignado: 'Asignado', en_camino: 'En camino', entregado: 'Entregado', cancelado: 'Cancelado' };
-const BADGE  = { pendiente: 'badge-warn', asignado: 'badge-info', en_camino: 'badge-info', entregado: 'badge-ok', cancelado: 'badge-err' };
+const PASOS = ['pendiente','asignado','en_camino','entregado'];
+const LABELS = { pendiente:'Pendiente', asignado:'Asignado', en_camino:'En camino', entregado:'Entregado', cancelado:'Cancelado' };
+const ROLE_COLOR = '#8b5cf6';
 
-export default function ClienteDashboard() {
+export default function ClienteRastreo() {
   const { token } = useAuth();
   const [pedidos, setPedidos]   = useState([]);
   const [selected, setSelected] = useState(null);
@@ -44,31 +44,16 @@ export default function ClienteDashboard() {
     setDomiPos(null);
   }, [selected?.id]);
 
-  const activos   = pedidos.filter(p => p.estado !== 'entregado' && p.estado !== 'cancelado').length;
-  const stepIdx   = PASOS.indexOf(selected?.estado);
+  const stepIdx = PASOS.indexOf(selected?.estado);
 
   return (
-    <DashboardLayout role="cliente" pageTitle="Mis pedidos" pageSubtitle="Rastreo en tiempo real">
+    <DashboardLayout role="cliente" pageTitle="Rastrear pedido">
       <div className="page-header">
-        <h1 className="page-title">Mis pedidos</h1>
-        <p className="page-subtitle">Rastrea tu domicilio en tiempo real</p>
+        <h1 className="page-title">Rastreo en tiempo real</h1>
+        <p className="page-subtitle">Sigue la ubicación de tu domiciliario</p>
       </div>
 
-      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3,1fr)', marginBottom: '1.5rem' }}>
-        {[
-          { label: 'Total pedidos', value: pedidos.length,                                        accent: '#8b5cf6' },
-          { label: 'En curso',      value: activos,                                               accent: '#3b82f6' },
-          { label: 'Entregados',    value: pedidos.filter(p => p.estado === 'entregado').length,  accent: '#10b981' },
-        ].map(s => (
-          <div className="stat-card" key={s.label}>
-            <div className="stat-label">{s.label}</div>
-            <div className="stat-value">{loading ? '—' : s.value}</div>
-            <div className="stat-accent-line" style={{ background: s.accent }} />
-          </div>
-        ))}
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '290px 1fr', gap: '1rem', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '1rem', alignItems: 'start' }}>
         {/* Lista pedidos */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -76,11 +61,6 @@ export default function ClienteDashboard() {
           </span>
           {loading ? (
             <div className="card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Cargando...</div>
-          ) : pedidos.length === 0 ? (
-            <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📦</div>
-              <p style={{ color: 'var(--text-tertiary)', fontSize: '0.82rem' }}>Sin pedidos activos</p>
-            </div>
           ) : pedidos.map(p => (
             <button key={p.id} onClick={() => setSelected(p)} style={{
               background: selected?.id === p.id ? 'rgba(139,92,246,0.1)' : 'var(--bg-surface)',
@@ -90,7 +70,9 @@ export default function ClienteDashboard() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
                 <span style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>#{String(p.id).slice(-6)}</span>
-                <span className={`badge ${BADGE[p.estado] || 'badge-neutral'}`}>{LABELS[p.estado] || p.estado}</span>
+                <span className={`badge ${p.estado === 'entregado' ? 'badge-ok' : p.estado === 'cancelado' ? 'badge-err' : p.estado === 'en_camino' ? 'badge-info' : 'badge-warn'}`}>
+                  {LABELS[p.estado] || p.estado}
+                </span>
               </div>
               <div style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-primary)' }}>{p.descripcion}</div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: 2 }}>{p.direccion_entrega}</div>
@@ -105,8 +87,8 @@ export default function ClienteDashboard() {
               <span className="card-title">MAPA EN VIVO</span>
               {domiPos && <div className="status-indicator"><span className="pulse-dot live" /><span style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>GPS activo</span></div>}
             </div>
-            <div style={{ height: 320 }}>
-              <AppMap center={domiPos || [4.4389, -75.2322]} zoom={14}>
+            <div style={{ height: 340 }}>
+              <AppMap center={domiPos || [4.4389, -75.2322]} zoom={13}>
                 {domiPos && <Marker position={domiPos} icon={domiIcon}><Popup>🛵 Domiciliario en camino</Popup></Marker>}
               </AppMap>
             </div>
@@ -117,19 +99,32 @@ export default function ClienteDashboard() {
             )}
           </div>
 
+          {/* Timeline */}
           {selected && selected.estado !== 'cancelado' && (
             <div className="card">
-              <div className="card-header"><span className="card-title">PROGRESO</span></div>
-              <div style={{ display: 'flex' }}>
+              <div className="card-header"><span className="card-title">PROGRESO DEL PEDIDO</span></div>
+              <div style={{ display: 'flex', gap: 0 }}>
                 {PASOS.map((paso, i) => {
-                  const done = i <= stepIdx; const current = i === stepIdx;
+                  const done    = i <= stepIdx;
+                  const current = i === stepIdx;
                   return (
                     <div key={paso} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', position: 'relative' }}>
-                      {i < PASOS.length - 1 && <div style={{ position: 'absolute', top: 10, left: '50%', width: '100%', height: 2, background: done && i < stepIdx ? '#8b5cf6' : 'var(--border-subtle)', zIndex: 0 }} />}
-                      <div style={{ width: 22, height: 22, borderRadius: '50%', zIndex: 1, background: done ? '#8b5cf6' : 'var(--bg-elevated)', border: `2px solid ${done ? '#8b5cf6' : 'var(--border-mid)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: done ? '#fff' : 'var(--text-tertiary)', fontWeight: 600, boxShadow: current ? '0 0 0 4px rgba(139,92,246,0.2)' : 'none' }}>
+                      {i < PASOS.length - 1 && (
+                        <div style={{ position: 'absolute', top: 10, left: '50%', width: '100%', height: 2, background: done && i < stepIdx ? ROLE_COLOR : 'var(--border-subtle)', zIndex: 0 }} />
+                      )}
+                      <div style={{
+                        width: 22, height: 22, borderRadius: '50%', zIndex: 1,
+                        background: done ? ROLE_COLOR : 'var(--bg-elevated)',
+                        border: `2px solid ${done ? ROLE_COLOR : 'var(--border-mid)'}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '0.6rem', color: done ? '#fff' : 'var(--text-tertiary)', fontWeight: 600,
+                        boxShadow: current ? `0 0 0 4px rgba(139,92,246,0.2)` : 'none',
+                      }}>
                         {done ? '✓' : i + 1}
                       </div>
-                      <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', color: done ? '#8b5cf6' : 'var(--text-tertiary)', textAlign: 'center', fontWeight: current ? 600 : 400 }}>{LABELS[paso]}</span>
+                      <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', color: done ? ROLE_COLOR : 'var(--text-tertiary)', textAlign: 'center', fontWeight: current ? 600 : 400 }}>
+                        {LABELS[paso]}
+                      </span>
                     </div>
                   );
                 })}

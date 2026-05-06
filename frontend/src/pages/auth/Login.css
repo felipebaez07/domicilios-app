@@ -1,0 +1,336 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+.login-root {
+  min-height: 100vh;
+  background: #0b0f1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Outfit', sans-serif;
+}
+
+.login-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.login-card {
+  width: 440px;
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 2rem;
+  position: relative;
+  z-index: 1;
+  transition: border-color 0.5s ease;
+}
+
+/* Logo */
+.login-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.75rem;
+}
+
+.login-logo-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+.login-app-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #f0f4ff;
+}
+
+.login-app-ver {
+  font-size: 0.6rem;
+  font-family: 'DM Mono', monospace;
+  color: #2a3550;
+  letter-spacing: 0.05em;
+}
+
+/* Título */
+.login-head {
+  margin-bottom: 1.5rem;
+}
+
+.login-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  transition: color 0.4s ease;
+  color: #f0f4ff;
+  line-height: 1.1;
+}
+
+.login-subtitle {
+  font-size: 0.75rem;
+  color: #3d4a65;
+  margin-top: 5px;
+  font-family: 'DM Mono', monospace;
+}
+
+/* Roles */
+.login-roles-label {
+  font-size: 0.6rem;
+  font-family: 'DM Mono', monospace;
+  color: #2a3550;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.login-roles-track {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.login-role-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  background: #1a2236;
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Outfit', sans-serif;
+}
+
+.login-role-pill:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.12);
+}
+
+.login-role-pill.active {
+  transform: translateY(-3px);
+}
+
+.login-role-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.login-role-emoji {
+  font-size: 1.35rem;
+  line-height: 1;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.login-role-pill.active .login-role-emoji {
+  transform: scale(1.2);
+}
+
+.login-role-name {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #3d4a65;
+  letter-spacing: 0.02em;
+  transition: color 0.25s ease;
+  text-align: center;
+}
+
+.login-role-check {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Descripción del rol */
+.login-desc-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid;
+  transition: background 0.4s ease, border-color 0.4s ease;
+  min-height: 38px;
+  margin-bottom: 1.25rem;
+}
+
+.login-desc-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.login-desc-text {
+  font-size: 0.72rem;
+  font-family: 'DM Mono', monospace;
+  transition: color 0.4s ease;
+  line-height: 1.3;
+}
+
+/* Formulario */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.login-field-label {
+  font-size: 0.6rem;
+  font-family: 'DM Mono', monospace;
+  color: #2a3550;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.login-field-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-field-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 0.85rem;
+  opacity: 0.3;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.login-field-input {
+  width: 100%;
+  height: 42px;
+  background: #0d1420;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 9px;
+  padding: 0 40px 0 38px;
+  font-size: 0.875rem;
+  font-family: 'Outfit', sans-serif;
+  color: #f0f4ff;
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.login-field-input::placeholder {
+  color: #1e2d45;
+}
+
+.login-pw-toggle {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: opacity 0.2s;
+  color: inherit;
+  padding: 4px;
+  line-height: 1;
+}
+
+/* Error */
+.login-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 8px;
+  color: #f87171;
+  font-size: 0.78rem;
+  font-family: 'DM Mono', monospace;
+}
+
+/* Botón submit */
+.login-submit {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: filter 0.2s ease, transform 0.15s ease, box-shadow 0.4s ease, opacity 0.3s ease;
+  letter-spacing: 0.01em;
+  margin-top: 4px;
+}
+
+.login-submit:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.login-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.login-arrow {
+  transition: transform 0.2s ease;
+}
+
+.login-submit:hover .login-arrow {
+  transform: translateX(3px);
+}
+
+/* Spinner */
+.login-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Footer */
+.login-footer-note {
+  text-align: center;
+  font-size: 0.6rem;
+  font-family: 'DM Mono', monospace;
+  color: #1e2d45;
+  letter-spacing: 0.04em;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 480px) {
+  .login-card { width: 100%; border-radius: 0; min-height: 100vh; }
+  .login-root { align-items: flex-start; }
+}

@@ -2,12 +2,20 @@
   "name": "domicilios-app",
   "version": "1.0.0",
   "description": "",
+  "keywords": [],
+  "homepage": "https://github.com/felipebaez07/domicilios-app#readme",
+  "bugs": {
+    "url": "https://github.com/felipebaez07/domicilios-app/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/felipebaez07/domicilios-app.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs"
+  }
 }
