@@ -4,13 +4,16 @@ const jwt = require('jsonwebtoken')
 const { createClient } = require('@supabase/supabase-js')
 const amqplib = require('amqplib')
 require('dotenv').config()
+const ws = require('ws')
+const { createClient } = require('@supabase/supabase-js')
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
-
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
+  realtime: { transport: ws }
+})
 let channel = null
 
 async function conectarRabbitMQ() {
