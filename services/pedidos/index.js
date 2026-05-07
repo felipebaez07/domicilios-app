@@ -1,11 +1,10 @@
 const express = require('express')
 const cors = require('cors')
 const jwt = require('jsonwebtoken')
-const { createClient } = require('@supabase/supabase-js')
 const amqplib = require('amqplib')
-require('dotenv').config()
 const ws = require('ws')
 const { createClient } = require('@supabase/supabase-js')
+require('dotenv').config()
 
 const app = express()
 app.use(cors())
@@ -14,6 +13,7 @@ app.use(express.json())
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
   realtime: { transport: ws }
 })
+
 let channel = null
 
 async function conectarRabbitMQ() {
@@ -40,9 +40,16 @@ const verificarToken = (req, res, next) => {
   }
 }
 
-app.get('/health', (req, res) => res.json({ status: 'ok', servicio: 'pedidos' }))
+function normalizar(p) {
+  return {
+    ...p,
+    cliente_nombre: p.cliente_nombre || p.descripcion || 'Sin nombre',
+    telefono: p.telefono || null,
+    direccion_entrega: p.direccion_entrega || p.direccion_destino || p.direccion_origen,
+  }
+}
 
-// ── RUTAS ESPECÍFICAS ANTES DE /:id ──
+app.get('/health', (req, res) => res.json({ status: 'ok', servicio: 'pedidos' }))
 
 app.get('/pedidos/mis-pedidos', verificarToken, async (req, res) => {
   try {
@@ -51,7 +58,6 @@ app.get('/pedidos/mis-pedidos', verificarToken, async (req, res) => {
       .eq('distribuidor_id', req.usuario.id)
       .order('created_at', { ascending: false })
     if (error) throw error
-    // Normalizar campos para el frontend
     res.json(data.map(normalizar))
   } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
 })
@@ -92,55 +98,31 @@ app.get('/usuarios/domiciliarios', verificarToken, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
 })
 
-// ── NORMALIZAR: mapea columnas BD → campos que espera el frontend ──
-function normalizar(p) {
-  return {
-    ...p,
-    // El frontend usa estos nombres
-    cliente_nombre:    p.cliente_nombre    || p.descripcion || 'Sin nombre',
-    telefono:          p.telefono          || null,
-    direccion_entrega: p.direccion_entrega || p.direccion_destino || p.direccion_origen,
-  }
-}
-
-// ── CREAR PEDIDO ──
 app.post('/pedidos', verificarToken, async (req, res) => {
   try {
     const {
-      cliente_nombre,
-      telefono,
-      direccion_entrega,
-      descripcion,
-      // campos originales también aceptados
-      direccion_origen,
-      direccion_destino,
-      lat_origen, lng_origen,
-      lat_destino, lng_destino,
+      cliente_nombre, telefono, direccion_entrega, descripcion,
+      direccion_origen, direccion_destino,
+      lat_origen, lng_origen, lat_destino, lng_destino,
     } = req.body
 
-    // Construir objeto solo con columnas que existen en la BD
     const insertar = {
-      distribuidor_id:   req.usuario.id,
-      descripcion:       descripcion || cliente_nombre || null,
-      direccion_origen:  direccion_origen || direccion_entrega || 'No especificado',
+      distribuidor_id: req.usuario.id,
+      descripcion: descripcion || cliente_nombre || null,
+      direccion_origen: direccion_origen || direccion_entrega || 'No especificado',
       direccion_destino: direccion_destino || direccion_entrega || 'No especificado',
-      lat_origen,
-      lng_origen,
-      lat_destino,
-      lng_destino,
+      lat_origen, lng_origen, lat_destino, lng_destino,
       estado: 'pendiente',
     }
 
-    // Solo agregar columnas extra si existen (después de correr el ALTER TABLE)
-    if (cliente_nombre !== undefined) insertar.cliente_nombre    = cliente_nombre
-    if (telefono       !== undefined) insertar.telefono          = telefono
+    if (cliente_nombre !== undefined) insertar.cliente_nombre = cliente_nombre
+    if (telefono !== undefined) insertar.telefono = telefono
     if (direccion_entrega !== undefined) insertar.direccion_entrega = direccion_entrega
 
     const { data, error } = await supabase
       .from('pedidos').insert([insertar]).select().single()
 
     if (error) {
-      // Si falla por columna inexistente, reintenta sin columnas extra
       if (error.code === 'PGRST204') {
         delete insertar.cliente_nombre
         delete insertar.telefono
@@ -160,7 +142,6 @@ app.post('/pedidos', verificarToken, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
 })
 
-// ── LISTAR PEDIDOS ──
 app.get('/pedidos', verificarToken, async (req, res) => {
   try {
     let query = supabase.from('pedidos').select('*').order('created_at', { ascending: false })
@@ -172,7 +153,6 @@ app.get('/pedidos', verificarToken, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
 })
 
-// ── ACTUALIZAR ESTADO ──
 app.patch('/pedidos/:id/estado', verificarToken, async (req, res) => {
   try {
     const { estado } = req.body
@@ -192,7 +172,6 @@ app.patch('/pedidos/:id/estado', verificarToken, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
 })
 
-// ── ASIGNAR DOMICILIARIO ──
 app.patch('/pedidos/:id/asignar', verificarToken, async (req, res) => {
   try {
     if (!['operador','admin'].includes(req.usuario.rol))
@@ -212,7 +191,6 @@ app.patch('/pedidos/:id/asignar', verificarToken, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
 })
 
-// ── PEDIDO POR ID (siempre al final) ──
 app.get('/pedidos/:id', verificarToken, async (req, res) => {
   try {
     const { data, error } = await supabase
