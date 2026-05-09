@@ -1,9 +1,9 @@
 const express = require('express')
-const cors = require('cors')
+const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { createClient } = require('@supabase/supabase-js')
-const amqplib = require('amqplib')
+const cors = require('cors')
 const ws = require('ws')
+const { createClient } = require('@supabase/supabase-js')
 require('dotenv').config()
 
 const app = express()
@@ -15,19 +15,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
   realtime: { transport: ws }
 })
 
-let channel = null
-
-async function conectarRabbitMQ() {
-  try {
-    const conn = await amqplib.connect(process.env.RABBITMQ_URL)
-    channel = await conn.createChannel()
-    await channel.assertQueue('pedidos_eventos', { durable: true })
-    console.log('RabbitMQ conectado en pedidos')
-  } catch (error) {
-    console.error('Error conectando RabbitMQ:', error)
-    setTimeout(conectarRabbitMQ, 5000)
-  }
-}
+const ROLES = ['distribuidor', 'cliente', 'domiciliario', 'operador', 'admin']
 
 const verificarToken = (req, res, next) => {
   const auth = req.headers.authorization
@@ -41,192 +29,139 @@ const verificarToken = (req, res, next) => {
   }
 }
 
-app.get('/health', (req, res) => res.json({ status: 'ok', servicio: 'pedidos' }))
-
-// ── RUTAS ESPECÍFICAS ANTES DE /:id ──
-
-app.get('/pedidos/mis-pedidos', verificarToken, async (req, res) => {
+// ── TELEGRAM ──
+async function enviarTelegram(chatId, mensaje) {
+  if (!chatId || !process.env.TELEGRAM_BOT_TOKEN) return
   try {
-    const { data, error } = await supabase
-      .from('pedidos').select('*')
-      .eq('distribuidor_id', req.usuario.id)
-      .order('created_at', { ascending: false })
+    await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: mensaje, parse_mode: 'HTML' })
+    })
+  } catch (e) { console.error('Telegram error:', e.message) }
+}
+
+app.get('/health', (req, res) => res.json({ status: 'ok', servicio: 'auth' }))
+
+app.post('/register', async (req, res) => {
+  try {
+    const { nombre, email, password, rol } = req.body
+    if (!ROLES.includes(rol)) return res.status(400).json({ error: 'Rol inválido' })
+    const { data: existe } = await supabase.from('usuarios').select('id').eq('email', email).single()
+    if (existe) return res.status(400).json({ error: 'Email ya registrado' })
+    const hash = await bcrypt.hash(password, 10)
+    const { data: usuario, error } = await supabase.from('usuarios').insert([{ nombre, email, password: hash, rol }]).select().single()
     if (error) throw error
-    // Normalizar campos para el frontend
-    res.json(data.map(normalizar))
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
+    const token = jwt.sign({ id: usuario.id, email: usuario.email, rol: usuario.rol, nombre: usuario.nombre }, process.env.JWT_SECRET, { expiresIn: '7d' })
+    res.status(201).json({ token, usuario: { id: usuario.id, nombre, email, rol } })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error interno' })
+  }
 })
 
-app.get('/pedidos/mis-entregas', verificarToken, async (req, res) => {
+app.post('/login', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('pedidos').select('*')
-      .eq('domiciliario_id', req.usuario.id)
-      .order('created_at', { ascending: false })
-    if (error) throw error
-    res.json(data.map(normalizar))
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
+    const { email, password } = req.body
+    const { data: usuario, error } = await supabase.from('usuarios').select('*').eq('email', email).single()
+    if (error || !usuario) return res.status(401).json({ error: 'Credenciales inválidas' })
+    const valido = await bcrypt.compare(password, usuario.password)
+    if (!valido) return res.status(401).json({ error: 'Credenciales inválidas' })
+    const token = jwt.sign(
+      { id: usuario.id, email: usuario.email, rol: usuario.rol, nombre: usuario.nombre },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    )
+    res.json({ token, usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol } })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error interno' })
+  }
 })
 
-app.get('/pedidos/todos', verificarToken, async (req, res) => {
+app.post('/verificar', (req, res) => {
   try {
-    if (!['admin', 'operador'].includes(req.usuario.rol))
-      return res.status(403).json({ error: 'Sin permisos' })
-    const { data, error } = await supabase
-      .from('pedidos').select('*')
-      .order('created_at', { ascending: false })
-    if (error) throw error
-    res.json(data.map(normalizar))
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
+    const { token } = req.body
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    res.json({ valido: true, usuario: decoded })
+  } catch {
+    res.status(401).json({ valido: false, error: 'Token inválido' })
+  }
 })
 
-app.get('/usuarios/domiciliarios', verificarToken, async (req, res) => {
+// GET /usuarios
+app.get('/usuarios', verificarToken, async (req, res) => {
   try {
     if (!['operador', 'admin'].includes(req.usuario.rol))
       return res.status(403).json({ error: 'Sin permisos' })
-    // Consulta Supabase directamente — no depende del auth service
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('id, nombre, email, rol')
-      .eq('rol', 'domiciliario')
-      .order('nombre', { ascending: true })
+    let query = supabase.from('usuarios').select('id, nombre, email, rol, created_at, telegram_chat_id')
+    if (req.query.rol) query = query.eq('rol', req.query.rol)
+    const { data, error } = await query.order('created_at', { ascending: false })
     if (error) throw error
-    res.json(data || [])
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
-})
-
-// ── NORMALIZAR: mapea columnas BD → campos que espera el frontend ──
-function normalizar(p) {
-  return {
-    ...p,
-    // El frontend usa estos nombres
-    cliente_nombre:    p.cliente_nombre    || p.descripcion || 'Sin nombre',
-    telefono:          p.telefono          || null,
-    direccion_entrega: p.direccion_entrega || p.direccion_destino || p.direccion_origen,
+    res.json(data)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error interno' })
   }
-}
+})
 
-// ── CREAR PEDIDO ──
-app.post('/pedidos', verificarToken, async (req, res) => {
+// GET /perfil
+app.get('/perfil', verificarToken, async (req, res) => {
   try {
-    const {
-      cliente_nombre,
-      telefono,
-      direccion_entrega,
-      descripcion,
-      // campos originales también aceptados
-      direccion_origen,
-      direccion_destino,
-      lat_origen, lng_origen,
-      lat_destino, lng_destino,
-    } = req.body
+    const { data, error } = await supabase.from('usuarios')
+      .select('id, nombre, email, rol, created_at, telegram_chat_id')
+      .eq('id', req.usuario.id).single()
+    if (error) throw error
+    res.json(data)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error interno' })
+  }
+})
 
-    // Construir objeto solo con columnas que existen en la BD
-    const insertar = {
-      distribuidor_id:   req.usuario.id,
-      descripcion:       descripcion || cliente_nombre || null,
-      direccion_origen:  direccion_origen || direccion_entrega || 'No especificado',
-      direccion_destino: direccion_destino || direccion_entrega || 'No especificado',
-      lat_origen,
-      lng_origen,
-      lat_destino,
-      lng_destino,
-      estado: 'pendiente',
+// PATCH /perfil/telegram — guarda el chat_id de Telegram
+app.patch('/perfil/telegram', verificarToken, async (req, res) => {
+  try {
+    const { telegram_chat_id } = req.body
+    if (!telegram_chat_id) return res.status(400).json({ error: 'chat_id requerido' })
+
+    const { data, error } = await supabase.from('usuarios')
+      .update({ telegram_chat_id: String(telegram_chat_id) })
+      .eq('id', req.usuario.id).select().single()
+    if (error) throw error
+
+    // Mensaje de bienvenida
+    await enviarTelegram(telegram_chat_id,
+      `✅ <b>¡Telegram vinculado!</b>\n\nHola <b>${req.usuario.nombre}</b>, recibirás notificaciones de RAVEN aquí.\n\n🚀 ¡Listo para trabajar!`
+    )
+
+    res.json({ ok: true, telegram_chat_id: data.telegram_chat_id })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error interno' })
+  }
+})
+
+// POST /telegram/notify — endpoint interno para que pedidos service notifique
+app.post('/telegram/notify', async (req, res) => {
+  try {
+    const { user_id, mensaje } = req.body
+    if (!user_id || !mensaje) return res.status(400).json({ error: 'Faltan datos' })
+
+    const { data: usuario } = await supabase.from('usuarios')
+      .select('telegram_chat_id').eq('id', user_id).single()
+
+    if (usuario?.telegram_chat_id) {
+      await enviarTelegram(usuario.telegram_chat_id, mensaje)
+      res.json({ ok: true, enviado: true })
+    } else {
+      res.json({ ok: true, enviado: false, motivo: 'Sin telegram vinculado' })
     }
-
-    // Solo agregar columnas extra si existen (después de correr el ALTER TABLE)
-    if (cliente_nombre !== undefined) insertar.cliente_nombre    = cliente_nombre
-    if (telefono       !== undefined) insertar.telefono          = telefono
-    if (direccion_entrega !== undefined) insertar.direccion_entrega = direccion_entrega
-
-    const { data, error } = await supabase
-      .from('pedidos').insert([insertar]).select().single()
-
-    if (error) {
-      // Si falla por columna inexistente, reintenta sin columnas extra
-      if (error.code === 'PGRST204') {
-        delete insertar.cliente_nombre
-        delete insertar.telefono
-        delete insertar.direccion_entrega
-        const { data: data2, error: error2 } = await supabase
-          .from('pedidos').insert([insertar]).select().single()
-        if (error2) throw error2
-        return res.status(201).json(normalizar(data2))
-      }
-      throw error
-    }
-
-    if (channel) channel.sendToQueue('pedidos_eventos',
-      Buffer.from(JSON.stringify({ tipo: 'pedido_creado', pedido_id: data.id })))
-
-    res.status(201).json(normalizar(data))
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error interno' })
+  }
 })
 
-// ── LISTAR PEDIDOS ──
-app.get('/pedidos', verificarToken, async (req, res) => {
-  try {
-    let query = supabase.from('pedidos').select('*').order('created_at', { ascending: false })
-    if (req.usuario.rol === 'distribuidor') query = query.eq('distribuidor_id', req.usuario.id)
-    else if (req.usuario.rol === 'domiciliario') query = query.eq('domiciliario_id', req.usuario.id)
-    const { data, error } = await query
-    if (error) throw error
-    res.json(data.map(normalizar))
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
-})
-
-// ── ACTUALIZAR ESTADO ──
-app.patch('/pedidos/:id/estado', verificarToken, async (req, res) => {
-  try {
-    const { estado } = req.body
-    if (!['pendiente','asignado','en_camino','entregado','cancelado'].includes(estado))
-      return res.status(400).json({ error: 'Estado inválido' })
-
-    const { data, error } = await supabase
-      .from('pedidos').update({ estado, updated_at: new Date() })
-      .eq('id', req.params.id).select().single()
-
-    if (error) throw error
-
-    if (channel) channel.sendToQueue('pedidos_eventos',
-      Buffer.from(JSON.stringify({ tipo: 'estado_actualizado', pedido_id: data.id, estado: data.estado })))
-
-    res.json(normalizar(data))
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
-})
-
-// ── ASIGNAR DOMICILIARIO ──
-app.patch('/pedidos/:id/asignar', verificarToken, async (req, res) => {
-  try {
-    if (!['operador','admin'].includes(req.usuario.rol))
-      return res.status(403).json({ error: 'Sin permisos' })
-
-    const { domiciliario_id } = req.body
-    const { data, error } = await supabase
-      .from('pedidos').update({ domiciliario_id, estado: 'asignado', updated_at: new Date() })
-      .eq('id', req.params.id).select().single()
-
-    if (error) throw error
-
-    if (channel) channel.sendToQueue('pedidos_eventos',
-      Buffer.from(JSON.stringify({ tipo: 'pedido_asignado', pedido_id: data.id, domiciliario_id })))
-
-    res.json(normalizar(data))
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
-})
-
-// ── PEDIDO POR ID (siempre al final) ──
-app.get('/pedidos/:id', verificarToken, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('pedidos').select('*').eq('id', req.params.id).single()
-    if (error) throw error
-    res.json(normalizar(data))
-  } catch (e) { console.error(e); res.status(500).json({ error: 'Error interno' }) }
-})
-
-const PORT = process.env.PORT || 3002
-app.listen(PORT, () => {
-  console.log(`Pedidos service corriendo en puerto ${PORT}`)
-  conectarRabbitMQ()
-})
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => console.log(`Auth service corriendo en puerto ${PORT}`))

@@ -14,6 +14,7 @@ import ClienteHistorial  from './pages/cliente/Historial';
 import DomiciliarioDashboard from './pages/domiciliario/Dashboard';
 import DomiciliarioRuta      from './pages/domiciliario/Ruta';
 import DomiciliarioHistorial from './pages/domiciliario/Historial';
+import DomiciliarioPerfil   from './pages/domiciliario/Perfil';
 
 import OperadorDashboard     from './pages/operador/Dashboard';
 import OperadorPedidos       from './pages/operador/Pedidos';
@@ -53,6 +54,7 @@ function AppRoutes() {
       <Route path="/domiciliario"           element={<ProtectedRoute allowedRole="domiciliario"><DomiciliarioDashboard /></ProtectedRoute>} />
       <Route path="/domiciliario/ruta"      element={<ProtectedRoute allowedRole="domiciliario"><DomiciliarioRuta /></ProtectedRoute>} />
       <Route path="/domiciliario/historial" element={<ProtectedRoute allowedRole="domiciliario"><DomiciliarioHistorial /></ProtectedRoute>} />
+      <Route path="/domiciliario/perfil"   element={<ProtectedRoute allowedRole="domiciliario"><DomiciliarioPerfil /></ProtectedRoute>} />
 
       <Route path="/operador"               element={<ProtectedRoute allowedRole="operador"><OperadorDashboard /></ProtectedRoute>} />
       <Route path="/operador/pedidos"       element={<ProtectedRoute allowedRole="operador"><OperadorPedidos /></ProtectedRoute>} />
