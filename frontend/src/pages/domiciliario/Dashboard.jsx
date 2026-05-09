@@ -80,7 +80,7 @@ export default function DomiciliarioDashboard() {
 
   useEffect(() => {
     fetchData();
-    socketRef.current = io(TRACKING_URL, { auth:{ token }, transports:['websocket'] });
+    socketRef.current = io(TRACKING_URL, { auth:{ token }, transports:['polling','websocket'] });
     if (localStorage.getItem('dom_gps_active')==='true') setTimeout(() => startWatch(), 600);
     return () => { socketRef.current?.disconnect(); if (watchRef.current) navigator.geolocation.clearWatch(watchRef.current); };
   }, []);

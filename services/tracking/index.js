@@ -7,12 +7,13 @@ const { Redis } = require('@upstash/redis')
 require('dotenv').config()
 
 const app = express()
-app.use(cors())
+app.use(cors({ origin: "*", methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"], allowedHeaders: ["Content-Type","Authorization"] }))
+app.options("*", cors())
 app.use(express.json())
 
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
-  cors: { origin: '*', methods: ['GET', 'POST'] }
+  cors: { origin: "*", methods: ["GET","POST"], credentials: true }
 })
 
 const redis = new Redis({
