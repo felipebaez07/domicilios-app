@@ -3,13 +3,16 @@ const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const { createClient } = require('@supabase/supabase-js')
 const amqplib = require('amqplib')
+const ws = require('ws')
 require('dotenv').config()
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
+  realtime: { transport: ws }
+})
 
 let channel = null
 
