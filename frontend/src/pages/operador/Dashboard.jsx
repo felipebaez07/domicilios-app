@@ -5,28 +5,22 @@ import L from 'leaflet';
 import io from 'socket.io-client';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
+import StatCard from '../../components/StatCard';
 import AppMap from '../../components/AppMap';
 import Modal from '../../components/Modal';
 
 const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
-
-const ESTADO = {
-  pendiente: { label: 'PENDIENTE', cls: 'badge-warn' },
-  asignado:  { label: 'ASIGNADO',  cls: 'badge-info' },
-  en_camino: { label: 'EN CAMINO', cls: 'badge-info' },
-  entregado: { label: 'ENTREGADO', cls: 'badge-ok'   },
-  cancelado: { label: 'CANCELADO', cls: 'badge-err'  },
-};
+const ESTADO = { pendiente:{label:'Pendiente',cls:'badge-warn',emoji:'⏳'}, asignado:{label:'Asignado',cls:'badge-info',emoji:'👤'}, en_camino:{label:'En camino',cls:'badge-info',emoji:'🛵'}, entregado:{label:'Entregado',cls:'badge-ok',emoji:'✅'}, cancelado:{label:'Cancelado',cls:'badge-err',emoji:'❌'} };
 
 function makeDomiIcon(nombre, activo) {
-  const c = activo ? '#60a8d8' : '#5a7a9a';
+  const c = activo ? '#10b981' : '#94a3b8';
   return new L.DivIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-      <div style="width:28px;height:28px;border-radius:50%;background:${c};border:2px solid ${c}55;display:flex;align-items:center;justify-content:center;font-size:13px;">🛵</div>
-      <div style="background:rgba(8,24,40,0.9);color:#e8f4ff;font-size:8px;padding:1px 5px;border-radius:2px;white-space:nowrap;font-family:monospace;">${nombre}</div>
+      <div style="width:36px;height:36px;border-radius:50%;background:${c};border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,0.2);">🛵</div>
+      <div style="background:white;color:#1a1a2e;font-size:9px;padding:2px 7px;border-radius:99px;white-space:nowrap;font-family:Poppins,sans-serif;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.15);">${nombre}</div>
     </div>`,
-    iconSize: [70, 46], iconAnchor: [35, 46], className: '',
+    iconSize: [70, 52], iconAnchor: [35, 52], className: '',
   });
 }
 
@@ -55,10 +49,7 @@ export default function OperadorDashboard() {
     fetchData();
     socketRef.current = io(TRACKING_URL, { auth: { token }, transports: ['websocket'] });
     socketRef.current.on('location_update', ({ domiciliario_id, lat, lng, nombre }) => {
-      setPositions(prev => ({
-        ...prev,
-        [domiciliario_id]: { lat, lng, nombre: nombre || prev[domiciliario_id]?.nombre || `Dom-${domiciliario_id}`, activo: true, lastSeen: Date.now() },
-      }));
+      setPositions(prev => ({ ...prev, [domiciliario_id]: { lat, lng, nombre: nombre || prev[domiciliario_id]?.nombre || `Dom`, activo: true } }));
     });
     socketRef.current.on('gps_off', ({ domiciliario_id }) => {
       setPositions(prev => ({ ...prev, [domiciliario_id]: { ...prev[domiciliario_id], activo: false } }));
@@ -69,13 +60,8 @@ export default function OperadorDashboard() {
   async function asignar(pedidoId, domiciliarioId) {
     setAsignando(true);
     try {
-      await axios.patch(
-        `${PEDIDOS_URL}/pedidos/${pedidoId}/asignar`,
-        { domiciliario_id: domiciliarioId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSelected(null);
-      fetchData();
+      await axios.patch(`${PEDIDOS_URL}/pedidos/${pedidoId}/asignar`, { domiciliario_id: domiciliarioId }, { headers: { Authorization: `Bearer ${token}` } });
+      setSelected(null); fetchData();
     } catch {} finally { setAsignando(false); }
   }
 
@@ -84,165 +70,94 @@ export default function OperadorDashboard() {
 
   return (
     <DashboardLayout role="operador" pageTitle="Centro de control">
+      <div className="page-header">
+        <div>
+          <div className="page-title">🎮 Centro de control</div>
+          <div className="page-subtitle">Monitoreo en tiempo real · {domisActivos} GPS activos</div>
+        </div>
+        <button className="btn btn-ghost" onClick={fetchData}>🔄 Actualizar</button>
+      </div>
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', borderBottom: '1px solid var(--border)' }}>
-        {[
-          { l: 'Total pedidos', v: pedidos.length },
-          { l: 'Pendientes',    v: pedidos.filter(p => p.estado === 'pendiente').length },
-          { l: 'En tránsito',   v: pedidos.filter(p => p.estado === 'en_camino').length },
-          { l: 'GPS activos',   v: domisActivos },
-        ].map((s, i) => (
-          <div key={s.l} style={{ padding: '0.85rem 1.1rem', borderRight: i < 3 ? '1px solid var(--border)' : 'none', transition: 'background 0.15s', cursor: 'default' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-            <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 3 }}>{s.l}</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--txt-1)', letterSpacing: '-0.05em', lineHeight: 1 }}>
-              {loading ? '—' : String(s.v).padStart(2, '0')}
-            </div>
-          </div>
-        ))}
+      <div className="stats-grid-4">
+        <StatCard icon="📦" value={String(pedidos.length)} label="Total pedidos" delay={0} />
+        <StatCard icon="⏳" value={String(pedidos.filter(p=>p.estado==='pendiente').length)} label="Pendientes" delay={100} />
+        <StatCard icon="🛵" value={String(pedidos.filter(p=>p.estado==='en_camino').length)} label="En tránsito" delay={200} />
+        <StatCard icon="📡" value={String(domisActivos)} label="GPS activos" delay={300} />
       </div>
 
       {/* Split mapa / tabla */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 'calc(100vh - 170px)', minHeight: 380 }}>
-
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 'calc(100vh - 260px)', minHeight: 380 }}>
         {/* Mapa */}
-        <div style={{ borderRight: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 8, left: 10, zIndex: 10, fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', letterSpacing: '0.1em', textTransform: 'uppercase', background: 'rgba(8,24,40,0.85)', padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', animation: 'blink 2s infinite' }} />
-            MAPA EN VIVO · {domisActivos} GPS
+        <div style={{ borderRight: '1px solid rgba(255,255,255,0.15)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 10, left: 12, zIndex: 10, background: 'rgba(255,255,255,0.9)', borderRadius: 99, padding: '4px 12px', fontSize: 11, fontWeight: 600, color: '#1a1a2e', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 6px #10b981' }} />
+            Mapa en vivo · {domisActivos} activos
           </div>
           <div style={{ width: '100%', height: '100%' }}>
             <AppMap center={[4.4389, -75.2322]} zoom={13}>
               {Object.entries(positions).filter(([,d]) => d.lat && d.lng).map(([id, d]) => (
                 <Marker key={id} position={[d.lat, d.lng]} icon={makeDomiIcon(d.nombre || `Dom-${id}`, d.activo)}>
-                  <Popup>
-                    <div style={{ fontFamily: 'monospace', fontSize: 11, lineHeight: 1.6 }}>
-                      <strong>{d.nombre}</strong><br />
-                      {d.activo ? '🟢 En línea' : '⚫ Sin señal'}
-                    </div>
-                  </Popup>
+                  <Popup><b>{d.nombre}</b><br />{d.activo ? '🟢 En línea' : '⚫ Sin señal'}</Popup>
                 </Marker>
               ))}
             </AppMap>
           </div>
         </div>
 
-        {/* Tabla pedidos */}
-        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {/* Filtros */}
-          <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+        {/* Tabla */}
+        <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', gap: 4, padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.12)', flexWrap: 'wrap' }}>
             {['todos','pendiente','asignado','en_camino','entregado'].map(f => (
-              <button key={f} onClick={() => setFilter(f)} style={{
-                padding: '7px 10px', fontSize: 6, fontFamily: 'var(--font-mono)', fontWeight: 700,
-                letterSpacing: '0.08em', textTransform: 'uppercase',
-                background: filter === f ? 'var(--bg-active)' : 'transparent',
-                color: filter === f ? 'var(--accent)' : 'var(--txt-3)',
-                border: 'none', borderRight: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.15s',
-              }}>
-                {f === 'todos' ? 'TODOS' : ESTADO[f]?.label || f}
+              <button key={f} onClick={() => setFilter(f)} style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 600, border: 'none', cursor: 'pointer', background: filter===f ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)', color: '#fff', transition: 'all 0.15s' }}>
+                {f==='todos'?'Todos':`${ESTADO[f]?.emoji} ${ESTADO[f]?.label}`}
               </button>
             ))}
-            <button onClick={fetchData} style={{ marginLeft: 'auto', padding: '7px 10px', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', background: 'transparent', border: 'none', cursor: 'pointer' }}>↺</button>
           </div>
-
           <div style={{ flex: 1, overflowY: 'auto' }}>
-            <table className="rv-table" style={{ width: '100%' }}>
-              <thead>
-                <tr>
-                  {['#', 'Cliente', 'Estado', 'Domiciliario', ''].map(h => <th key={h}>{h}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>CARGANDO...</td></tr>
-                ) : pedidosFilt.length === 0 ? (
-                  <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>SIN PEDIDOS</td></tr>
-                ) : pedidosFilt.map(p => {
-                  const est = ESTADO[p.estado] || { label: p.estado?.toUpperCase(), cls: 'badge-neutral' };
-                  return (
-                    <tr key={p.id}>
-                      <td className="m">#{String(p.id).slice(-6)}</td>
-                      <td className="p">{p.cliente_nombre || p.descripcion || '—'}</td>
-                      <td><span className={`badge ${est.cls}`}>{est.label}</span></td>
-                      <td style={{ color: p.domiciliario_nombre ? 'var(--accent)' : 'var(--txt-3)', fontSize: 10 }}>
-                        {p.domiciliario_nombre || '—'}
-                      </td>
-                      <td>
-                        {p.estado === 'pendiente' && (
-                          <button onClick={() => setSelected(p)} style={{
-                            padding: '2px 8px', fontSize: 7, fontFamily: 'var(--font-mono)', fontWeight: 700,
-                            letterSpacing: '0.06em', background: 'transparent',
-                            border: '1px solid var(--border-md)', color: 'var(--txt-2)', cursor: 'pointer',
-                            transition: 'all 0.15s',
-                          }}>
-                            ASIGNAR →
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 10 }}>
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>⏳ Cargando...</div>
+              ) : pedidosFilt.map(p => {
+                const est = ESTADO[p.estado] || { label: p.estado, cls: 'badge-neutral', emoji: '📌' };
+                return (
+                  <div key={p.id} style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 14, padding: '10px 12px', border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.cliente_nombre || p.descripcion || '—'}</div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>{p.direccion_entrega || p.direccion_destino || '—'}</div>
+                    </div>
+                    <span className={`badge ${est.cls}`}><span className="badge-dot"/>{est.emoji} {est.label}</span>
+                    {p.estado === 'pendiente' && (
+                      <button onClick={() => setSelected(p)} style={{ padding: '4px 10px', borderRadius: 99, background: 'rgba(255,255,255,0.25)', border: '1px solid rgba(255,255,255,0.4)', color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Poppins,sans-serif' }}>
+                        Asignar →
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Modal asignación — usando portal, centrado correctamente */}
+      {/* Modal asignación */}
       {selected && (
         <Modal onClose={() => setSelected(null)} width={420}>
-          <div style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-              <div>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--txt-1)' }}>
-                  Asignar pedido
-                </div>
-                <div style={{ fontSize: 8, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 2 }}>
-                  #{String(selected.id).slice(-6)} · {selected.cliente_nombre || selected.descripcion}
-                </div>
-              </div>
-              <button onClick={() => setSelected(null)} style={{
-                width: 28, height: 28, border: '1px solid var(--border-md)',
-                background: 'transparent', color: 'var(--txt-2)',
-                cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 12,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>✕</button>
-            </div>
-
-            <div style={{ fontSize: 8, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginBottom: '0.75rem', letterSpacing: '0.04em' }}>
-              {selected.direccion_entrega || selected.direccion_destino}
-            </div>
-
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          <div className="modal-inner">
+            <div className="modal-title">🛵 Asignar domiciliario</div>
+            <div className="modal-sub">Pedido #{String(selected.id).slice(-6)} · {selected.cliente_nombre || selected.descripcion}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {domisInfo.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '1.5rem', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', letterSpacing: '0.06em' }}>
-                  SIN DOMICILIARIOS REGISTRADOS
-                </div>
+                <p style={{ textAlign: 'center', padding: '1rem', color: '#aaa', fontSize: 12 }}>Sin domiciliarios registrados 😔</p>
               ) : domisInfo.map(d => {
                 const enLinea = positions[d.id]?.activo;
                 return (
-                  <button key={d.id} onClick={() => asignar(selected.id, d.id)} disabled={asignando}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '0.75rem',
-                      padding: '0.65rem 0.9rem',
-                      background: enLinea ? 'rgba(96,168,216,0.07)' : 'var(--bg-hover)',
-                      border: `1px solid ${enLinea ? 'var(--border-md)' : 'var(--border)'}`,
-                      cursor: 'pointer', textAlign: 'left', width: '100%',
-                      transition: 'all 0.15s', opacity: asignando ? 0.5 : 1,
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(96,168,216,0.12)'}
-                    onMouseLeave={e => e.currentTarget.style.background = enLinea ? 'rgba(96,168,216,0.07)' : 'var(--bg-hover)'}
-                  >
-                    <span style={{ fontSize: '1.1rem' }}>🛵</span>
+                  <button key={d.id} onClick={() => asignar(selected.id, d.id)} disabled={asignando} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 14, background: enLinea ? 'linear-gradient(135deg,rgba(16,185,129,0.1),rgba(5,150,105,0.1))' : '#f8f9ff', border: `2px solid ${enLinea ? '#10b981' : '#e8eaff'}`, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s', fontFamily: 'Poppins,sans-serif' }}>
+                    <span style={{ fontSize: '1.4rem' }}>🛵</span>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt-1)' }}>{d.nombre}</div>
-                      <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: enLinea ? 'var(--accent)' : 'var(--txt-3)', letterSpacing: '0.06em', marginTop: 1 }}>
-                        {enLinea ? '● GPS ACTIVO' : '○ SIN SEÑAL GPS'}
-                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e' }}>{d.nombre}</div>
+                      <div style={{ fontSize: 10, color: enLinea ? '#10b981' : '#aaa', fontWeight: 500 }}>{enLinea ? '🟢 GPS activo' : '⚫ Sin señal'}</div>
                     </div>
-                    <span style={{ color: 'var(--txt-3)', fontSize: 12 }}>→</span>
+                    <span style={{ fontSize: 16 }}>→</span>
                   </button>
                 );
               })}
