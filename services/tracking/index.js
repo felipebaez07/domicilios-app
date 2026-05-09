@@ -8,7 +8,7 @@ require('dotenv').config()
 
 const app = express()
 app.use(cors({ origin: "*", methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"], allowedHeaders: ["Content-Type","Authorization"] }))
-app.options("*", cors())
+app.options("(.*)", cors())
 app.use(express.json())
 
 const httpServer = createServer(app)
