@@ -118,22 +118,18 @@ app.get('/perfil', verificarToken, async (req, res) => {
   }
 })
 
-// PATCH /perfil/telegram — guarda el chat_id de Telegram
+// PATCH /perfil/telegram
 app.patch('/perfil/telegram', verificarToken, async (req, res) => {
   try {
     const { telegram_chat_id } = req.body
     if (!telegram_chat_id) return res.status(400).json({ error: 'chat_id requerido' })
-
     const { data, error } = await supabase.from('usuarios')
       .update({ telegram_chat_id: String(telegram_chat_id) })
       .eq('id', req.usuario.id).select().single()
     if (error) throw error
-
-    // Mensaje de bienvenida
     await enviarTelegram(telegram_chat_id,
       `✅ <b>¡Telegram vinculado!</b>\n\nHola <b>${req.usuario.nombre}</b>, recibirás notificaciones de RAVEN aquí.\n\n🚀 ¡Listo para trabajar!`
     )
-
     res.json({ ok: true, telegram_chat_id: data.telegram_chat_id })
   } catch (error) {
     console.error(error)
@@ -141,15 +137,13 @@ app.patch('/perfil/telegram', verificarToken, async (req, res) => {
   }
 })
 
-// POST /telegram/notify — endpoint interno para que pedidos service notifique
+// POST /telegram/notify — pedidos service llama esto para notificar
 app.post('/telegram/notify', async (req, res) => {
   try {
     const { user_id, mensaje } = req.body
     if (!user_id || !mensaje) return res.status(400).json({ error: 'Faltan datos' })
-
     const { data: usuario } = await supabase.from('usuarios')
       .select('telegram_chat_id').eq('id', user_id).single()
-
     if (usuario?.telegram_chat_id) {
       await enviarTelegram(usuario.telegram_chat_id, mensaje)
       res.json({ ok: true, enviado: true })
@@ -162,5 +156,34 @@ app.post('/telegram/notify', async (req, res) => {
   }
 })
 
+// POST /telegram/webhook — Telegram llama esto cuando el usuario escribe /start
+app.post('/telegram/webhook', async (req, res) => {
+  res.sendStatus(200)
+  const msg = req.body?.message
+  if (!msg) return
+  const chatId = msg.chat.id
+  const text = msg.text || ''
+  if (text.startsWith('/start')) {
+    await enviarTelegram(chatId,
+      `👋 ¡Hola! Soy el bot de <b>RAVEN Domicilios</b> 🚀\n\n` +
+      `Tu <b>Chat ID</b> es:\n\n<code>${chatId}</code>\n\n` +
+      `📋 Cópialo y pégalo en tu perfil de RAVEN para activar notificaciones 🔔`
+    )
+  }
+})
+
 const PORT = process.env.PORT || 3001
-app.listen(PORT, () => console.log(`Auth service corriendo en puerto ${PORT}`))
+app.listen(PORT, async () => {
+  console.log(`Auth service corriendo en puerto ${PORT}`)
+  // Registrar webhook de Telegram automáticamente
+  if (process.env.TELEGRAM_BOT_TOKEN && process.env.AUTH_URL) {
+    try {
+      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/setWebhook`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: `${process.env.AUTH_URL}/telegram/webhook` })
+      })
+      console.log('Telegram webhook registrado')
+    } catch (e) { console.error('Webhook error:', e.message) }
+  }
+})

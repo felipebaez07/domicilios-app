@@ -18,10 +18,11 @@ const NAV = {
     { label: '📋 Historial',   path: '/cliente/historial' },
   ],
   domiciliario: [
-    { label: '🏠 Mi turno',    path: '/domiciliario' },
-    { label: '🗺️ Ruta activa', path: '/domiciliario/ruta' },
-    { label: '✅ Entregas',    path: '/domiciliario/historial' },
-  ],
+  { label: '🏠 Mi turno',    path: '/domiciliario' },
+  { label: '🗺️ Ruta activa', path: '/domiciliario/ruta' },
+  { label: '✅ Entregas',    path: '/domiciliario/historial' },
+  { label: '📲 Telegram',   path: '/domiciliario/perfil' },
+],
   operador: [
     { label: '🎮 Control',       path: '/operador' },
     { label: '📦 Pedidos',       path: '/operador/pedidos' },
