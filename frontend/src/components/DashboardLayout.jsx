@@ -18,20 +18,24 @@ const NAV = {
     { label: '📋 Historial',   path: '/cliente/historial' },
   ],
   domiciliario: [
-  { label: '🏠 Mi turno',    path: '/domiciliario' },
-  { label: '🗺️ Ruta activa', path: '/domiciliario/ruta' },
-  { label: '✅ Entregas',    path: '/domiciliario/historial' },
-  { label: '📲 Telegram',   path: '/domiciliario/perfil' },
-],
+    { label: '🏠 Mi turno',     path: '/domiciliario' },
+    { label: '🗺️ Ruta activa',  path: '/domiciliario/ruta' },
+    { label: '✅ Entregas',     path: '/domiciliario/historial' },
+    { label: '📲 Telegram',    path: '/domiciliario/perfil' },
+  ],
   operador: [
     { label: '🎮 Control',       path: '/operador' },
     { label: '📦 Pedidos',       path: '/operador/pedidos' },
     { label: '🛵 Domiciliarios', path: '/operador/domiciliarios' },
   ],
   admin: [
-    { label: '📈 Métricas', path: '/admin' },
-    { label: '📦 Pedidos',  path: '/admin/pedidos' },
-    { label: '👥 Usuarios', path: '/admin/usuarios' },
+    { label: '📈 Métricas',  path: '/admin' },
+    { label: '📦 Pedidos',   path: '/admin/pedidos' },
+    { label: '👥 Mi equipo', path: '/admin/equipo' },
+    { label: '👤 Usuarios',  path: '/admin/usuarios' },
+  ],
+  superadmin: [
+    { label: '🏢 Empresas', path: '/superadmin' },
   ],
 };
 
@@ -41,15 +45,16 @@ const RC = {
   domiciliario: { label: 'Domiciliario', emoji: '🛵' },
   operador:     { label: 'Operador',     emoji: '🗺️' },
   admin:        { label: 'Admin',        emoji: '⚡' },
+  superadmin:   { label: 'Superadmin',   emoji: '👑' },
 };
 
-// Gradientes por rol para el menú
 const GRADIENTS = {
   distribuidor: 'linear-gradient(135deg, #667eea, #764ba2)',
   cliente:      'linear-gradient(135deg, #8b5cf6, #6d28d9)',
   domiciliario: 'linear-gradient(135deg, #10b981, #059669)',
   operador:     'linear-gradient(135deg, #f59e0b, #d97706)',
   admin:        'linear-gradient(135deg, #ef4444, #dc2626)',
+  superadmin:   'linear-gradient(135deg, #1a1a2e, #16213e)',
 };
 
 export default function DashboardLayout({ role, children, pageTitle }) {
@@ -58,8 +63,8 @@ export default function DashboardLayout({ role, children, pageTitle }) {
   const location  = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const lineRef   = useRef(null);
-  const nav = NAV[role] || [];
-  const rc  = RC[role] || {};
+  const nav  = NAV[role] || [];
+  const rc   = RC[role] || {};
   const grad = GRADIENTS[role] || GRADIENTS.distribuidor;
 
   const initials = (user?.nombre || user?.email || 'U')
@@ -94,7 +99,6 @@ export default function DashboardLayout({ role, children, pageTitle }) {
 
   const labelClean = (lbl) => lbl.replace(/^\S+\s/, '');
 
-  // Menú como portal — renderiza en document.body para tapar TODO
   const menuPortal = menuOpen && createPortal(
     <div
       onClick={e => e.target === e.currentTarget && setMenuOpen(false)}
@@ -106,7 +110,6 @@ export default function DashboardLayout({ role, children, pageTitle }) {
         animation: 'fadeIn 0.2s ease both',
       }}
     >
-      {/* Panel del menú */}
       <div style={{
         width: 320, maxWidth: '85vw',
         background: grad,
@@ -115,26 +118,27 @@ export default function DashboardLayout({ role, children, pageTitle }) {
         animation: 'slideRight 0.25s ease both',
         overflowY: 'auto',
       }}>
-        {/* Header del menú */}
+        {/* Header */}
         <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <img src={ravenLogo} alt="Raven" style={{ height: 28, filter: 'brightness(10)' }} />
             <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '0.05em' }}>RAVEN</span>
           </div>
-          <button onClick={() => setMenuOpen(false)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>✕</button>
+          <button onClick={() => setMenuOpen(false)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
 
-        {/* Info usuario */}
+        {/* Usuario */}
         <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(255,255,255,0.25)', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>{initials}</div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{user?.nombre || user?.email?.split('@')[0]}</div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 1 }}>{rc.emoji} {rc.label}</div>
+            {user?.empresa_nombre && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>🏢 {user.empresa_nombre}</div>}
           </div>
         </div>
 
-        {/* Nav items */}
-        <nav style={{ padding: '0.75rem 0.75rem', flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {/* Nav */}
+        <nav style={{ padding: '0.75rem', flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0 0.75rem', marginBottom: 4 }}>Navegación</div>
           {nav.map(item => {
             const isActive = location.pathname === item.path ||
@@ -148,14 +152,13 @@ export default function DashboardLayout({ role, children, pageTitle }) {
                 cursor: 'pointer', color: '#fff', width: '100%', textAlign: 'left',
                 fontSize: 14, fontWeight: isActive ? 700 : 500,
                 fontFamily: 'Poppins, sans-serif', transition: 'all 0.15s',
-                boxShadow: isActive ? '0 2px 12px rgba(0,0,0,0.15)' : 'none',
               }}
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
               >
                 <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>{item.label.split(' ')[0]}</span>
                 <span>{item.label.replace(/^\S+\s/, '')}</span>
-                {isActive && <span style={{ marginLeft: 'auto', fontSize: 10 }}>●</span>}
+                {isActive && <span style={{ marginLeft: 'auto', fontSize: 10 }}>◉</span>}
               </button>
             );
           })}
@@ -184,7 +187,6 @@ export default function DashboardLayout({ role, children, pageTitle }) {
   return (
     <>
       {menuPortal}
-
       <div style={{ minHeight: '100vh' }} data-role={role}>
         <div className="app-wrap" data-role={role}>
           <div ref={lineRef} className="page-line" />
@@ -230,7 +232,7 @@ export default function DashboardLayout({ role, children, pageTitle }) {
         @keyframes slideRight { from{transform:translateX(-100%);opacity:0} to{transform:translateX(0);opacity:1} }
         @keyframes fadeIn     { from{opacity:0} to{opacity:1} }
       `}</style>
-    <ChatBubble />
+      <ChatBubble />
     </>
   );
 }
