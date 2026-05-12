@@ -29,10 +29,11 @@ const NAV = {
     { label: '🛵 Domiciliarios', path: '/operador/domiciliarios' },
   ],
   admin: [
-    { label: '📈 Métricas',  path: '/admin' },
-    { label: '📦 Pedidos',   path: '/admin/pedidos' },
-    { label: '👥 Mi equipo', path: '/admin/equipo' },
-    { label: '👤 Usuarios',  path: '/admin/usuarios' },
+    { label: '📈 Métricas',    path: '/admin' },
+    { label: '📦 Pedidos',     path: '/admin/pedidos' },
+    { label: '👥 Mi equipo',   path: '/admin/equipo' },
+    { label: '👤 Usuarios',    path: '/admin/usuarios' },
+    { label: '🎨 Personalizar', path: '/admin/personalizar' },
   ],
   superadmin: [
     { label: '🏢 Empresas', path: '/superadmin' },
@@ -65,7 +66,10 @@ export default function DashboardLayout({ role, children, pageTitle }) {
   const lineRef   = useRef(null);
   const nav  = NAV[role] || [];
   const rc   = RC[role] || {};
-  const grad = GRADIENTS[role] || GRADIENTS.distribuidor;
+  // Usar colores de empresa si el admin los tiene configurados
+  const grad = (role === 'admin' && user?.empresa_color1 && user?.empresa_color2)
+    ? `linear-gradient(135deg, ${user.empresa_color1}, ${user.empresa_color2})`
+    : GRADIENTS[role] || GRADIENTS.distribuidor;
 
   const initials = (user?.nombre || user?.email || 'U')
     .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);

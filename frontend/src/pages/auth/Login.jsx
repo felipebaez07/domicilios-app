@@ -11,11 +11,12 @@ import ilAdm   from '../../assets/rol_admin.png';
 import './Login.css';
 
 const ROLES = [
-  { id:'distribuidor', emoji:'📦', label:'Distribuidor', desc:'Crear y despachar pedidos',   g1:'#667eea', g2:'#764ba2', img:ilDist },
-  { id:'cliente',      emoji:'👤', label:'Cliente',      desc:'Rastrear mis pedidos',         g1:'#8b5cf6', g2:'#6d28d9', img:ilCli  },
-  { id:'domiciliario', emoji:'🛵', label:'Domiciliario', desc:'Gestionar entregas en ruta',   g1:'#10b981', g2:'#059669', img:ilDomi },
-  { id:'operador',     emoji:'🗺️', label:'Operador',     desc:'Centro de control en vivo',    g1:'#f59e0b', g2:'#d97706', img:ilOper },
-  { id:'admin',        emoji:'⚡', label:'Admin',        desc:'Métricas globales',             g1:'#ef4444', g2:'#dc2626', img:ilAdm  },
+  { id:'distribuidor', emoji:'📦', label:'Distribuidor', desc:'Crear y despachar pedidos',    g1:'#667eea', g2:'#764ba2', img:ilDist },
+  { id:'cliente',      emoji:'👤', label:'Cliente',      desc:'Rastrear mis pedidos',          g1:'#8b5cf6', g2:'#6d28d9', img:ilCli  },
+  { id:'domiciliario', emoji:'🛵', label:'Domiciliario', desc:'Gestionar entregas en ruta',    g1:'#10b981', g2:'#059669', img:ilDomi },
+  { id:'operador',     emoji:'🗺️', label:'Operador',     desc:'Centro de control en vivo',     g1:'#f59e0b', g2:'#d97706', img:ilOper },
+  { id:'admin',        emoji:'⚡', label:'Admin',        desc:'Métricas y gestión de empresa', g1:'#ef4444', g2:'#dc2626', img:ilAdm  },
+  { id:'superadmin',   emoji:'👑', label:'Superadmin',   desc:'Gestión de la plataforma',      g1:'#1a1a2e', g2:'#16213e', img:ilAdm  },
 ];
 
 export default function Login() {
@@ -111,7 +112,7 @@ export default function Login() {
           {error && <div className="alert alert-err">{error}</div>}
 
           <button type="submit" disabled={!role || loading} className="lv-submit"
-            style={{ background: r ? `linear-gradient(135deg,${r.g1},${r.g2})` : '#ccc', boxShadow: r ? `0 4px 20px ${r.g1}50` : 'none', cursor: !role ? 'not-allowed' : 'pointer', opacity: !role ? 0.6 : 1 }}
+            style={{ background: r ? `linear-gradient(135deg,${r.g1},${r.g2})` : '#ccc', boxShadow: r ? `0 4px 20px ${r.g1}50` : 'none', cursor: !role ? 'not-allowed' : 'pointer', opacity: !role || loading ? 0.7 : 1 }}
           >
             {loading ? <span className="rv-spinner" /> : <>{r ? `🚀 Entrar como ${r.label}` : 'Selecciona un rol'}</>}
           </button>

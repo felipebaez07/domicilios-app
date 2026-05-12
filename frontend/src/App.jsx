@@ -23,7 +23,8 @@ import OperadorDomiciliarios from './pages/operador/Domiciliarios';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminPedidos   from './pages/admin/Pedidos';
 import AdminUsuarios  from './pages/admin/Usuarios';
-import AdminEquipo    from './pages/admin/Equipo';
+import AdminEquipo       from './pages/admin/Equipo';
+import AdminPersonalizar from './pages/admin/Personalizar';
 
 import SuperadminDashboard from './pages/superadmin/Dashboard';
 
@@ -66,7 +67,8 @@ function AppRoutes() {
       <Route path="/admin"          element={<ProtectedRoute allowedRole="admin"><AdminDashboard /></ProtectedRoute>} />
       <Route path="/admin/pedidos"  element={<ProtectedRoute allowedRole="admin"><AdminPedidos /></ProtectedRoute>} />
       <Route path="/admin/usuarios" element={<ProtectedRoute allowedRole="admin"><AdminUsuarios /></ProtectedRoute>} />
-      <Route path="/admin/equipo"   element={<ProtectedRoute allowedRole="admin"><AdminEquipo /></ProtectedRoute>} />
+      <Route path="/admin/equipo"        element={<ProtectedRoute allowedRole="admin"><AdminEquipo /></ProtectedRoute>} />
+      <Route path="/admin/personalizar"  element={<ProtectedRoute allowedRole="admin"><AdminPersonalizar /></ProtectedRoute>} />
 
       <Route path="/superadmin"     element={<ProtectedRoute allowedRole="superadmin"><SuperadminDashboard /></ProtectedRoute>} />
 
