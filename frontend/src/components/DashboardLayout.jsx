@@ -66,10 +66,15 @@ export default function DashboardLayout({ role, children, pageTitle }) {
   const lineRef   = useRef(null);
   const nav  = NAV[role] || [];
   const rc   = RC[role] || {};
-  // Usar colores de empresa si el admin los tiene configurados
-  const grad = (role === 'admin' && user?.empresa_color1 && user?.empresa_color2)
-    ? `linear-gradient(135deg, ${user.empresa_color1}, ${user.empresa_color2})`
+  // Usar colores de empresa si el admin/operador/domiciliario los tiene configurados
+  const empresaColor1 = user?.empresa_color1
+  const empresaColor2 = user?.empresa_color2
+  const usarEmpresa = ['admin','operador','domiciliario','distribuidor'].includes(role) && empresaColor1 && empresaColor2
+  const grad = usarEmpresa
+    ? `linear-gradient(135deg, ${empresaColor1}, ${empresaColor2})`
     : GRADIENTS[role] || GRADIENTS.distribuidor;
+  const c1 = usarEmpresa ? empresaColor1 : (role === 'admin' ? '#ef4444' : role === 'operador' ? '#f59e0b' : role === 'domiciliario' ? '#10b981' : role === 'distribuidor' ? '#667eea' : role === 'cliente' ? '#8b5cf6' : '#1a1a2e')
+  const c2 = usarEmpresa ? empresaColor2 : (role === 'admin' ? '#dc2626' : role === 'operador' ? '#d97706' : role === 'domiciliario' ? '#059669' : role === 'distribuidor' ? '#764ba2' : role === 'cliente' ? '#6d28d9' : '#16213e')
 
   const initials = (user?.nombre || user?.email || 'U')
     .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -191,8 +196,8 @@ export default function DashboardLayout({ role, children, pageTitle }) {
   return (
     <>
       {menuPortal}
-      <div style={{ minHeight: '100vh' }} data-role={role}>
-        <div className="app-wrap" data-role={role}>
+      <div style={{ minHeight: '100vh', background: grad }} data-role={role}>
+        <div className="app-wrap" data-role={role} style={{ '--c1': c1, '--c2': c2, '--grad': grad, '--grad-bg': grad }}>
           <div ref={lineRef} className="page-line" />
 
           {/* TOPBAR */}
