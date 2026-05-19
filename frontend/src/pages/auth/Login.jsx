@@ -90,10 +90,12 @@ export default function Login() {
     setError(''); setLoading(true);
     try {
       const { data } = await axios.post(`${AUTH_URL}/login`, { email, password });
-      login(data.token, data.usuario);
-      // Mostrar pantalla de bienvenida 2.5 segundos
+      // Mostrar pantalla de bienvenida ANTES de hacer login
       setWelcome(data.usuario);
-      setTimeout(() => navigate(`/${data.usuario.rol}`), 2500);
+      setTimeout(() => {
+        login(data.token, data.usuario);
+        navigate(`/${data.usuario.rol}`);
+      }, 2500);
     } catch (err) {
       setError(err.response?.data?.error || 'Credenciales incorrectas');
     } finally { setLoading(false); }
@@ -129,9 +131,11 @@ export default function Login() {
         rol:      reg.rol,
         telefono: reg.telefono,
       });
-      login(data.token, data.usuario);
       setWelcome(data.usuario);
-      setTimeout(() => navigate(`/${data.usuario.rol}`), 2500);
+      setTimeout(() => {
+        login(data.token, data.usuario);
+        navigate(`/${data.usuario.rol}`);
+      }, 2500);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al registrarse');
     } finally { setLoading(false); }
