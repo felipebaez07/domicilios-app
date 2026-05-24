@@ -1,50 +1,134 @@
-/**
- * Caso de uso: ActualizarEstado
- * Valida la transición de estado en el dominio
- */
-const { ESTADOS_VALIDOS } = require('../../domain/entities/Pedido')
+require('dotenv').config()
+const express = require('express')
+const amqplib = require('amqplib')
+const cors    = require('cors')
 
-class ActualizarEstado {
-  constructor({ pedidoRepository, notificacionService, eventoService }) {
-    this.pedidoRepo      = pedidoRepository
-    this.notificacionSvc = notificacionService
-    this.eventoSvc       = eventoService
-  }
+const app = express()
+app.use(cors())
+app.use(express.json())
 
-  async execute({ pedido_id, estado }) {
-    if (!ESTADOS_VALIDOS.includes(estado))
-      throw new Error('Estado inválido')
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
+const AUTH_URL           = process.env.AUTH_URL || 'https://raven-auth.onrender.com'
+const RABBITMQ_URL       = process.env.RABBITMQ_URL
 
-    const pedidoActual = await this.pedidoRepo.findById(pedido_id)
-    if (!pedidoActual) throw new Error('Pedido no encontrado')
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', servicio: 'notificaciones', timestamp: new Date().toISOString() })
+})
 
-    if (!pedidoActual.puedeTransicionarA(estado))
-      throw new Error(`No se puede cambiar de ${pedidoActual.estado} a ${estado}`)
-
-    const pedido = await this.pedidoRepo.updateEstado(pedido_id, estado)
-
-    // Notificaciones síncronas directas
-    if (estado === 'entregado' && pedido.distribuidor_id) {
-      await this.notificacionSvc.notificarUsuario(pedido.distribuidor_id,
-        `✅ <b>¡Pedido entregado!</b>\n\n📦 ${pedido.descripcion || ''}\n🏠 ${pedido.direccion_entrega || pedido.direccion_destino}\n\n¡Tu envío llegó exitosamente! 🎉`)
-    }
-    if (estado === 'en_camino' && pedido.distribuidor_id) {
-      await this.notificacionSvc.notificarUsuario(pedido.distribuidor_id,
-        `🛵 <b>¡En camino!</b>\n\nTu pedido está siendo entregado.\n📦 ${pedido.descripcion || ''}`)
-    }
-
-    // Publicar evento enriquecido a RabbitMQ
-    await this.eventoSvc.publicar('estado_actualizado', {
-      pedido_id:       pedido.id,
-      estado,
-      descripcion:     pedido.descripcion,
-      distribuidor_id: pedido.distribuidor_id,
-      cliente_id:      pedido.cliente_id,
-      direccion_entrega: pedido.direccion_entrega || pedido.direccion_destino,
+async function notificarUsuario(userId, mensaje) {
+  if (!userId) return
+  try {
+    await fetch(`${AUTH_URL}/telegram/notify`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ user_id: userId, mensaje })
     })
-
-    return pedido.toJSON()
+    console.log(`✅ Notificación enviada al usuario ${userId}`)
+  } catch (e) {
+    console.error('Error notificando usuario:', e.message)
   }
 }
 
-module.exports = ActualizarEstado
+function mensajePorEvento(evento) {
+  switch (evento.tipo) {
+
+    case 'pedido_creado':
+      return {
+        destinatarios: evento.operador_ids || [],
+        mensaje: `📦 <b>Nuevo pedido recibido</b>\n\n` +
+                 `👤 Cliente: <b>${evento.cliente_nombre || 'Sin nombre'}</b>\n` +
+                 `📍 Recogida: ${evento.direccion_origen || 'No especificado'}\n` +
+                 `🏠 Entrega: ${evento.direccion_destino || 'No especificado'}\n\n` +
+                 `⚡ Entra a RAVEN y asígnalo`
+      }
+
+    case 'pedido_asignado':
+      return {
+        destinatarios: evento.domiciliario_id ? [evento.domiciliario_id] : [],
+        mensaje: `🛵 <b>¡Pedido asignado!</b>\n\n` +
+                 `📦 ${evento.descripcion || 'Sin descripción'}\n` +
+                 `👤 ${evento.cliente_nombre || ''}\n` +
+                 `📍 Recogida: ${evento.direccion_origen || 'No especificado'}\n` +
+                 `🏠 Entrega: ${evento.direccion_entrega || evento.direccion_destino || 'No especificado'}\n\n` +
+                 `🗺️ Abre RAVEN para ver la ruta`
+      }
+
+    case 'estado_actualizado': {
+      const destEstado = []
+      if (evento.distribuidor_id) destEstado.push(evento.distribuidor_id)
+      if (evento.cliente_id)      destEstado.push(evento.cliente_id)
+
+      const emojis = { asignado:'🟡', en_camino:'🛵', entregado:'✅', cancelado:'❌' }
+      const textos = {
+        asignado:  'Tu pedido fue asignado a un domiciliario.',
+        en_camino: '¡Tu pedido está en camino!',
+        entregado: '¡Tu pedido fue entregado exitosamente! 🎉',
+        cancelado: 'Tu pedido fue cancelado.',
+      }
+
+      return {
+        destinatarios: destEstado,
+        mensaje: `${emojis[evento.estado] || '📋'} <b>Estado actualizado</b>\n\n` +
+                 `${textos[evento.estado] || `Nuevo estado: ${evento.estado}`}\n\n` +
+                 `📦 ${evento.descripcion || 'Pedido'}\n` +
+                 `🆔 ID: <code>${evento.pedido_id}</code>`
+      }
+    }
+
+    default:
+      console.log(`Evento desconocido ignorado: ${evento.tipo}`)
+      return null
+  }
+}
+
+async function conectarRabbitMQ() {
+  try {
+    const conn    = await amqplib.connect(RABBITMQ_URL)
+    const channel = await conn.createChannel()
+
+    await channel.assertQueue('pedidos_eventos', { durable: true })
+    channel.prefetch(1)
+
+    console.log('🐇 RabbitMQ conectado — escuchando pedidos_eventos...')
+
+    channel.consume('pedidos_eventos', async (msg) => {
+      if (!msg) return
+      let evento
+      try {
+        evento = JSON.parse(msg.content.toString())
+        console.log(`📨 Evento recibido: ${evento.tipo}`, evento)
+      } catch (e) {
+        console.error('JSON inválido:', e.message)
+        channel.ack(msg)
+        return
+      }
+      try {
+        const resultado = mensajePorEvento(evento)
+        if (resultado && resultado.destinatarios.length > 0) {
+          for (const userId of resultado.destinatarios) {
+            await notificarUsuario(userId, resultado.mensaje)
+          }
+        }
+        channel.ack(msg)
+      } catch (e) {
+        console.error('Error procesando evento:', e.message)
+        channel.nack(msg, false, false)
+      }
+    })
+
+    conn.on('error', (e) => { console.error('RabbitMQ error:', e.message); setTimeout(conectarRabbitMQ, 5000) })
+    conn.on('close', () => { console.log('RabbitMQ desconectado, reconectando...'); setTimeout(conectarRabbitMQ, 5000) })
+
+  } catch (e) {
+    console.error('Error conectando RabbitMQ:', e.message)
+    setTimeout(conectarRabbitMQ, 5000)
+  }
+}
+
+const PORT = process.env.PORT || 3004
+app.listen(PORT, () => {
+  console.log(`🔔 Notificaciones service corriendo en puerto ${PORT}`)
+  if (!TELEGRAM_BOT_TOKEN) console.warn('⚠️  TELEGRAM_BOT_TOKEN no configurado')
+  if (!RABBITMQ_URL)       console.warn('⚠️  RABBITMQ_URL no configurado')
+  conectarRabbitMQ()
+})
