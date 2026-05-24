@@ -12,4 +12,4 @@ class ActualizarUbicacion {
   }
 }
 
-module.exports = ActualizarUbicacion
+module.exports = ActualizarUbicacion   

@@ -15,7 +15,6 @@ class ActualizarEstado {
     if (!ESTADOS_VALIDOS.includes(estado))
       throw new Error('Estado inválido')
 
-    // Obtener pedido actual para validar transición
     const pedidoActual = await this.pedidoRepo.findById(pedido_id)
     if (!pedidoActual) throw new Error('Pedido no encontrado')
 
@@ -24,9 +23,7 @@ class ActualizarEstado {
 
     const pedido = await this.pedidoRepo.updateEstado(pedido_id, estado)
 
-    await this.eventoSvc.publicar('estado_actualizado', { pedido_id: pedido.id, estado })
-
-    // Notificaciones según el nuevo estado
+    // Notificaciones síncronas directas
     if (estado === 'entregado' && pedido.distribuidor_id) {
       await this.notificacionSvc.notificarUsuario(pedido.distribuidor_id,
         `✅ <b>¡Pedido entregado!</b>\n\n📦 ${pedido.descripcion || ''}\n🏠 ${pedido.direccion_entrega || pedido.direccion_destino}\n\n¡Tu envío llegó exitosamente! 🎉`)
@@ -35,6 +32,16 @@ class ActualizarEstado {
       await this.notificacionSvc.notificarUsuario(pedido.distribuidor_id,
         `🛵 <b>¡En camino!</b>\n\nTu pedido está siendo entregado.\n📦 ${pedido.descripcion || ''}`)
     }
+
+    // Publicar evento enriquecido a RabbitMQ
+    await this.eventoSvc.publicar('estado_actualizado', {
+      pedido_id:       pedido.id,
+      estado,
+      descripcion:     pedido.descripcion,
+      distribuidor_id: pedido.distribuidor_id,
+      cliente_id:      pedido.cliente_id,
+      direccion_entrega: pedido.direccion_entrega || pedido.direccion_destino,
+    })
 
     return pedido.toJSON()
   }

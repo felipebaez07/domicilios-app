@@ -33,15 +33,26 @@ class CrearPedido {
       estado: 'pendiente',
     })
 
-    // Publicar evento
-    await this.eventoSvc.publicar('pedido_creado', { pedido_id: pedido.id })
-
-    // Notificar operadores de la empresa
+    // Obtener operadores de la empresa para notificarlos
+    let operador_ids = []
     if (pedido.empresa_id) {
       const operadores = await this.usuarioRepo.findOperadoresByEmpresa(pedido.empresa_id)
+      operador_ids = operadores.map(op => op.id)
+
+      // Notificación síncrona directa (Telegram via auth)
       const msg = `📦 <b>Nuevo pedido</b>\n\n👤 Cliente: <b>${pedido.cliente_nombre}</b>\n📍 Recogida: ${pedido.direccion_origen}\n🏠 Entrega: ${pedido.direccion_destino}\n\n⚡ Asígnalo en RAVEN`
       for (const op of operadores) await this.notificacionSvc.notificarUsuario(op.id, msg)
     }
+
+    // Publicar evento enriquecido a RabbitMQ (para el servicio de notificaciones)
+    await this.eventoSvc.publicar('pedido_creado', {
+      pedido_id:        pedido.id,
+      empresa_id:       pedido.empresa_id,
+      cliente_nombre:   pedido.cliente_nombre,
+      direccion_origen:  pedido.direccion_origen,
+      direccion_destino: pedido.direccion_destino,
+      operador_ids,          // ← quién debe recibir la notificación async
+    })
 
     return pedido.toJSON()
   }

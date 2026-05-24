@@ -1,72 +1,50 @@
-const express = require('express')
-const amqplib = require('amqplib')
-const axios = require('axios')
-const cors = require('cors')
-require('dotenv').config()
+/**
+ * Caso de uso: ActualizarEstado
+ * Valida la transición de estado en el dominio
+ */
+const { ESTADOS_VALIDOS } = require('../../domain/entities/Pedido')
 
-const app = express()
-app.use(cors())
-app.use(express.json())
+class ActualizarEstado {
+  constructor({ pedidoRepository, notificacionService, eventoService }) {
+    this.pedidoRepo      = pedidoRepository
+    this.notificacionSvc = notificacionService
+    this.eventoSvc       = eventoService
+  }
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', servicio: 'notificaciones' })
-})
+  async execute({ pedido_id, estado }) {
+    if (!ESTADOS_VALIDOS.includes(estado))
+      throw new Error('Estado inválido')
 
-async function conectarRabbitMQ() {
-  try {
-    const conn = await amqplib.connect(process.env.RABBITMQ_URL)
-    const channel = await conn.createChannel()
+    const pedidoActual = await this.pedidoRepo.findById(pedido_id)
+    if (!pedidoActual) throw new Error('Pedido no encontrado')
 
-    await channel.assertQueue('pedidos_eventos', { durable: true })
-    await channel.assertQueue('notificaciones', { durable: true })
+    if (!pedidoActual.puedeTransicionarA(estado))
+      throw new Error(`No se puede cambiar de ${pedidoActual.estado} a ${estado}`)
 
-    console.log('RabbitMQ conectado, escuchando eventos...')
+    const pedido = await this.pedidoRepo.updateEstado(pedido_id, estado)
 
-    channel.consume('pedidos_eventos', async (msg) => {
-      if (!msg) return
-      try {
-        const evento = JSON.parse(msg.content.toString())
-        console.log('Evento recibido:', evento)
+    // Notificaciones síncronas directas
+    if (estado === 'entregado' && pedido.distribuidor_id) {
+      await this.notificacionSvc.notificarUsuario(pedido.distribuidor_id,
+        `✅ <b>¡Pedido entregado!</b>\n\n📦 ${pedido.descripcion || ''}\n🏠 ${pedido.direccion_entrega || pedido.direccion_destino}\n\n¡Tu envío llegó exitosamente! 🎉`)
+    }
+    if (estado === 'en_camino' && pedido.distribuidor_id) {
+      await this.notificacionSvc.notificarUsuario(pedido.distribuidor_id,
+        `🛵 <b>¡En camino!</b>\n\nTu pedido está siendo entregado.\n📦 ${pedido.descripcion || ''}`)
+    }
 
-        if (evento.tipo === 'pedido_creado') {
-          await enviarWhatsApp(
-            evento.telefono,
-            `Nuevo pedido creado. ID: ${evento.pedido_id}. Estado: pendiente`
-          )
-        }
-
-        if (evento.tipo === 'estado_actualizado') {
-          await enviarWhatsApp(
-            evento.telefono,
-            `Tu pedido ${evento.pedido_id} cambió a: ${evento.estado}`
-          )
-        }
-
-        channel.ack(msg)
-      } catch (error) {
-        console.error('Error procesando evento:', error)
-        channel.nack(msg)
-      }
+    // Publicar evento enriquecido a RabbitMQ
+    await this.eventoSvc.publicar('estado_actualizado', {
+      pedido_id:       pedido.id,
+      estado,
+      descripcion:     pedido.descripcion,
+      distribuidor_id: pedido.distribuidor_id,
+      cliente_id:      pedido.cliente_id,
+      direccion_entrega: pedido.direccion_entrega || pedido.direccion_destino,
     })
-  } catch (error) {
-    console.error('Error conectando RabbitMQ:', error)
-    setTimeout(conectarRabbitMQ, 5000)
+
+    return pedido.toJSON()
   }
 }
 
-async function enviarWhatsApp(telefono, mensaje) {
-  try {
-    if (!telefono || !process.env.CALLMEBOT_APIKEY) return
-    const url = `https://api.callmebot.com/whatsapp.php?phone=${telefono}&text=${encodeURIComponent(mensaje)}&apikey=${process.env.CALLMEBOT_APIKEY}`
-    await axios.get(url)
-    console.log(`WhatsApp enviado a ${telefono}`)
-  } catch (error) {
-    console.error('Error enviando WhatsApp:', error)
-  }
-}
-
-const PORT = process.env.PORT || 3004
-app.listen(PORT, () => {
-  console.log(`Notificaciones service corriendo en puerto ${PORT}`)
-  conectarRabbitMQ()
-})
+module.exports = ActualizarEstado
