@@ -13,6 +13,7 @@ import { useRoute, formatDistancia, formatDuracion } from '../../hooks/useRoute'
 
 const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
 const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
+const AUTH_URL     = import.meta.env.VITE_AUTH_URL;
 
 const domiIcon = new L.DivIcon({
   html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
@@ -37,15 +38,18 @@ const BADGE  = { pendiente:'badge-warn', asignado:'badge-info', en_camino:'badge
 
 export default function ClienteDashboard() {
   const { token, user } = useAuth();
-  const [pedidos, setPedidos]   = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [domiPos, setDomiPos]   = useState(null);
-  const [loading, setLoading]   = useState(true);
-  const [step, setStep]         = useState('list'); // 'list' | 'picker' | 'form'
-  const [ubicaciones, setUbicaciones] = useState(null);
-  const [form, setForm]         = useState({ descripcion:'' });
-  const [saving, setSaving]     = useState(false);
-  const [success, setSuccess]   = useState('');
+  const [pedidos, setPedidos]               = useState([]);
+  const [selected, setSelected]             = useState(null);
+  const [domiPos, setDomiPos]               = useState(null);
+  const [loading, setLoading]               = useState(true);
+  const [step, setStep]                     = useState('list'); // 'list' | 'empresa' | 'picker' | 'form'
+  const [empresas, setEmpresas]             = useState([]);
+  const [empresaSeleccionada, setEmpresaSeleccionada] = useState(null);
+  const [loadingEmpresas, setLoadingEmpresas] = useState(false);
+  const [ubicaciones, setUbicaciones]       = useState(null);
+  const [form, setForm]                     = useState({ descripcion:'' });
+  const [saving, setSaving]                 = useState(false);
+  const [success, setSuccess]               = useState('');
   const socketRef = useRef(null);
 
   const origin      = domiPos || (selected?.lat_origen && selected?.lng_origen ? [selected.lat_origen, selected.lng_origen] : null);
@@ -61,6 +65,19 @@ export default function ClienteDashboard() {
       setSelected(prev => prev ? (data.find(p => p.id === prev.id) || prev) : (data[0] || null));
     } catch {} finally { setLoading(false); }
   }, [token]);
+
+  // Cargar empresas públicas
+  async function fetchEmpresas() {
+    setLoadingEmpresas(true);
+    try {
+      const { data } = await axios.get(`${AUTH_URL}/empresas/publicas`);
+      setEmpresas(data);
+    } catch {
+      setEmpresas([]);
+    } finally {
+      setLoadingEmpresas(false);
+    }
+  }
 
   useEffect(() => {
     fetchData();
@@ -79,13 +96,21 @@ export default function ClienteDashboard() {
     setDomiPos(null);
   }, [selected?.id]);
 
+  function handleNuevoPedido() {
+    fetchEmpresas();
+    setEmpresaSeleccionada(null);
+    setUbicaciones(null);
+    setForm({ descripcion: '' });
+    setStep('empresa');
+  }
+
   async function crearPedido(e) {
     e.preventDefault(); setSaving(true);
     try {
       await axios.post(`${PEDIDOS_URL}/pedidos`, {
         descripcion:       form.descripcion,
         cliente_nombre:    user?.nombre || user?.email,
-        empresa_id:        user?.empresa_id,
+        empresa_id:        empresaSeleccionada.id,
         direccion_origen:  ubicaciones.origen.label,
         direccion_destino: ubicaciones.destino.label,
         direccion_entrega: ubicaciones.destino.label,
@@ -94,9 +119,13 @@ export default function ClienteDashboard() {
         lat_destino: ubicaciones.destino.lat,
         lng_destino: ubicaciones.destino.lng,
       }, { headers: { Authorization: `Bearer ${token}` } });
-      setStep('list'); setUbicaciones(null); setForm({ descripcion: '' });
+      setStep('list');
+      setUbicaciones(null);
+      setEmpresaSeleccionada(null);
+      setForm({ descripcion: '' });
       setSuccess('¡Pedido creado! 🎉 El operador lo asignará pronto.');
-      fetchData(); setTimeout(() => setSuccess(''), 4000);
+      fetchData();
+      setTimeout(() => setSuccess(''), 4000);
     } catch (err) {
       alert(err.response?.data?.error || 'Error al crear pedido');
     } finally { setSaving(false); }
@@ -109,14 +138,94 @@ export default function ClienteDashboard() {
     || (tieneOrigen ? [selected.lat_origen, selected.lng_origen] : null)
     || [4.4389, -75.2322];
 
-  // Paso picker — pantalla completa del mapa
+  // ── PASO: Selección de empresa ──
+  if (step === 'empresa') {
+    return (
+      <DashboardLayout role="cliente" pageTitle="Nuevo pedido">
+        <div style={{ padding: '1.5rem', maxWidth: 600, margin: '0 auto' }}>
+          {/* Header */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button onClick={() => setStep('list')} style={{ background: 'rgba(255,255,255,.2)', border: '1px solid rgba(255,255,255,.3)', color: '#fff', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', marginBottom: 12 }}>
+              ← Volver
+            </button>
+            <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
+              🏢 ¿A qué empresa quieres hacerle el pedido?
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>
+              Selecciona la empresa que realizará tu entrega
+            </div>
+          </div>
+
+          {/* Lista de empresas */}
+          {loadingEmpresas ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,.6)', fontSize: 14 }}>
+              ⏳ Cargando empresas...
+            </div>
+          ) : empresas.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,.6)', fontSize: 14 }}>
+              😔 No hay empresas disponibles
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {empresas.map(emp => (
+                <button
+                  key={emp.id}
+                  onClick={() => { setEmpresaSeleccionada(emp); setStep('picker'); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 16,
+                    padding: '16px 20px', borderRadius: 16,
+                    background: 'rgba(255,255,255,.15)',
+                    border: '2px solid rgba(255,255,255,.25)',
+                    cursor: 'pointer', textAlign: 'left',
+                    transition: 'all .2s', fontFamily: 'Poppins,sans-serif',
+                    backdropFilter: 'blur(10px)',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.25)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,.15)'}
+                >
+                  {/* Emoji / logo */}
+                  <div style={{
+                    width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+                    background: emp.color1 || '#8b5cf6',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '1.6rem', boxShadow: '0 4px 12px rgba(0,0,0,.2)',
+                  }}>
+                    {emp.emoji || '🏢'}
+                  </div>
+                  {/* Info */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 2 }}>
+                      {emp.nombre}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,.65)', fontWeight: 500 }}>
+                      Toca para seleccionar
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 20, color: 'rgba(255,255,255,.5)' }}>→</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // ── PASO: MapPicker ──
   if (step === 'picker') {
     return (
       <DashboardLayout role="cliente" pageTitle="Nuevo pedido">
-        <div style={{ height: 'calc(100vh - 90px)', display: 'flex', flexDirection: 'column' }}>
+        {/* Chip empresa seleccionada */}
+        <div style={{ padding: '8px 1rem', background: 'rgba(255,255,255,.1)', borderBottom: '1px solid rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button onClick={() => setStep('empresa')} style={{ background: 'rgba(255,255,255,.2)', border: 'none', color: '#fff', borderRadius: 99, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Poppins,sans-serif' }}>← Cambiar empresa</button>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.8)', fontWeight: 600 }}>
+            {empresaSeleccionada?.emoji} {empresaSeleccionada?.nombre}
+          </div>
+        </div>
+        <div style={{ height: 'calc(100vh - 130px)', display: 'flex', flexDirection: 'column' }}>
           <MapPicker
             gradiente="linear-gradient(135deg,#8b5cf6,#6d28d9)"
-            onCancel={() => setStep('list')}
+            onCancel={() => setStep('empresa')}
             onConfirm={ubs => { setUbicaciones(ubs); setStep('form'); }}
           />
         </div>
@@ -134,7 +243,7 @@ export default function ClienteDashboard() {
           <div className="page-title">🛍️ Mis pedidos</div>
           <div className="page-subtitle">Rastrea tu domicilio en tiempo real</div>
         </div>
-        <button className="btn btn-ghost" style={{ flexShrink: 0 }} onClick={() => setStep('picker')}>
+        <button className="btn btn-ghost" style={{ flexShrink: 0 }} onClick={handleNuevoPedido}>
           ➕ Nuevo pedido
         </button>
       </div>
@@ -146,16 +255,12 @@ export default function ClienteDashboard() {
         minHeight: 400,
         overflow: 'hidden',
       }}>
-        {/* Lista pedidos - ancho fijo */}
+        {/* Lista pedidos */}
         <div style={{
-          width: 250,
-          flexShrink: 0,
+          width: 250, flexShrink: 0,
           borderRight: '1px solid rgba(255,255,255,.15)',
-          overflowY: 'auto',
-          padding: 10,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 8,
+          overflowY: 'auto', padding: 10,
+          display: 'flex', flexDirection: 'column', gap: 8,
         }}>
           <div style={{ fontSize: 9, color: 'rgba(255,255,255,.5)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', padding: '4px 4px 0' }}>
             {pedidos.length} pedido{pedidos.length !== 1 ? 's' : ''}
@@ -168,7 +273,7 @@ export default function ClienteDashboard() {
               <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>📭</div>
               Sin pedidos aún
               <br/>
-              <button onClick={() => setStep('picker')} style={{ marginTop: 10, padding: '8px 16px', borderRadius: 99, background: 'rgba(255,255,255,.2)', border: '1px solid rgba(255,255,255,.3)', color: '#fff', fontSize: 12, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', fontWeight: 600 }}>
+              <button onClick={handleNuevoPedido} style={{ marginTop: 10, padding: '8px 16px', borderRadius: 99, background: 'rgba(255,255,255,.2)', border: '1px solid rgba(255,255,255,.3)', color: '#fff', fontSize: 12, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', fontWeight: 600 }}>
                 ➕ Crear pedido
               </button>
             </div>
@@ -197,9 +302,7 @@ export default function ClienteDashboard() {
 
         {/* Mapa + timeline */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-          {/* Mapa */}
           <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-            {/* Chips info */}
             <div style={{ position: 'absolute', top: 10, left: 12, zIndex: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <div style={{ background: 'rgba(255,255,255,.9)', borderRadius: 99, padding: '4px 12px', fontSize: 11, fontWeight: 600, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 10px rgba(0,0,0,.1)' }}>
                 {domiPos
@@ -277,6 +380,19 @@ export default function ClienteDashboard() {
         <Modal onClose={() => setStep('list')} width={420}>
           <div style={{ padding: '1.25rem', overflowY: 'auto', maxHeight: '80vh' }}>
             <div style={{ fontSize: '1rem', fontWeight: 700, color: '#1a1a2e', marginBottom: 4 }}>📦 Detalles del pedido</div>
+
+            {/* Empresa seleccionada */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f0f2ff', borderRadius: 10, border: '1px solid #c7d2fe', marginBottom: '1rem' }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: empresaSeleccionada?.color1 || '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>
+                {empresaSeleccionada?.emoji || '🏢'}
+              </div>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#8b5cf6', textTransform: 'uppercase', letterSpacing: '.06em' }}>Empresa</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a2e' }}>{empresaSeleccionada?.nombre}</div>
+              </div>
+              <button onClick={() => setStep('empresa')} style={{ marginLeft: 'auto', fontSize: 11, color: '#8b5cf6', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontFamily: 'Poppins,sans-serif' }}>Cambiar</button>
+            </div>
+
             <div style={{ fontSize: 11, color: '#9090b0', marginBottom: '1rem' }}>Ya seleccionaste las ubicaciones en el mapa</div>
 
             {/* Resumen ubicaciones */}
