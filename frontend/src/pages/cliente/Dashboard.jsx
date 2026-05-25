@@ -85,6 +85,7 @@ export default function ClienteDashboard() {
       await axios.post(`${PEDIDOS_URL}/pedidos`, {
         descripcion:       form.descripcion,
         cliente_nombre:    user?.nombre || user?.email,
+        empresa_id:        user?.empresa_id,
         direccion_origen:  ubicaciones.origen.label,
         direccion_destino: ubicaciones.destino.label,
         direccion_entrega: ubicaciones.destino.label,
