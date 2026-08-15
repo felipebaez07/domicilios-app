@@ -31,37 +31,48 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p "${{ secrets.DEPLOY_PORT }}" "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Asegurar rsync disponible
-        run: command -v rsync || (sudo apt-get update -y && sudo apt-get install -y rsync)
-
-      - name: Deploy frontend a public_html
+      # El servidor limita conexiones SSH nuevas por minuto (CSF/cPHulk) y no permite
+      # multiplexar (MaxSessions 1), así que empaquetamos todo en un solo archivo y
+      # usamos solo 2 conexiones en total: una para subirlo, otra para repartirlo.
+      - name: Empaquetar build
         run: |
-          rsync -az --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.DEPLOY_PORT }}" \
-            --exclude='.htaccess' --exclude='.well-known' \
-            frontend/dist/ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:~/public_html/"
-
-      - name: Deploy microservicios
-        run: |
-          declare -A SERVICIOS=(
-            [auth]=auth.ravendomicilios.dpdns.org
-            [pedidos]=pedidos.ravendomicilios.dpdns.org
-            [tracking]=tracking.ravendomicilios.dpdns.org
-            [notificaciones]=notificaciones.ravendomicilios.dpdns.org
-          )
-          SSH_OPTS="-i ~/.ssh/deploy_key -p ${{ secrets.DEPLOY_PORT }}"
-          REMOTE="${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}"
-
-          for servicio in "${!SERVICIOS[@]}"; do
-            destino="${SERVICIOS[$servicio]}"
-            echo "== Desplegando $servicio -> $destino =="
-            rsync -az --delete \
-              -e "ssh $SSH_OPTS" \
-              --exclude='.env' --exclude='node_modules' --exclude='tmp' \
-              "services/$servicio/" "$REMOTE:~/$destino/"
-
-            ssh $SSH_OPTS "$REMOTE" "cd ~/$destino && /opt/cpanel/ea-nodejs22/bin/npm ci --omit=dev && mkdir -p tmp && touch tmp/restart.txt"
+          mkdir -p _deploy/public_html
+          cp -a frontend/dist/. _deploy/public_html/
+          for s in auth pedidos tracking notificaciones; do
+            mkdir -p "_deploy/$s"
+            rsync -a --exclude='.env' --exclude='node_modules' --exclude='tmp' "services/$s/" "_deploy/$s/"
           done
+          tar -czf deploy.tar.gz -C _deploy .
+
+      - name: Subir paquete al servidor
+        run: |
+          scp -i ~/.ssh/deploy_key -P "${{ secrets.DEPLOY_PORT }}" \
+            deploy.tar.gz "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:~/deploy_incoming.tar.gz"
+
+      - name: Desplegar y reiniciar servicios (una sola conexión)
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "${{ secrets.DEPLOY_PORT }}" \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" bash -s <<'REMOTE_SCRIPT'
+            set -e
+            rm -rf ~/_deploy_incoming
+            mkdir -p ~/_deploy_incoming
+            tar -xzf ~/deploy_incoming.tar.gz -C ~/_deploy_incoming
+            rm -f ~/deploy_incoming.tar.gz
+
+            rsync -a --delete --exclude='.htaccess' --exclude='.well-known' \
+              ~/_deploy_incoming/public_html/ ~/public_html/
+
+            for s in auth pedidos tracking notificaciones; do
+              destino=~/"$s".ravendomicilios.dpdns.org
+              rsync -a --delete \
+                --exclude='.env' --exclude='node_modules' --exclude='tmp' \
+                --exclude='app.js' --exclude='.well-known' \
+                ~/_deploy_incoming/"$s"/ "$destino"/
+              (cd "$destino" && /opt/cpanel/ea-nodejs22/bin/npm ci --omit=dev && mkdir -p tmp && touch tmp/restart.txt)
+            done
+
+            rm -rf ~/_deploy_incoming
+REMOTE_SCRIPT
 
       - name: Verificar health checks
         run: |
