@@ -1,10 +1,10 @@
 const INotificacionService = require('../../domain/services/INotificacionService')
 
 class TelegramNotificacionService extends INotificacionService {
-  constructor(supabase) {
+  constructor(usuarioRepository) {
     super()
-    this.supabase = supabase
-    this.token    = process.env.TELEGRAM_BOT_TOKEN
+    this.usuarioRepository = usuarioRepository
+    this.token = process.env.TELEGRAM_BOT_TOKEN
   }
 
   async enviar(chatId, mensaje) {
@@ -19,9 +19,8 @@ class TelegramNotificacionService extends INotificacionService {
   }
 
   async enviarAUsuario(userId, mensaje) {
-    const { data } = await this.supabase
-      .from('usuarios').select('telegram_chat_id').eq('id', userId).single()
-    if (data?.telegram_chat_id) await this.enviar(data.telegram_chat_id, mensaje)
+    const usuario = await this.usuarioRepository.findById(userId)
+    if (usuario?.telegram_chat_id) await this.enviar(usuario.telegram_chat_id, mensaje)
   }
 }
 

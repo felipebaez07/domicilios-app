@@ -4,11 +4,11 @@ const cors     = require('cors')
 const amqplib  = require('amqplib')
 
 // ── Infraestructura: config
-const supabase = require('./src/infrastructure/config/supabase')
+const pool = require('./src/infrastructure/config/mysql')
 
 // ── Infraestructura: repositorios
-const SupabasePedidoRepository  = require('./src/infrastructure/repositories/SupabasePedidoRepository')
-const SupabaseUsuarioRepository = require('./src/infrastructure/repositories/SupabaseUsuarioRepository')
+const MySqlPedidoRepository  = require('./src/infrastructure/repositories/MySqlPedidoRepository')
+const MySqlUsuarioRepository = require('./src/infrastructure/repositories/MySqlUsuarioRepository')
 
 // ── Infraestructura: servicios
 const HttpNotificacionService  = require('./src/infrastructure/services/HttpNotificacionService')
@@ -35,8 +35,8 @@ async function conectarRabbitMQ() {
 }
 
 // ── Ensamblar dependencias (Dependency Injection)
-const pedidoRepository  = new SupabasePedidoRepository(supabase)
-const usuarioRepository = new SupabaseUsuarioRepository(supabase)
+const pedidoRepository  = new MySqlPedidoRepository(pool)
+const usuarioRepository = new MySqlUsuarioRepository(pool)
 const notificacionService = new HttpNotificacionService()
 
 // eventoService se inicializa después de conectar RabbitMQ

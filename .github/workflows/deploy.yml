@@ -1,0 +1,70 @@
+name: Deploy a cPanel
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_AUTH_URL: https://auth.ravendomicilios.dpdns.org
+          VITE_PEDIDOS_URL: https://pedidos.ravendomicilios.dpdns.org
+          VITE_TRACKING_URL: https://tracking.ravendomicilios.dpdns.org
+        run: |
+          npm ci
+          npm run build
+
+      - name: Configurar SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ secrets.DEPLOY_PORT }}" "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Asegurar rsync disponible
+        run: command -v rsync || (sudo apt-get update -y && sudo apt-get install -y rsync)
+
+      - name: Deploy frontend a public_html
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.DEPLOY_PORT }}" \
+            --exclude='.htaccess' --exclude='.well-known' \
+            frontend/dist/ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:~/public_html/"
+
+      - name: Deploy microservicios
+        run: |
+          declare -A SERVICIOS=(
+            [auth]=auth.ravendomicilios.dpdns.org
+            [pedidos]=pedidos.ravendomicilios.dpdns.org
+            [tracking]=tracking.ravendomicilios.dpdns.org
+            [notificaciones]=notificaciones.ravendomicilios.dpdns.org
+          )
+          SSH_OPTS="-i ~/.ssh/deploy_key -p ${{ secrets.DEPLOY_PORT }}"
+          REMOTE="${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}"
+
+          for servicio in "${!SERVICIOS[@]}"; do
+            destino="${SERVICIOS[$servicio]}"
+            echo "== Desplegando $servicio -> $destino =="
+            rsync -az --delete \
+              -e "ssh $SSH_OPTS" \
+              --exclude='.env' --exclude='node_modules' --exclude='tmp' \
+              "services/$servicio/" "$REMOTE:~/$destino/"
+
+            ssh $SSH_OPTS "$REMOTE" "cd ~/$destino && /opt/cpanel/ea-nodejs22/bin/npm ci --omit=dev && mkdir -p tmp && touch tmp/restart.txt"
+          done
+
+      - name: Verificar health checks
+        run: |
+          sleep 5
+          curl -sf https://auth.ravendomicilios.dpdns.org/health || echo "auth: health check falló"
+          curl -sf https://pedidos.ravendomicilios.dpdns.org/health || echo "pedidos: health check falló"

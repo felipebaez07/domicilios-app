@@ -3,13 +3,13 @@ const express = require('express')
 const cors    = require('cors')
 
 // ── Infraestructura: config
-const supabase      = require('./src/infrastructure/config/supabase')
+const pool          = require('./src/infrastructure/config/mysql')
 const tokenService  = require('./src/infrastructure/config/jwt')
 const passwordService = require('./src/infrastructure/config/password')
 
 // ── Infraestructura: repositorios (adaptadores de salida)
-const SupabaseUsuarioRepository = require('./src/infrastructure/repositories/SupabaseUsuarioRepository')
-const SupabaseEmpresaRepository = require('./src/infrastructure/repositories/SupabaseEmpresaRepository')
+const MySqlUsuarioRepository = require('./src/infrastructure/repositories/MySqlUsuarioRepository')
+const MySqlEmpresaRepository = require('./src/infrastructure/repositories/MySqlEmpresaRepository')
 
 // ── Infraestructura: servicios externos (adaptadores de salida)
 const TelegramNotificacionService = require('./src/infrastructure/services/TelegramNotificacionService')
@@ -21,9 +21,9 @@ const authRoutes        = require('./src/infrastructure/http/routes/authRoutes')
 const empresaRoutes     = require('./src/infrastructure/http/routes/empresaRoutes')
 
 // ── Ensamblar dependencias (Dependency Injection manual)
-const usuarioRepository    = new SupabaseUsuarioRepository(supabase)
-const empresaRepository    = new SupabaseEmpresaRepository(supabase)
-const notificacionService  = new TelegramNotificacionService(supabase)
+const usuarioRepository    = new MySqlUsuarioRepository(pool)
+const empresaRepository    = new MySqlEmpresaRepository(pool)
+const notificacionService  = new TelegramNotificacionService(usuarioRepository)
 
 const authController = new AuthController({
   usuarioRepository,
