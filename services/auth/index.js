@@ -46,7 +46,9 @@ const empresaController = new EmpresaController({
 // ── Express app
 const app = express()
 app.use(cors({ origin: '*', methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], allowedHeaders: ['Content-Type','Authorization'] }))
-app.use(express.json())
+// Limite mas alto que el default (100kb): el logo de la empresa viaja
+// como base64 dentro del body de /empresas/:id/personalizar.
+app.use(express.json({ limit: '3mb' }))
 // Nunca cachear respuestas de la API: un proxy delante que ignore
 // Authorization podria servirle a un usuario la respuesta de otro.
 app.use((req, res, next) => { res.set('Cache-Control', 'no-store, private'); next() })
@@ -59,6 +61,15 @@ app.use('/', empresaRoutes(empresaController))
 const PORT = process.env.PORT || 3001
 app.listen(PORT, async () => {
   console.log(`Auth service (Hexagonal) corriendo en puerto ${PORT}`)
+
+  // logo_url se guardaba como URL corta (Supabase Storage); ahora tiene
+  // que caber una imagen en base64. Ensanchar la columna es seguro de
+  // repetir en cada arranque (no hay como correr una migracion aparte
+  // sin acceso directo al servidor).
+  try {
+    await pool.query('ALTER TABLE empresas MODIFY COLUMN logo_url MEDIUMTEXT')
+    console.log('Columna empresas.logo_url verificada (MEDIUMTEXT)')
+  } catch (e) { console.error('No se pudo verificar empresas.logo_url:', e.message) }
 
   // Registrar webhook de Telegram
   if (process.env.TELEGRAM_BOT_TOKEN && process.env.AUTH_URL) {

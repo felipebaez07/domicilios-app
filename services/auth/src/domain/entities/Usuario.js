@@ -3,7 +3,7 @@
  * Representa un usuario del sistema con sus reglas de negocio
  */
 class Usuario {
-  constructor({ id, nombre, email, rol, empresa_id, telegram_chat_id, empresa_nombre, empresa_color1, empresa_color2, empresa_emoji }) {
+  constructor({ id, nombre, email, rol, empresa_id, telegram_chat_id, empresa_nombre, empresa_color1, empresa_color2, empresa_emoji, empresa_logo_url }) {
     this.id               = id
     this.nombre           = nombre
     this.email            = email
@@ -14,6 +14,7 @@ class Usuario {
     this.empresa_color1   = empresa_color1   || '#667eea'
     this.empresa_color2   = empresa_color2   || '#764ba2'
     this.empresa_emoji    = empresa_emoji    || '🏢'
+    this.empresa_logo_url = empresa_logo_url || null
   }
 
   perteneceAEmpresa(empresaId) {
@@ -51,6 +52,7 @@ class Usuario {
       empresa_color1: this.empresa_color1,
       empresa_color2: this.empresa_color2,
       empresa_emoji:  this.empresa_emoji,
+      empresa_logo_url: this.empresa_logo_url,
     }
   }
 }

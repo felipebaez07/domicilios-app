@@ -129,7 +129,14 @@ export default function DashboardLayout({ role, children, pageTitle }) {
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{user?.nombre || user?.email?.split('@')[0]}</div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 5 }}><Icon name={rc.icon} size={12} /> {rc.label}</div>
-            {user?.empresa_nombre && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="building" size={11} /> {user.empresa_nombre}</div>}
+            {user?.empresa_nombre && (
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
+                {user.empresa_logo_url
+                  ? <img src={user.empresa_logo_url} alt="" style={{ width: 12, height: 12, objectFit: 'contain', borderRadius: 3, flexShrink: 0 }} />
+                  : <Icon name="building" size={11} />}
+                {' '}{user.empresa_nombre}
+              </div>
+            )}
           </div>
         </div>
 

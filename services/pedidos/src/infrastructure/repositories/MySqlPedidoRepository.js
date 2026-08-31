@@ -2,6 +2,12 @@ const { randomUUID } = require('crypto')
 const IPedidoRepository = require('../../domain/repositories/IPedidoRepository')
 const { Pedido } = require('../../domain/entities/Pedido')
 
+const SELECT_CON_DOMICILIARIO = `
+  SELECT p.*, dom.nombre AS domiciliario_nombre
+  FROM pedidos p
+  LEFT JOIN usuarios dom ON dom.id = p.domiciliario_id
+`
+
 class MySqlPedidoRepository extends IPedidoRepository {
   constructor(pool) {
     super()
@@ -9,41 +15,41 @@ class MySqlPedidoRepository extends IPedidoRepository {
   }
 
   async findById(id) {
-    const [rows] = await this.pool.query('SELECT * FROM pedidos WHERE id = ? LIMIT 1', [id])
+    const [rows] = await this.pool.query(`${SELECT_CON_DOMICILIARIO} WHERE p.id = ? LIMIT 1`, [id])
     if (!rows[0]) return null
     return this._toEntity(rows[0])
   }
 
   async findByDistribuidor(distribuidorId) {
     const [rows] = await this.pool.query(
-      'SELECT * FROM pedidos WHERE distribuidor_id = ? ORDER BY created_at DESC', [distribuidorId]
+      `${SELECT_CON_DOMICILIARIO} WHERE p.distribuidor_id = ? ORDER BY p.created_at DESC`, [distribuidorId]
     )
     return rows.map(p => this._toEntity(p))
   }
 
   async findByDomiciliario(domiciliarioId) {
     const [rows] = await this.pool.query(
-      'SELECT * FROM pedidos WHERE domiciliario_id = ? ORDER BY created_at DESC', [domiciliarioId]
+      `${SELECT_CON_DOMICILIARIO} WHERE p.domiciliario_id = ? ORDER BY p.created_at DESC`, [domiciliarioId]
     )
     return rows.map(p => this._toEntity(p))
   }
 
   async findByCliente(clienteId) {
     const [rows] = await this.pool.query(
-      'SELECT * FROM pedidos WHERE cliente_id = ? ORDER BY created_at DESC', [clienteId]
+      `${SELECT_CON_DOMICILIARIO} WHERE p.cliente_id = ? ORDER BY p.created_at DESC`, [clienteId]
     )
     return rows.map(p => this._toEntity(p))
   }
 
   async findByEmpresa(empresaId) {
     const [rows] = await this.pool.query(
-      'SELECT * FROM pedidos WHERE empresa_id = ? ORDER BY created_at DESC', [empresaId]
+      `${SELECT_CON_DOMICILIARIO} WHERE p.empresa_id = ? ORDER BY p.created_at DESC`, [empresaId]
     )
     return rows.map(p => this._toEntity(p))
   }
 
   async findAll() {
-    const [rows] = await this.pool.query('SELECT * FROM pedidos ORDER BY created_at DESC')
+    const [rows] = await this.pool.query(`${SELECT_CON_DOMICILIARIO} ORDER BY p.created_at DESC`)
     return rows.map(p => this._toEntity(p))
   }
 

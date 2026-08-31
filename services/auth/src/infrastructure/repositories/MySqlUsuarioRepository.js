@@ -87,10 +87,11 @@ class MySqlUsuarioRepository extends IUsuarioRepository {
     if (data.empresa_id) {
       const empresa = await empresaRepo.findById(data.empresa_id)
       if (empresa) {
-        usuario.empresa_nombre = empresa.nombre
-        usuario.empresa_color1 = empresa.color1
-        usuario.empresa_color2 = empresa.color2
-        usuario.empresa_emoji  = empresa.emoji
+        usuario.empresa_nombre   = empresa.nombre
+        usuario.empresa_color1   = empresa.color1
+        usuario.empresa_color2   = empresa.color2
+        usuario.empresa_emoji    = empresa.emoji
+        usuario.empresa_logo_url = empresa.logo_url
       }
     }
     return usuario

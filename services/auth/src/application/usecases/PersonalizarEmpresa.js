@@ -6,7 +6,7 @@ class PersonalizarEmpresa {
     this.empresaRepo = empresaRepository
   }
 
-  async execute({ empresa_id, color1, color2, emoji, nombre }, solicitante) {
+  async execute({ empresa_id, color1, color2, emoji, nombre, logo_url }, solicitante) {
     if (!solicitante.puedeGestionarEmpresa(empresa_id))
       throw new Error('Sin permisos para personalizar esta empresa')
 
@@ -15,6 +15,8 @@ class PersonalizarEmpresa {
     if (color2) update.color2 = color2
     if (emoji)  update.emoji  = emoji
     if (nombre) update.nombre = nombre
+    // logo_url si puede llegar vacio a proposito: es como se quita un logo ya subido
+    if (logo_url !== undefined) update.logo_url = logo_url || null
 
     const empresa = await this.empresaRepo.update(empresa_id, update)
     return empresa.toJSON()

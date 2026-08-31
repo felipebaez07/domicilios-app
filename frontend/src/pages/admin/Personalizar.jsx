@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
@@ -21,34 +21,80 @@ const PALETAS = [
   { nombre:'Oscuro',    c1:'#221415', c2:'#16213e' },
 ];
 
+const LOGO_MAX_LADO   = 320;         // px, el mayor lado de la imagen ya redimensionada
+const LOGO_MAX_ARCHIVO = 8 * 1024 * 1024; // 8MB, antes de procesar
+
+function procesarLogo(file) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) { reject(new Error('Selecciona un archivo de imagen')); return; }
+    if (file.size > LOGO_MAX_ARCHIVO) { reject(new Error('La imagen pesa demasiado (máx. 8MB)')); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > LOGO_MAX_LADO || height > LOGO_MAX_LADO) {
+          if (width > height) { height = Math.round(height * LOGO_MAX_LADO / width); width = LOGO_MAX_LADO; }
+          else { width = Math.round(width * LOGO_MAX_LADO / height); height = LOGO_MAX_LADO; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('No se pudo leer la imagen'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function AdminPersonalizar() {
   const { token, user, login } = useAuth();
   const [form, setForm]   = useState({
-    nombre:  user?.empresa_nombre || '',
-    color1:  user?.empresa_color1 || '#d0121b',
-    color2:  user?.empresa_color2 || '#a80e17',
-    emoji:   user?.empresa_emoji  || '🏢',
+    nombre:   user?.empresa_nombre   || '',
+    color1:   user?.empresa_color1   || '#d0121b',
+    color2:   user?.empresa_color2   || '#a80e17',
+    emoji:    user?.empresa_emoji    || '🏢',
+    logo_url: user?.empresa_logo_url || '',
   });
   const [saving, setSaving]   = useState(false);
   const [success, setSuccess] = useState('');
+  const [logoErr, setLogoErr] = useState('');
+  const fileRef = useRef(null);
 
   const h = { Authorization: `Bearer ${token}` };
   const empresaId = user?.empresa_id;
+
+  async function onLogoChange(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setLogoErr('');
+    try {
+      const dataUrl = await procesarLogo(file);
+      setForm(v => ({ ...v, logo_url: dataUrl }));
+    } catch (err) {
+      setLogoErr(err.message);
+    }
+  }
 
   async function guardar(e) {
     e.preventDefault(); setSaving(true);
     try {
       await axios.patch(`${AUTH_URL}/empresas/${empresaId}/personalizar`, form, { headers: h });
-      // Actualizar el usuario en localStorage con los nuevos colores
+      // Actualizar el usuario en localStorage con los nuevos datos
       const nuevoUser = {
         ...user,
-        empresa_nombre: form.nombre,
-        empresa_color1: form.color1,
-        empresa_color2: form.color2,
-        empresa_emoji:  form.emoji,
+        empresa_nombre:   form.nombre,
+        empresa_color1:   form.color1,
+        empresa_color2:   form.color2,
+        empresa_emoji:    form.emoji,
+        empresa_logo_url: form.logo_url || null,
       };
       login(token, nuevoUser);
-      setSuccess('¡Cambios guardados! Recarga para ver los colores aplicados.');
+      setSuccess('¡Cambios guardados!');
       setTimeout(() => setSuccess(''), 4000);
     } catch {
       alert('Error al guardar');
@@ -62,7 +108,7 @@ export default function AdminPersonalizar() {
       <div className="page-header">
         <div>
           <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="palette" size={18} />Personalizar empresa</div>
-          <div className="page-subtitle">Configura los colores y la identidad de tu empresa</div>
+          <div className="page-subtitle">Configura el logo, los colores y la identidad de tu empresa</div>
         </div>
       </div>
 
@@ -72,6 +118,36 @@ export default function AdminPersonalizar() {
         <form onSubmit={guardar} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
           {success && <div className="alert alert-ok">{success}</div>}
+
+          {/* Logo */}
+          <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#221415', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="image" size={14} />Logo de la empresa</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{
+                width: 84, height: 84, borderRadius: 16, flexShrink: 0, overflow: 'hidden',
+                background: form.logo_url ? '#fff' : '#f4ebea',
+                border: form.logo_url ? '1px solid #e9dcdb' : '2px dashed #e9dcdb',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {form.logo_url
+                  ? <img src={form.logo_url} alt="Logo de la empresa" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  : <Icon name="image" size={26} color="#c9b6b6" />}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minWidth: 0 }}>
+                <input ref={fileRef} type="file" accept="image/*" onChange={onLogoChange} style={{ display: 'none' }} />
+                <button type="button" onClick={() => fileRef.current?.click()} className="btn btn-ghost" style={{ justifyContent: 'center' }}>
+                  <Icon name="pencil" size={13} />{form.logo_url ? 'Cambiar logo' : 'Subir logo'}
+                </button>
+                {form.logo_url && (
+                  <button type="button" onClick={() => setForm(v => ({ ...v, logo_url: '' }))} style={{ background: 'none', border: 'none', color: '#8a6d6e', fontSize: 11, cursor: 'pointer', textAlign: 'left', padding: 0 }}>
+                    Quitar logo
+                  </button>
+                )}
+                <div style={{ fontSize: 10, color: '#c9b6b6' }}>PNG o JPG · aparece en tu menú y donde los clientes eligen tu empresa</div>
+              </div>
+            </div>
+            {logoErr && <div className="alert alert-err" style={{ marginTop: 10, fontSize: 11 }}>{logoErr}</div>}
+          </div>
 
           {/* Nombre */}
           <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
@@ -87,7 +163,8 @@ export default function AdminPersonalizar() {
 
           {/* Emoji */}
           <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#221415', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="sparkles" size={14} />Ícono de la empresa</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#221415', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="sparkles" size={14} />Ícono de reserva</div>
+            <div style={{ fontSize: 10, color: '#c9b6b6', marginBottom: 12 }}>Se usa solo si no subes un logo</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {EMOJIS_EMPRESA.map(em => (
                 <button key={em} type="button" onClick={() => setForm(v => ({...v, emoji: em}))} style={{
@@ -205,8 +282,8 @@ export default function AdminPersonalizar() {
 
             {/* Empresa nombre */}
             <div style={{ background: '#fff', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: previewGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-                {form.emoji}
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: form.logo_url ? '#fff' : previewGrad, border: form.logo_url ? '1px solid #e9dcdb' : 'none', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
+                {form.logo_url ? <img src={form.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : form.emoji}
               </div>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#221415' }}>{form.nombre || 'Mi Empresa'}</div>

@@ -2,9 +2,19 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
+import StatCard from '../../components/StatCard';
+import Icon from '../../components/Icon';
 
 const API = import.meta.env.VITE_AUTH_URL;
-const ROLES = ['distribuidor','cliente','domiciliario','operador','admin'];
+
+const ROL_INFO = {
+  distribuidor: { icon: 'package',  label: 'Distribuidor', color: '#0c7ec4' },
+  cliente:      { icon: 'bag',      label: 'Cliente',      color: '#8b5cf6' },
+  domiciliario: { icon: 'scooter',  label: 'Domiciliario', color: '#1a9c53' },
+  operador:     { icon: 'map',      label: 'Operador',     color: '#d9820b' },
+  admin:        { icon: 'crown',    label: 'Admin',        color: '#d0121b' },
+};
+const ROLES = Object.keys(ROL_INFO);
 
 export default function AdminUsuarios() {
   const { token } = useAuth();
@@ -28,47 +38,69 @@ export default function AdminUsuarios() {
 
   return (
     <DashboardLayout role="admin" pageTitle="Usuarios">
-      <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--txt-1)' }}>Usuarios del sistema</div>
-        <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 2, letterSpacing: '0.08em' }}>{usuarios.length} REGISTRADOS</div>
-      </div>
-      {/* Stats por rol */}
-      <div className="stats-row" style={{ gridTemplateColumns: 'repeat(5,1fr)' }}>
-        {ROLES.map((r, i) => (
-          <div key={r} className="stat-cell" style={{ borderRight: i < 4 ? '1px solid var(--border)' : 'none' }}>
-            <div className="stat-lbl">{r}</div>
-            <div className="stat-val">{loading ? '—' : String(conteo[r] || 0).padStart(2,'0')}</div>
-          </div>
-        ))}
-      </div>
-      {/* Filtros */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
-        {['todos', ...ROLES].map(r => (
-          <button key={r} onClick={() => setFilterRol(r)} style={{ padding: '8px 9px', fontSize: 6, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', background: filterRol === r ? 'var(--bg-active)' : 'transparent', color: filterRol === r ? 'var(--accent)' : 'var(--txt-3)', border: 'none', borderRight: '1px solid var(--border)', cursor: 'pointer' }}>
-            {r === 'todos' ? 'TODOS' : r.slice(0,4).toUpperCase()}
-          </button>
-        ))}
-        <div style={{ flex: 1, borderLeft: '1px solid var(--border)' }}>
-          <input type="search" placeholder="Buscar nombre o email..." value={search} onChange={e => setSearch(e.target.value)} style={{ border: 'none', height: 32, background: 'transparent', fontSize: 9 }} />
+      <div className="page-header">
+        <div>
+          <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="users" size={18} />Usuarios del sistema</div>
+          <div className="page-subtitle">{usuarios.length} personas registradas en tu empresa</div>
         </div>
       </div>
-      <div style={{ overflowX: 'auto' }}>
-        <table className="rv-table">
-          <thead><tr><th>#</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Registro</th></tr></thead>
-          <tbody>
-            {loading ? <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>CARGANDO...</td></tr>
-              : filtrados.length === 0 ? <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>SIN RESULTADOS</td></tr>
-              : filtrados.map((u, i) => (
-                <tr key={u.id}>
-                  <td className="m">{i+1}</td>
-                  <td className="p">{u.nombre}</td>
-                  <td style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--txt-2)' }}>{u.email}</td>
-                  <td><span className="badge badge-info">{u.rol?.toUpperCase()}</span></td>
-                  <td className="m">{u.created_at ? new Date(u.created_at).toLocaleDateString('es-CO') : '—'}</td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+
+      <div className="stats-grid-5" style={{ paddingBottom: 0 }}>
+        {ROLES.map((r, i) => (
+          <StatCard
+            key={r}
+            icon={<Icon name={ROL_INFO[r].icon} size={20} color={ROL_INFO[r].color} />}
+            value={loading ? '—' : String(conteo[r] || 0)}
+            label={`${ROL_INFO[r].label}s`}
+            delay={i * 80}
+          />
+        ))}
+      </div>
+
+      <div className="white-card" style={{ marginTop: '1.25rem' }}>
+        <div className="white-card-header">
+          <div className="white-card-title"><Icon name="list" size={15} />Listado</div>
+          <input type="search" placeholder="Buscar nombre o email..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: 220, height: 32, fontSize: 12 }} />
+        </div>
+        <div className="filters-row">
+          {['todos', ...ROLES].map(r => (
+            <button key={r} className={`filter-btn ${filterRol === r ? 'active' : ''}`} onClick={() => setFilterRol(r)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              {r === 'todos' ? <><Icon name="list" size={12} />Todos</> : <><Icon name={ROL_INFO[r].icon} size={12} />{ROL_INFO[r].label}s</>}
+            </button>
+          ))}
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="rv-table">
+            <thead><tr><th>#</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Registro</th></tr></thead>
+            <tbody>
+              {loading
+                ? <tr><td colSpan={5} style={{ padding: '2.5rem', textAlign: 'center', color: '#8a6d6e' }}>Cargando...</td></tr>
+                : filtrados.length === 0
+                ? (
+                  <tr><td colSpan={5} style={{ padding: '2.5rem', textAlign: 'center', color: '#8a6d6e' }}>
+                    <Icon name="users" size={26} color="#c9b6b6" style={{ marginBottom: 6 }} />
+                    <div>Sin resultados</div>
+                  </td></tr>
+                )
+                : filtrados.map((u, i) => {
+                  const info = ROL_INFO[u.rol] || { icon: 'user', label: u.rol, color: '#8a6d6e' };
+                  return (
+                    <tr key={u.id}>
+                      <td className="m">{i + 1}</td>
+                      <td className="p">{u.nombre}</td>
+                      <td style={{ color: '#55393b' }}>{u.email}</td>
+                      <td>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 9px', borderRadius: 99, background: `${info.color}18`, color: info.color, fontSize: 10, fontWeight: 700, border: `1px solid ${info.color}40` }}>
+                          <Icon name={info.icon} size={10} />{info.label}
+                        </span>
+                      </td>
+                      <td className="m">{u.created_at ? new Date(u.created_at).toLocaleDateString('es-CO') : '—'}</td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </DashboardLayout>
   );

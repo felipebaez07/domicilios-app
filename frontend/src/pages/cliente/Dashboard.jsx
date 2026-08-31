@@ -188,14 +188,17 @@ export default function ClienteDashboard() {
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#ffb8b2'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(208,18,27,0.1)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = '#e9dcdb'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(34,20,21,0.05)'; }}
                 >
-                  {/* Emoji / logo */}
+                  {/* Logo / emoji */}
                   <div style={{
-                    width: 52, height: 52, borderRadius: 14, flexShrink: 0,
-                    background: emp.color1 || '#d0121b',
+                    width: 52, height: 52, borderRadius: 14, flexShrink: 0, overflow: 'hidden',
+                    background: emp.logo_url ? '#fff' : (emp.color1 || '#d0121b'),
+                    border: emp.logo_url ? '1px solid #e9dcdb' : 'none',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '1.6rem', boxShadow: '0 4px 12px rgba(0,0,0,.2)',
                   }}>
-                    {emp.emoji || '🏢'}
+                    {emp.logo_url
+                      ? <img src={emp.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      : (emp.emoji || '🏢')}
                   </div>
                   {/* Info */}
                   <div style={{ flex: 1 }}>
@@ -223,8 +226,11 @@ export default function ClienteDashboard() {
         {/* Chip empresa seleccionada */}
         <div style={{ padding: '8px 1rem', background: '#fff', borderBottom: '1px solid #e9dcdb', display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={() => setStep('empresa')} style={{ background: '#f4ebea', border: 'none', color: '#55393b', borderRadius: 99, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="arrowLeft" size={11} />Cambiar empresa</button>
-          <div style={{ fontSize: 12, color: '#221415', fontWeight: 600 }}>
-            {empresaSeleccionada?.emoji} {empresaSeleccionada?.nombre}
+          <div style={{ fontSize: 12, color: '#221415', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+            {empresaSeleccionada?.logo_url
+              ? <img src={empresaSeleccionada.logo_url} alt="" style={{ width: 16, height: 16, objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />
+              : <span>{empresaSeleccionada?.emoji}</span>}
+            {empresaSeleccionada?.nombre}
           </div>
         </div>
         <div style={{ height: 'calc(100dvh - 130px)', display: 'flex', flexDirection: 'column' }}>

@@ -15,7 +15,7 @@ const TRANSICIONES_VALIDAS = {
 
 class Pedido {
   constructor({
-    id, empresa_id, distribuidor_id, cliente_id, domiciliario_id,
+    id, empresa_id, distribuidor_id, cliente_id, domiciliario_id, domiciliario_nombre,
     descripcion, cliente_nombre, telefono,
     direccion_origen, direccion_destino, direccion_entrega,
     lat_origen, lng_origen, lat_destino, lng_destino,
@@ -26,6 +26,7 @@ class Pedido {
     this.distribuidor_id  = distribuidor_id  || null
     this.cliente_id       = cliente_id       || null
     this.domiciliario_id  = domiciliario_id  || null
+    this.domiciliario_nombre = domiciliario_nombre || null
     this.descripcion      = descripcion      || null
     this.cliente_nombre   = cliente_nombre   || descripcion || 'Sin nombre'
     this.telefono         = telefono         || null
@@ -65,6 +66,7 @@ class Pedido {
       distribuidor_id:   this.distribuidor_id,
       cliente_id:        this.cliente_id,
       domiciliario_id:   this.domiciliario_id,
+      domiciliario_nombre: this.domiciliario_nombre,
       descripcion:       this.descripcion,
       cliente_nombre:    this.cliente_nombre,
       telefono:          this.telefono,
