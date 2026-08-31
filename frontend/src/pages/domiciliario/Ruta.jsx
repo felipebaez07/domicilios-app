@@ -7,12 +7,13 @@ import { useAuth } from '../../context/AuthContext';
 import { usePersistentState } from '../../hooks/usePersistentState';
 import DashboardLayout from '../../components/DashboardLayout';
 import AppMap from '../../components/AppMap';
+import Icon from '../../components/Icon';
 
 const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
 
 const myIcon = new L.DivIcon({
-  html: `<div style="width:34px;height:34px;border-radius:50%;background:#d0121b;border:3px solid rgba(208,18,27,0.35);display:flex;align-items:center;justify-content:center;font-size:16px;">🛵</div>`,
+  html: `<div style="width:34px;height:34px;border-radius:50%;background:#d0121b;border:3px solid rgba(208,18,27,0.35);display:flex;align-items:center;justify-content:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="2.2"/><circle cx="18.5" cy="18.5" r="2.2"/><path d="M7.5 18.5H12L15 10H18"/><path d="M12 18.5L9.5 12H6.5"/><path d="M15 10L17 6"/></svg></div>`,
   iconSize: [34, 34], iconAnchor: [17, 17], className: '',
 });
 
@@ -75,22 +76,22 @@ export default function DomiciliarioRuta() {
           <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 2, letterSpacing: '0.08em' }}>COMPARTE TU UBICACIÓN GPS EN TIEMPO REAL</div>
         </div>
         <button onClick={toggleGPS} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '7px 14px', background: gpsOn ? '#e7f9ee' : 'transparent', border: `1px solid ${gpsOn ? '#a6e8bf' : 'var(--border)'}`, color: gpsOn ? '#1a9c53' : 'var(--txt-2)', fontSize: 8, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s' }}>
-          {gpsOn ? <><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1a9c53', display: 'inline-block', animation: 'blink 2s infinite' }} /> GPS ACTIVO</> : <>📍 ACTIVAR GPS</>}
+          {gpsOn ? <><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1a9c53', display: 'inline-block', animation: 'blink 2s infinite' }} /> GPS ACTIVO</> : <><Icon name="mapPin" size={11} />ACTIVAR GPS</>}
         </button>
       </div>
-      {gpsErr && <div className="alert alert-err" style={{ margin: '0.75rem 1.25rem 0' }}>⚠ {gpsErr}</div>}
+      {gpsErr && <div className="alert alert-err" style={{ margin: '0.75rem 1.25rem 0' }}>{gpsErr}</div>}
       <div className="responsive-split" style={{ '--split-cols': '1fr 280px', height: 'calc(100vh - 190px)', minHeight: 380 }}>
         <div style={{ borderRight: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
           {myPos && <div style={{ position: 'absolute', bottom: 8, right: 10, zIndex: 10, fontSize: 7, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,.8)', background: 'rgba(34,20,21,0.85)', padding: '3px 7px', letterSpacing: '0.04em' }}>{myPos[0].toFixed(4)}, {myPos[1].toFixed(4)}</div>}
           <div style={{ width: '100%', height: '100%' }}>
             <AppMap center={myPos || [4.4389, -75.2322]} zoom={14}>
-              {myPos && <Marker position={myPos} icon={myIcon}><Popup>📍 Tu ubicación</Popup></Marker>}
+              {myPos && <Marker position={myPos} icon={myIcon}><Popup>Tu ubicación</Popup></Marker>}
             </AppMap>
           </div>
           {!myPos && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,.75)', backdropFilter: 'blur(4px)', zIndex: 5 }}>
               <div style={{ textAlign: 'center', color: 'var(--txt-2)', fontSize: 9, fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>
-                <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>📍</div>ACTIVA EL GPS
+                <Icon name="mapPin" size={24} style={{ marginBottom: 8 }} />ACTIVA EL GPS
               </div>
             </div>
           )}
@@ -99,7 +100,7 @@ export default function DomiciliarioRuta() {
           <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>PEDIDO ACTIVO</div>
           {!pedidoActivo ? (
             <div style={{ textAlign: 'center', padding: '1.5rem 0', color: 'var(--txt-3)' }}>
-              <div style={{ fontSize: '1.5rem', marginBottom: 6 }}>✓</div>
+              <Icon name="checkCircle" size={22} style={{ marginBottom: 6 }} />
               <div style={{ fontSize: 9, fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>SIN PEDIDOS ASIGNADOS</div>
             </div>
           ) : (
@@ -115,7 +116,7 @@ export default function DomiciliarioRuta() {
                   <div style={{ fontSize: 11, color: 'var(--txt-1)', fontWeight: 500 }}>{r.v || '—'}</div>
                 </div>
               ))}
-              {!gpsOn && <div className="alert alert-warn" style={{ marginTop: '0.5rem', fontSize: 8 }}>⚠ ACTIVA EL GPS PARA COMPARTIR TU UBICACIÓN</div>}
+              {!gpsOn && <div className="alert alert-warn" style={{ marginTop: '0.5rem', fontSize: 8 }}>ACTIVA EL GPS PARA COMPARTIR TU UBICACIÓN</div>}
             </div>
           )}
         </div>

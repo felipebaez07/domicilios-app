@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
+import Icon from '../../components/Icon';
 
 const API = import.meta.env.VITE_PEDIDOS_URL;
 const ESTADO = { pendiente:{label:'PENDIENTE',cls:'badge-warn'}, asignado:{label:'ASIGNADO',cls:'badge-info'}, en_camino:{label:'EN CAMINO',cls:'badge-info'}, entregado:{label:'ENTREGADO',cls:'badge-ok'}, cancelado:{label:'CANCELADO',cls:'badge-err'} };
@@ -44,7 +45,7 @@ export default function OperadorPedidos() {
           <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--txt-1)' }}>Gestión de pedidos</div>
           <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 2, letterSpacing: '0.08em' }}>{pedidos.length} PEDIDOS · {pedidos.filter(p => p.estado === 'pendiente').length} SIN ASIGNAR</div>
         </div>
-        <button onClick={fetchData} style={{ padding: '5px 12px', fontSize: 7, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.08em', background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt-2)', cursor: 'pointer' }}>↺ SYNC</button>
+        <button onClick={fetchData} style={{ padding: '5px 12px', fontSize: 7, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.08em', background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt-2)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="refresh" size={9} />SYNC</button>
       </div>
       <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
         {['todos','pendiente','asignado','en_camino','entregado'].map(f => (
@@ -66,7 +67,7 @@ export default function OperadorPedidos() {
                   <td style={{ maxWidth: 160 }}>{p.direccion_entrega}</td>
                   <td><span className={`badge ${est.cls}`}>{est.label}</span></td>
                   <td style={{ color: p.domiciliario_nombre ? '#1a9c53' : 'var(--txt-3)' }}>{p.domiciliario_nombre || '—'}</td>
-                  <td>{p.estado === 'pendiente' && <button onClick={() => setSelected(p)} style={{ padding: '2px 8px', fontSize: 7, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.06em', background: 'transparent', border: '1px solid var(--border-md)', color: 'var(--txt-2)', cursor: 'pointer' }}>ASIGNAR →</button>}</td>
+                  <td>{p.estado === 'pendiente' && <button onClick={() => setSelected(p)} style={{ padding: '2px 8px', fontSize: 7, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.06em', background: 'transparent', border: '1px solid var(--border-md)', color: 'var(--txt-2)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3 }}>ASIGNAR<Icon name="arrowRight" size={9} /></button>}</td>
                 </tr>
               );})}
           </tbody>
@@ -77,17 +78,17 @@ export default function OperadorPedidos() {
           <div className="modal">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <div className="modal-title">Asignar #{String(selected.id).slice(-6)}</div>
-              <button onClick={() => setSelected(null)} style={{ width: 26, height: 26, border: '1px solid var(--border-md)', background: 'transparent', color: 'var(--txt-2)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              <button onClick={() => setSelected(null)} style={{ width: 26, height: 26, border: '1px solid var(--border-md)', background: 'transparent', color: 'var(--txt-2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="x" size={13} /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               {domis.map(d => (
                 <button key={d.id} onClick={() => asignar(selected.id, d.id)} disabled={asignando} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem', background: 'var(--bg-hover)', border: '1px solid var(--border)', cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'all 0.15s' }}>
-                  <span style={{ fontSize: '1.1rem' }}>🛵</span>
+                  <Icon name="scooter" size={18} color="var(--txt-2)" />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt-1)' }}>{d.nombre}</div>
                     <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', letterSpacing: '0.06em' }}>{d.email}</div>
                   </div>
-                  <span style={{ color: 'var(--txt-3)', fontSize: 10 }}>→</span>
+                  <Icon name="chevronRight" size={14} color="var(--txt-3)" />
                 </button>
               ))}
             </div>

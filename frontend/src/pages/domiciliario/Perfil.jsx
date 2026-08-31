@@ -57,7 +57,9 @@ export default function DomiciliarioPerfil() {
             <div>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#221415' }}>{user?.nombre}</div>
               <div style={{ fontSize: 12, color: '#8a6d6e' }}>{user?.email}</div>
-              <div style={{ fontSize: 11, color: '#1a9c53', fontWeight: 600, marginTop: 2 }}>● Domiciliario activo</div>
+              <div style={{ fontSize: 11, color: '#1a9c53', fontWeight: 600, marginTop: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#1a9c53', display: 'inline-block' }} />Domiciliario activo
+              </div>
             </div>
           </div>
         </div>

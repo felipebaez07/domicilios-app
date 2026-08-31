@@ -9,22 +9,25 @@ import StatCard from '../../components/StatCard';
 import AppMap from '../../components/AppMap';
 import Modal from '../../components/Modal';
 import { useAutoRefresh } from '../../hooks/useAutoRefresh';
+import Icon from '../../components/Icon';
 
 const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
 const ESTADO = {
-  pendiente:{label:'Pendiente',cls:'badge-warn',emoji:'⏳'},
-  asignado:{label:'Asignado',cls:'badge-info',emoji:'👤'},
-  en_camino:{label:'En camino',cls:'badge-info',emoji:'🛵'},
-  entregado:{label:'Entregado',cls:'badge-ok',emoji:'✅'},
-  cancelado:{label:'Cancelado',cls:'badge-err',emoji:'❌'},
+  pendiente:{label:'Pendiente',cls:'badge-warn',icon:'clock'},
+  asignado:{label:'Asignado',cls:'badge-info',icon:'user'},
+  en_camino:{label:'En camino',cls:'badge-info',icon:'scooter'},
+  entregado:{label:'Entregado',cls:'badge-ok',icon:'checkCircle'},
+  cancelado:{label:'Cancelado',cls:'badge-err',icon:'x'},
 };
+
+const SCOOTER_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="2.2"/><circle cx="18.5" cy="18.5" r="2.2"/><path d="M7.5 18.5H12L15 10H18"/><path d="M12 18.5L9.5 12H6.5"/><path d="M15 10L17 6"/></svg>';
 
 function makeDomiIcon(nombre, activo) {
   const c = activo ? '#1a9c53' : '#94a3b8';
   return new L.DivIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-      <div style="width:36px;height:36px;border-radius:50%;background:${c};border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,0.2);">🛵</div>
+      <div style="width:36px;height:36px;border-radius:50%;background:${c};border:3px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);">${SCOOTER_SVG}</div>
       <div style="background:white;color:#221415;font-size:9px;padding:2px 7px;border-radius:99px;white-space:nowrap;font-family:Poppins,sans-serif;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.15);">${nombre}</div>
     </div>`,
     iconSize:[70,52], iconAnchor:[35,52], className:'',
@@ -80,17 +83,17 @@ export default function OperadorDashboard() {
     <DashboardLayout role="operador" pageTitle="Centro de control">
       <div className="page-header">
         <div>
-          <div className="page-title">🎮 Centro de control</div>
+          <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="gauge" size={18} />Centro de control</div>
           <div className="page-subtitle">Monitoreo en tiempo real · {domisActivos} GPS activos · auto-sync 15s</div>
         </div>
-        <button className="btn btn-ghost" onClick={fetchData}>🔄 Actualizar</button>
+        <button className="btn btn-ghost" onClick={fetchData} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="refresh" size={14} />Actualizar</button>
       </div>
 
       <div className="stats-grid-4">
-        <StatCard icon="📦" value={String(pedidos.length)} label="Total pedidos" delay={0} />
-        <StatCard icon="⏳" value={String(pedidos.filter(p=>p.estado==='pendiente').length)} label="Pendientes" delay={100} />
-        <StatCard icon="🛵" value={String(pedidos.filter(p=>p.estado==='en_camino').length)} label="En tránsito" delay={200} />
-        <StatCard icon="📡" value={String(domisActivos)} label="GPS activos" delay={300} />
+        <StatCard icon={<Icon name="package" size={20} />} value={String(pedidos.length)} label="Total pedidos" delay={0} />
+        <StatCard icon={<Icon name="clock" size={20} />} value={String(pedidos.filter(p=>p.estado==='pendiente').length)} label="Pendientes" delay={100} />
+        <StatCard icon={<Icon name="scooter" size={20} />} value={String(pedidos.filter(p=>p.estado==='en_camino').length)} label="En tránsito" delay={200} />
+        <StatCard icon={<Icon name="mapPin" size={20} />} value={String(domisActivos)} label="GPS activos" delay={300} />
       </div>
 
       <div className="responsive-split" style={{ '--split-cols':'1fr 1fr', height:'calc(100vh - 260px)', minHeight:380 }}>
@@ -104,7 +107,7 @@ export default function OperadorDashboard() {
             <AppMap center={[4.4389,-75.2322]} zoom={13}>
               {Object.entries(positions).filter(([,d]) => d.lat && d.lng).map(([id,d]) => (
                 <Marker key={id} position={[d.lat,d.lng]} icon={makeDomiIcon(d.nombre||`Dom-${id}`,d.activo)}>
-                  <Popup><b>{d.nombre}</b><br/>{d.activo?'🟢 En línea':'⚫ Sin señal'}</Popup>
+                  <Popup><b>{d.nombre}</b><br/>{d.activo?'En línea':'Sin señal'}</Popup>
                 </Marker>
               ))}
             </AppMap>
@@ -115,27 +118,27 @@ export default function OperadorDashboard() {
         <div style={{ display:'flex', flexDirection:'column', background:'#faf5f4', overflow:'hidden' }}>
           <div style={{ display:'flex', gap:4, padding:'8px 12px', borderBottom:'1px solid #e9dcdb', flexWrap:'wrap' }}>
             {['todos','pendiente','asignado','en_camino','entregado'].map(f => (
-              <button key={f} onClick={() => setFilter(f)} style={{ padding:'4px 10px', borderRadius:99, fontSize:10, fontWeight:600, border:'none', cursor:'pointer', background:filter===f?'linear-gradient(135deg,#d0121b,#a80e17)':'#f4ebea', color:filter===f?'#fff':'#55393b', transition:'all .15s' }}>
-                {f==='todos'?'Todos':`${ESTADO[f]?.emoji} ${ESTADO[f]?.label}`}
+              <button key={f} onClick={() => setFilter(f)} style={{ padding:'4px 10px', borderRadius:99, fontSize:10, fontWeight:600, border:'none', cursor:'pointer', background:filter===f?'linear-gradient(135deg,#d0121b,#a80e17)':'#f4ebea', color:filter===f?'#fff':'#55393b', transition:'all .15s', display:'inline-flex', alignItems:'center', gap:4 }}>
+                {f==='todos' ? 'Todos' : <><Icon name={ESTADO[f]?.icon} size={11} />{ESTADO[f]?.label}</>}
               </button>
             ))}
           </div>
           <div style={{ flex:1, overflowY:'auto' }}>
             <div style={{ display:'flex', flexDirection:'column', gap:6, padding:10 }}>
               {loading
-                ? <div style={{textAlign:'center',padding:'2rem',color:'#8a6d6e',fontSize:12}}>⏳ Cargando...</div>
+                ? <div style={{textAlign:'center',padding:'2rem',color:'#8a6d6e',fontSize:12}}>Cargando...</div>
                 : pedidosFilt.map(p => {
-                  const est = ESTADO[p.estado]||{label:p.estado,cls:'badge-neutral',emoji:'📌'};
+                  const est = ESTADO[p.estado]||{label:p.estado,cls:'badge-neutral',icon:'mapPin'};
                   return (
                     <div key={p.id} style={{ background:'#fff', borderRadius:14, padding:'10px 12px', border:'1px solid #e9dcdb', boxShadow:'0 2px 8px rgba(34,20,21,0.04)', display:'flex', alignItems:'center', gap:10 }}>
                       <div style={{ flex:1, minWidth:0 }}>
                         <div style={{ fontSize:12, fontWeight:700, color:'#221415', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p.cliente_nombre||p.descripcion||'—'}</div>
                         <div style={{ fontSize:10, color:'#8a6d6e', marginTop:2 }}>{p.direccion_entrega||p.direccion_destino||'—'}</div>
                       </div>
-                      <span className={`badge ${est.cls}`}><span className="badge-dot"/>{est.emoji} {est.label}</span>
+                      <span className={`badge ${est.cls}`}><span className="badge-dot"/><Icon name={est.icon} size={11} />{est.label}</span>
                       {p.estado === 'pendiente' && (
-                        <button onClick={() => setSelected(p)} style={{ padding:'4px 10px', borderRadius:99, background:'linear-gradient(135deg,#d0121b,#a80e17)', border:'none', color:'#fff', fontSize:10, fontWeight:600, cursor:'pointer', whiteSpace:'nowrap', fontFamily:'Poppins,sans-serif' }}>
-                          Asignar →
+                        <button onClick={() => setSelected(p)} style={{ padding:'4px 10px', borderRadius:99, background:'linear-gradient(135deg,#d0121b,#a80e17)', border:'none', color:'#fff', fontSize:10, fontWeight:600, cursor:'pointer', whiteSpace:'nowrap', fontFamily:'Poppins,sans-serif', display:'inline-flex', alignItems:'center', gap:4 }}>
+                          Asignar <Icon name="arrowRight" size={12} color="#fff" />
                         </button>
                       )}
                     </div>
@@ -149,21 +152,21 @@ export default function OperadorDashboard() {
       {selected && (
         <Modal onClose={() => setSelected(null)} width={420}>
           <div className="modal-inner">
-            <div className="modal-title">🛵 Asignar domiciliario</div>
+            <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="scooter" size={17} />Asignar domiciliario</div>
             <div className="modal-sub">Pedido #{String(selected.id).slice(-6)} · {selected.cliente_nombre||selected.descripcion}</div>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {domisInfo.length === 0
-                ? <p style={{textAlign:'center',padding:'1rem',color:'#8a6d6e',fontSize:12}}>Sin domiciliarios registrados 😔</p>
+                ? <p style={{textAlign:'center',padding:'1rem',color:'#8a6d6e',fontSize:12}}>Sin domiciliarios registrados</p>
                 : domisInfo.map(d => {
                   const enLinea = positions[d.id]?.activo;
                   return (
                     <button key={d.id} onClick={() => asignar(selected.id, d.id)} disabled={asignando} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:14, background:enLinea?'linear-gradient(135deg,rgba(26,156,83,0.1),rgba(5,150,105,0.1))':'#f4ebea', border:`2px solid ${enLinea?'#1a9c53':'#e9dcdb'}`, cursor:'pointer', textAlign:'left', width:'100%', transition:'all .2s', fontFamily:'Poppins,sans-serif', opacity:asignando?0.6:1 }}>
-                      <span style={{fontSize:'1.4rem'}}>🛵</span>
+                      <Icon name="scooter" size={22} color={enLinea ? '#1a9c53' : '#8a6d6e'} />
                       <div style={{flex:1}}>
                         <div style={{fontSize:13,fontWeight:700,color:'#221415'}}>{d.nombre}</div>
-                        <div style={{fontSize:10,color:enLinea?'#1a9c53':'#8a6d6e',fontWeight:500}}>{enLinea?'🟢 GPS activo':'⚫ Sin señal'}</div>
+                        <div style={{fontSize:10,color:enLinea?'#1a9c53':'#8a6d6e',fontWeight:500}}>{enLinea?'GPS activo':'Sin señal'}</div>
                       </div>
-                      <span style={{fontSize:16}}>→</span>
+                      <Icon name="chevronRight" size={16} color="#8a6d6e" />
                     </button>
                   );
                 })}

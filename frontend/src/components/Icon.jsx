@@ -43,6 +43,7 @@ const PATHS = {
   filter:       <path d="M4 5H20L14 12.5V19L10 17V12.5L4 5Z" />,
   arrowLeft:    <path d="M19 12H5M5 12L11 6M5 12L11 18" />,
   arrowRight:   <path d="M5 12H19M19 12L13 6M19 12L13 18" />,
+  truck:        <><rect x="1.5" y="7" width="12.5" height="9" rx="1" /><path d="M14 10.5H18L21.5 14V16H14V10.5Z" /><circle cx="6" cy="18.5" r="1.6" /><circle cx="17.5" cy="18.5" r="1.6" /></>,
 };
 
 export default function Icon({ name, size = 18, color = 'currentColor', strokeWidth = 1.8, style, className }) {

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import Icon from './Icon';
 
 const PEDIDOS_URL = import.meta.env.VITE_PEDIDOS_URL;
 
-const MEDALLAS = ['🥇','🥈','🥉'];
+const MEDALLAS = ['#d4af37', '#a8a8a8', '#b5732c']; // oro, plata, bronce
 
 export default function Leaderboard() {
   const { token, user } = useAuth();
@@ -21,13 +22,13 @@ export default function Leaderboard() {
       .finally(() => setLoading(false));
   }, [token]);
 
-  function getNivelEmoji(xp) {
-    if (xp >= 1500) return '👑';
-    if (xp >= 1000) return '💎';
-    if (xp >= 600)  return '🔥';
-    if (xp >= 300)  return '⚡';
-    if (xp >= 100)  return '🛵';
-    return '🥚';
+  function getNivelIcon(xp) {
+    if (xp >= 1500) return 'crown';
+    if (xp >= 1000) return 'star';
+    if (xp >= 600)  return 'flame';
+    if (xp >= 300)  return 'bolt';
+    if (xp >= 100)  return 'scooter';
+    return 'mapPin';
   }
 
   return (
@@ -35,11 +36,11 @@ export default function Leaderboard() {
       background: '#fff', borderRadius: 20, padding: '1rem',
       border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)',
     }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: '#55393b', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12, fontFamily: 'Poppins,sans-serif' }}>
-        🏆 Ranking domiciliarios
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#55393b', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12, fontFamily: 'Poppins,sans-serif', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <Icon name="trophy" size={13} />Ranking domiciliarios
       </div>
       {loading ? (
-        <p style={{ color: '#8a6d6e', fontSize: 12, fontFamily: 'Poppins,sans-serif' }}>⏳ Cargando...</p>
+        <p style={{ color: '#8a6d6e', fontSize: 12, fontFamily: 'Poppins,sans-serif' }}>Cargando...</p>
       ) : ranking.length === 0 ? (
         <p style={{ color: '#c9b6b6', fontSize: 12, fontFamily: 'Poppins,sans-serif' }}>Sin entregas registradas aún</p>
       ) : (
@@ -54,10 +55,10 @@ export default function Leaderboard() {
                 border: esYo ? '1px solid #ffb8b2' : '1px solid #e9dcdb',
                 transition: 'all .2s',
               }}>
-                <div style={{ fontSize: 18, width: 28, textAlign: 'center', flexShrink: 0 }}>
-                  {MEDALLAS[i] || `#${i + 1}`}
+                <div style={{ width: 28, textAlign: 'center', flexShrink: 0, fontSize: 13, fontWeight: 800, color: MEDALLAS[i] || '#c9b6b6', fontFamily: 'Poppins,sans-serif' }}>
+                  {MEDALLAS[i] ? <Icon name="trophy" size={16} color={MEDALLAS[i]} /> : `#${i + 1}`}
                 </div>
-                <div style={{ fontSize: 18, flexShrink: 0 }}>{getNivelEmoji(d.xp)}</div>
+                <Icon name={getNivelIcon(d.xp)} size={16} color="#8a6d6e" style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#221415', fontFamily: 'Poppins,sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {d.nombre}{esYo ? ' (tú)' : ''}

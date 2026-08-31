@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { INSIGNIAS, getNivel } from '../hooks/useGamification';
+import Icon from './Icon';
 
 const NIVELES_CONFIG = [
-  { nivel: 1, nombre: 'Novato',     xpMin: 0,    xpMax: 100,  emoji: '🥚', color: '#94a3b8' },
-  { nivel: 2, nombre: 'Mensajero',  xpMin: 100,  xpMax: 300,  emoji: '🛵', color: '#34d399' },
-  { nivel: 3, nombre: 'Veloz',      xpMin: 300,  xpMax: 600,  emoji: '⚡', color: '#60a5fa' },
-  { nivel: 4, nombre: 'Experto',    xpMin: 600,  xpMax: 1000, emoji: '🔥', color: '#fb923c' },
-  { nivel: 5, nombre: 'Élite',      xpMin: 1000, xpMax: 1500, emoji: '💎', color: '#a78bfa' },
-  { nivel: 6, nombre: 'Legendario', xpMin: 1500, xpMax: 9999, emoji: '👑', color: '#fbbf24' },
+  { nivel: 1, nombre: 'Novato',     xpMin: 0,    xpMax: 100,  icon: 'mapPin',  color: '#94a3b8' },
+  { nivel: 2, nombre: 'Mensajero',  xpMin: 100,  xpMax: 300,  icon: 'scooter', color: '#34d399' },
+  { nivel: 3, nombre: 'Veloz',      xpMin: 300,  xpMax: 600,  icon: 'bolt',    color: '#60a5fa' },
+  { nivel: 4, nombre: 'Experto',    xpMin: 600,  xpMax: 1000, icon: 'flame',   color: '#fb923c' },
+  { nivel: 5, nombre: 'Élite',      xpMin: 1000, xpMax: 1500, icon: 'star',    color: '#a78bfa' },
+  { nivel: 6, nombre: 'Legendario', xpMin: 1500, xpMax: 9999, icon: 'crown',   color: '#fbbf24' },
 ];
 
 function getNivelConfig(nivel) {
@@ -30,12 +31,12 @@ function InsigniaBadge({ insignia, desbloqueada, nueva }) {
         background: desbloqueada ? '#fff1f0' : '#f4ebea',
         border: glow ? '2px solid #d0121b' : '2px solid #e9dcdb',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 22, cursor: 'pointer', position: 'relative',
+        cursor: 'pointer', position: 'relative',
         boxShadow: glow ? '0 0 20px rgba(208,18,27,.35)' : 'none',
         animation: glow ? 'pulse 1s infinite' : 'none',
         transition: 'all .3s',
       }}>
-        {insignia.emoji}
+        <Icon name={insignia.icon} size={22} color={desbloqueada ? '#d0121b' : '#8a6d6e'} strokeWidth={1.6} />
         {nueva && glow && (
           <div style={{
             position: 'absolute', top: -8, right: -8,
@@ -69,13 +70,13 @@ export default function GamificationPanel({ stats }) {
       {/* Header nivel */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{
-          width: 52, height: 52, borderRadius: 14, fontSize: 26,
+          width: 52, height: 52, borderRadius: 14,
           background: `linear-gradient(135deg, ${nivelCfg.color}44, ${nivelCfg.color}22)`,
           border: `2px solid ${nivelCfg.color}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: `0 4px 20px ${nivelCfg.color}55`,
         }}>
-          {nivelCfg.emoji}
+          <Icon name={nivelCfg.icon} size={26} color={nivelCfg.color} strokeWidth={1.6} />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
@@ -84,8 +85,8 @@ export default function GamificationPanel({ stats }) {
                 Nv.{nivel} {nivelCfg.nombre}
               </span>
               {nivel < 6 && (
-                <span style={{ fontSize: 10, color: '#8a6d6e', marginLeft: 6 }}>
-                  → {nivelSig.emoji} {nivelSig.nombre}
+                <span style={{ fontSize: 10, color: '#8a6d6e', marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  <Icon name="chevronRight" size={10} color="#8a6d6e" /> <Icon name={nivelSig.icon} size={11} color="#8a6d6e" /> {nivelSig.nombre}
                 </span>
               )}
             </div>
@@ -113,15 +114,15 @@ export default function GamificationPanel({ stats }) {
       {/* Stats rápidos */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
         {[
-          { emoji: '📦', value: totalEntregas, label: 'Total' },
-          { emoji: '📅', value: entregasHoy,   label: 'Hoy' },
-          { emoji: '🔥', value: `${rachaActual}d`, label: 'Racha' },
+          { icon: 'package', value: totalEntregas, label: 'Total' },
+          { icon: 'checkCircle', value: entregasHoy,   label: 'Hoy' },
+          { icon: 'flame', value: `${rachaActual}d`, label: 'Racha' },
         ].map(s => (
           <div key={s.label} style={{
             background: '#f4ebea', borderRadius: 12, padding: '8px 6px',
             textAlign: 'center', border: '1px solid #e9dcdb',
           }}>
-            <div style={{ fontSize: 16 }}>{s.emoji}</div>
+            <Icon name={s.icon} size={16} color="#55393b" style={{ marginBottom: 2 }} />
             <div style={{ fontSize: 14, fontWeight: 800, color: '#221415', fontFamily: 'Poppins,sans-serif' }}>{s.value}</div>
             <div style={{ fontSize: 9, color: '#8a6d6e', fontFamily: 'Poppins,sans-serif' }}>{s.label}</div>
           </div>
@@ -135,13 +136,13 @@ export default function GamificationPanel({ stats }) {
           border: '1px solid rgba(251,146,60,.3)', borderRadius: 12, padding: '8px 12px',
           display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          <span style={{ fontSize: 20 }}>🔥</span>
+          <Icon name="flame" size={22} color="#fb923c" />
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#fb923c', fontFamily: 'Poppins,sans-serif' }}>
               ¡{rachaActual} día{rachaActual !== 1 ? 's' : ''} de racha!
             </div>
             <div style={{ fontSize: 10, color: '#8a6d6e', fontFamily: 'Poppins,sans-serif' }}>
-              {rachaActual >= 7 ? '¡Imparable! Sigue así 💪' : `${7 - rachaActual} días más para la insignia Imparable`}
+              {rachaActual >= 7 ? '¡Imparable! Sigue así' : `${7 - rachaActual} días más para la insignia Imparable`}
             </div>
           </div>
         </div>
@@ -149,8 +150,8 @@ export default function GamificationPanel({ stats }) {
 
       {/* Insignias */}
       <div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: '#8a6d6e', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10, fontFamily: 'Poppins,sans-serif' }}>
-          🏅 Insignias ({insignias.length}/{INSIGNIAS.length})
+        <div style={{ fontSize: 10, fontWeight: 700, color: '#8a6d6e', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10, fontFamily: 'Poppins,sans-serif', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <Icon name="trophy" size={12} />Insignias ({insignias.length}/{INSIGNIAS.length})
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
           {INSIGNIAS.map(ins => (

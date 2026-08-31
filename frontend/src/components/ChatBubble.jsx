@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import io from 'socket.io-client';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import Icon from './Icon';
 
 const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 
@@ -13,9 +14,9 @@ const ROL_COLOR = {
   domiciliario: '#1a9c53', operador: '#d9820b', admin: '#4a3538',
 };
 const BRAND = '#d0121b';
-const ROL_EMOJI = {
-  distribuidor: '📦', cliente: '👤',
-  domiciliario: '🛵', operador: '🗺️', admin: '⚡',
+const ROL_ICON = {
+  distribuidor: 'package', cliente: 'user',
+  domiciliario: 'scooter', operador: 'map', admin: 'bolt',
 };
 
 function timeAgo(ts) {
@@ -128,7 +129,7 @@ useEffect(() => {
         transform: open ? 'scale(0.9)' : 'scale(1)',
         fontFamily: 'Poppins, sans-serif',
       }}>
-        {open ? '✕' : '💬'}
+        <Icon name={open ? 'x' : 'messageCircle'} size={22} color="#fff" strokeWidth={2.2} />
         {!open && unread > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -4,
@@ -157,19 +158,19 @@ useEffect(() => {
           <div style={{ padding: '14px 16px', background: myColor, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             {chatWith ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <button onClick={() => setChatWith(null)} style={{ background: 'rgba(255,255,255,.2)', border: 'none', borderRadius: '50%', width: 28, height: 28, color: '#fff', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-                <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>
-                  {ROL_EMOJI[chatWith.rol] || '👤'}
+                <button onClick={() => setChatWith(null)} style={{ background: 'rgba(255,255,255,.2)', border: 'none', borderRadius: '50%', width: 28, height: 28, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="chevronLeft" size={15} color="#fff" /></button>
+                <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name={ROL_ICON[chatWith.rol] || 'user'} size={15} color="#fff" />
                 </div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{chatWith.nombre}</div>
                   <div style={{ fontSize: 10, color: 'rgba(255,255,255,.75)' }}>
-                    {escribiendo ? '✍️ Escribiendo...' : chatWith.rol}
+                    {escribiendo ? 'Escribiendo...' : chatWith.rol}
                   </div>
                 </div>
               </div>
             ) : (
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>💬 Chat en vivo</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="messageCircle" size={16} color="#fff" />Chat en vivo</div>
             )}
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,.7)', fontWeight: 500 }}>
               {usuarios.length} en línea
@@ -181,7 +182,7 @@ useEffect(() => {
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {usuarios.length === 0 ? (
                 <div style={{ padding: '2rem', textAlign: 'center', color: '#8a6d6e' }}>
-                  <div style={{ fontSize: '2rem', marginBottom: 8 }}>😴</div>
+                  <Icon name="messageCircle" size={30} color="#c9b6b6" style={{ marginBottom: 8 }} />
                   <div style={{ fontSize: 12 }}>No hay otros usuarios conectados</div>
                 </div>
               ) : (
@@ -198,14 +199,16 @@ useEffect(() => {
                       textAlign: 'left', transition: 'background 0.15s',
                       fontFamily: 'Poppins, sans-serif',
                     }}>
-                      <div style={{ width: 38, height: 38, borderRadius: '50%', background: `${ROL_COLOR[u.rol]}20`, border: `2px solid ${ROL_COLOR[u.rol]}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>
-                        {ROL_EMOJI[u.rol] || '👤'}
+                      <div style={{ width: 38, height: 38, borderRadius: '50%', background: `${ROL_COLOR[u.rol]}20`, border: `2px solid ${ROL_COLOR[u.rol]}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Icon name={ROL_ICON[u.rol] || 'user'} size={16} color={ROL_COLOR[u.rol] || '#8a6d6e'} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: '#221415', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.nombre}</div>
-                        <div style={{ fontSize: 10, color: ROL_COLOR[u.rol], fontWeight: 500, marginTop: 1 }}>{ROL_EMOJI[u.rol]} {u.rol}</div>
+                        <div style={{ fontSize: 10, color: ROL_COLOR[u.rol], fontWeight: 500, marginTop: 1 }}>{u.rol}</div>
                       </div>
-                      <span style={{ fontSize: 10, color: '#1a9c53', fontWeight: 600 }}>● En línea</span>
+                      <span style={{ fontSize: 10, color: '#1a9c53', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#1a9c53', display: 'inline-block' }} />En línea
+                      </span>
                     </button>
                   ))}
                 </>
@@ -216,10 +219,10 @@ useEffect(() => {
               {/* Mensajes */}
               <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 4px', display: 'flex', flexDirection: 'column', gap: 8, background: '#f4ebea' }}>
                 {loadingMsgs ? (
-                  <div style={{ textAlign: 'center', color: '#8a6d6e', fontSize: 12, padding: '2rem' }}>⏳ Cargando...</div>
+                  <div style={{ textAlign: 'center', color: '#8a6d6e', fontSize: 12, padding: '2rem' }}>Cargando...</div>
                 ) : chatMsgs.length === 0 ? (
                   <div style={{ textAlign: 'center', color: '#8a6d6e', fontSize: 12, padding: '2rem' }}>
-                    <div style={{ fontSize: '2rem', marginBottom: 8 }}>👋</div>
+                    <Icon name="messageCircle" size={30} color="#c9b6b6" style={{ marginBottom: 8 }} />
                     ¡Inicia la conversación!
                   </div>
                 ) : chatMsgs.map(m => {
@@ -227,8 +230,8 @@ useEffect(() => {
                   return (
                     <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start' }}>
                       {!mine && (
-                        <div style={{ width: 26, height: 26, borderRadius: '50%', background: `${ROL_COLOR[m.from_rol]}20`, border: `2px solid ${ROL_COLOR[m.from_rol]}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', marginRight: 6, flexShrink: 0, alignSelf: 'flex-end' }}>
-                          {ROL_EMOJI[m.from_rol] || '👤'}
+                        <div style={{ width: 26, height: 26, borderRadius: '50%', background: `${ROL_COLOR[m.from_rol]}20`, border: `2px solid ${ROL_COLOR[m.from_rol]}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6, flexShrink: 0, alignSelf: 'flex-end' }}>
+                          <Icon name={ROL_ICON[m.from_rol] || 'user'} size={12} color={ROL_COLOR[m.from_rol] || '#8a6d6e'} />
                         </div>
                       )}
                       <div style={{ maxWidth: '72%', display: 'flex', flexDirection: 'column', alignItems: mine ? 'flex-end' : 'flex-start', gap: 2 }}>
@@ -280,10 +283,10 @@ useEffect(() => {
                   width: 40, height: 40, borderRadius: '50%',
                   background: texto.trim() ? myColor : '#e9dcdb',
                   border: 'none', cursor: texto.trim() ? 'pointer' : 'default',
-                  color: '#fff', fontSize: '1rem',
+                  color: '#fff',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.2s', flexShrink: 0,
-                }}>➤</button>
+                }}><Icon name="send" size={16} color="#fff" /></button>
               </form>
             </>
           )}

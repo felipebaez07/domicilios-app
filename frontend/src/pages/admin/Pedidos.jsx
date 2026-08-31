@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
+import Icon from '../../components/Icon';
 
 const API = import.meta.env.VITE_PEDIDOS_URL;
 const ESTADO = { pendiente:{label:'PENDIENTE',cls:'badge-warn'}, asignado:{label:'ASIGNADO',cls:'badge-info'}, en_camino:{label:'EN CAMINO',cls:'badge-info'}, entregado:{label:'ENTREGADO',cls:'badge-ok'}, cancelado:{label:'CANCELADO',cls:'badge-err'} };
@@ -69,8 +70,8 @@ export default function AdminPedidos() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.25rem', borderTop: '1px solid var(--border)' }}>
           <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)' }}>PÁG {page}/{pages}</span>
           <div style={{ display: 'flex', gap: 4 }}>
-            <button onClick={() => setPage(v => v-1)} disabled={page===1} style={{ padding: '4px 10px', fontSize: 8, fontFamily: 'var(--font-mono)', background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt-2)', cursor: 'pointer', opacity: page===1?0.3:1 }}>← ANT</button>
-            <button onClick={() => setPage(v => v+1)} disabled={page===pages} style={{ padding: '4px 10px', fontSize: 8, fontFamily: 'var(--font-mono)', background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt-2)', cursor: 'pointer', opacity: page===pages?0.3:1 }}>SIG →</button>
+            <button onClick={() => setPage(v => v-1)} disabled={page===1} style={{ padding: '4px 10px', fontSize: 8, fontFamily: 'var(--font-mono)', background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt-2)', cursor: 'pointer', opacity: page===1?0.3:1, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Icon name="arrowLeft" size={10} />ANT</button>
+            <button onClick={() => setPage(v => v+1)} disabled={page===pages} style={{ padding: '4px 10px', fontSize: 8, fontFamily: 'var(--font-mono)', background: 'transparent', border: '1px solid var(--border)', color: 'var(--txt-2)', cursor: 'pointer', opacity: page===pages?0.3:1, display: 'inline-flex', alignItems: 'center', gap: 3 }}>SIG<Icon name="arrowRight" size={10} /></button>
           </div>
         </div>
       )}

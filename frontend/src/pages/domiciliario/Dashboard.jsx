@@ -12,13 +12,14 @@ import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 import { useGamification } from '../../hooks/useGamification';
 import GamificationPanel from '../../components/GamificationPanel';
 import Leaderboard from '../../components/Leaderboard';
+import Icon from '../../components/Icon';
 
 const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
 
 const myIcon = new L.DivIcon({
   html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-    <div style="width:40px;height:40px;border-radius:50%;background:#d0121b;border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px rgba(208,18,27,0.4);">🛵</div>
+    <div style="width:40px;height:40px;border-radius:50%;background:#d0121b;border:3px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(208,18,27,0.4);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="2.2"/><circle cx="18.5" cy="18.5" r="2.2"/><path d="M7.5 18.5H12L15 10H18"/><path d="M12 18.5L9.5 12H6.5"/><path d="M15 10L17 6"/></svg></div>
     <div style="background:white;color:#a80e17;font-size:9px;padding:2px 8px;border-radius:99px;font-family:Poppins,sans-serif;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.1);">Tú</div>
   </div>`,
   iconSize:[70,52], iconAnchor:[35,52], className:'',
@@ -88,7 +89,7 @@ function WazeBtn({ pedido }) {
         onClick={() => { abrirWaze(pedido.lat_origen, pedido.lng_origen, dirOrigen); setEtapa('destino'); }}
         style={{ ...btnBase, background: 'linear-gradient(135deg,#00c9ff,#0090d4)', color: '#fff', boxShadow: '0 4px 15px rgba(0,144,212,.4)' }}
       >
-        <span style={{ fontSize: '1.1rem' }}>🗺️</span> Ir al origen con Waze
+        <Icon name="map" size={17} color="#fff" /> Ir al origen con Waze
       </button>
     );
   }
@@ -99,21 +100,21 @@ function WazeBtn({ pedido }) {
         onClick={() => setEtapa('origen')}
         style={{ ...btnBase, background: '#f4ebea', color: '#55393b', border: '1px solid #e9dcdb', fontSize: 11 }}
       >
-        ← Volver al origen
+        <Icon name="arrowLeft" size={14} /> Volver al origen
       </button>
       <button
         onClick={() => abrirWaze(pedido.lat_destino, pedido.lng_destino, dirDestino)}
         style={{ ...btnBase, background: 'linear-gradient(135deg,#00e67a,#00b050)', color: '#fff', boxShadow: '0 4px 15px rgba(0,176,80,.4)' }}
       >
-        <span style={{ fontSize: '1.1rem' }}>🚚</span> Ir al destino con Waze
+        <Icon name="truck" size={17} color="#fff" /> Ir al destino con Waze
       </button>
     </div>
   );
 }
 
 const ESTADOS_SIG = {
-  asignado:  { next: 'en_camino', label: '▶️ Iniciar entrega' },
-  en_camino: { next: 'entregado', label: '✅ Marcar entregado' },
+  asignado:  { next: 'en_camino', label: 'Iniciar entrega',   icon: 'scooter' },
+  en_camino: { next: 'entregado', label: 'Marcar entregado', icon: 'checkCircle' },
 };
 
 export default function DomiciliarioDashboard() {
@@ -228,7 +229,7 @@ export default function DomiciliarioDashboard() {
     <DashboardLayout role="domiciliario" pageTitle="Mi turno">
       <div className="page-header">
         <div>
-          <div className="page-title">🏠 Centro de entregas</div>
+          <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="home" size={18} />Centro de entregas</div>
           <div className="page-subtitle">Gestiona tu ruta y comparte tu ubicación GPS · auto-sync 15s</div>
         </div>
         <button onClick={toggleGPS} style={{
@@ -241,16 +242,16 @@ export default function DomiciliarioDashboard() {
         }}>
           {gpsOn
             ? <><span style={{ width:8, height:8, borderRadius:'50%', background:'#1a9c53', display:'inline-block', boxShadow:'0 0 8px #1a9c53', animation:'blink 2s infinite' }}/>GPS activo</>
-            : <>📍 Activar GPS</>}
+            : <><Icon name="mapPin" size={13} />Activar GPS</>}
         </button>
       </div>
 
-      {gpsErr && <div className="alert alert-err" style={{ margin: '0 1.5rem .5rem' }}>⚠️ {gpsErr}</div>}
+      {gpsErr && <div className="alert alert-err" style={{ margin: '0 1.5rem .5rem' }}>{gpsErr}</div>}
 
       <div className="stats-grid-3">
-        <StatCard icon={gpsOn ? '📡' : '📵'} value={gpsOn ? 'ACTIVO' : 'INACTIVO'} label="GPS"           delay={0}   />
-        <StatCard icon="📦"                   value={loading ? '—' : String(pedidoActivo ? 1 : 0)}        label="Pedido activo" delay={100} />
-        <StatCard icon="✅"                   value={loading ? '—' : String(pedidosHoy.length)}            label="Entregas hoy"  delay={200} />
+        <StatCard icon={<Icon name={gpsOn ? 'mapPin' : 'x'} size={20} />} value={gpsOn ? 'ACTIVO' : 'INACTIVO'} label="GPS"           delay={0}   />
+        <StatCard icon={<Icon name="package" size={20} />}   value={loading ? '—' : String(pedidoActivo ? 1 : 0)}        label="Pedido activo" delay={100} />
+        <StatCard icon={<Icon name="checkCircle" size={20} />} value={loading ? '—' : String(pedidosHoy.length)}            label="Entregas hoy"  delay={200} />
       </div>
 
       <div className="responsive-split" style={{ '--split-cols': '1fr 300px 280px', height: 'calc(100vh - 290px)', minHeight: 360 }}>
@@ -261,21 +262,22 @@ export default function DomiciliarioDashboard() {
               position: 'absolute', bottom: 10, right: 10, zIndex: 10,
               background: 'rgba(255,255,255,.9)', borderRadius: 99, padding: '4px 12px',
               fontSize: 10, fontWeight: 600, color: '#221415', boxShadow: '0 2px 10px rgba(0,0,0,.1)',
+              display: 'flex', alignItems: 'center', gap: 4,
             }}>
-              📍 {(Array.isArray(myPos) ? myPos[0] : myPos.lat).toFixed(4)}, {(Array.isArray(myPos) ? myPos[1] : myPos.lng).toFixed(4)}
+              <Icon name="mapPin" size={11} />{(Array.isArray(myPos) ? myPos[0] : myPos.lat).toFixed(4)}, {(Array.isArray(myPos) ? myPos[1] : myPos.lng).toFixed(4)}
             </div>
           )}
           <div style={{ width: '100%', height: '100%' }}>
             <AppMap center={myPos || [4.4389, -75.2322]} zoom={14}>
               {myPos && (
                 <Marker position={myPos} icon={myIcon}>
-                  <Popup>📍 Tu ubicación actual</Popup>
+                  <Popup>Tu ubicación actual</Popup>
                 </Marker>
               )}
               {pedidoActivo?.lat_origen && pedidoActivo?.lng_origen && (
                 <Marker
                   position={[pedidoActivo.lat_origen, pedidoActivo.lng_origen]}
-                  icon={L.divIcon({ className: '', html: '<div style="font-size:24px;transform:translate(-50%,-50%)">📦</div>' })}
+                  icon={L.divIcon({ className: '', html: '<div style="width:26px;height:26px;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;background:#d0121b;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8L12 3L21 8V17L12 22L3 17V8Z"/><path d="M3 8L12 13L21 8"/><path d="M12 13V22"/></svg></div>' })}
                 >
                   <Popup>Origen: {pedidoActivo.direccion_origen}</Popup>
                 </Marker>
@@ -283,7 +285,7 @@ export default function DomiciliarioDashboard() {
               {pedidoActivo?.lat_destino && pedidoActivo?.lng_destino && (
                 <Marker
                   position={[pedidoActivo.lat_destino, pedidoActivo.lng_destino]}
-                  icon={L.divIcon({ className: '', html: '<div style="font-size:24px;transform:translate(-50%,-50%)">🏠</div>' })}
+                  icon={L.divIcon({ className: '', html: '<div style="width:26px;height:26px;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;background:#221415;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11L12 4L20 11"/><path d="M6 10V20H18V10"/><path d="M10 20V15H14V20"/></svg></div>' })}
                 >
                   <Popup>Destino: {pedidoActivo.direccion_destino || pedidoActivo.direccion_entrega}</Popup>
                 </Marker>
@@ -300,7 +302,7 @@ export default function DomiciliarioDashboard() {
               backdropFilter: 'blur(4px)', zIndex: 5,
             }}>
               <div style={{ textAlign: 'center', color: '#55393b' }}>
-                <div style={{ fontSize: '3rem', marginBottom: 8 }}>📍</div>
+                <Icon name="mapPin" size={40} style={{ marginBottom: 8 }} />
                 <div style={{ fontSize: 13, fontWeight: 600 }}>Activa el GPS para ver tu posición</div>
               </div>
             </div>
@@ -313,15 +315,15 @@ export default function DomiciliarioDashboard() {
             background: '#fff', borderRadius: 20, padding: '1rem',
             border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)',
           }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#55393b', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.75rem' }}>
-              📦 Pedido activo
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#55393b', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.75rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Icon name="package" size={13} />Pedido activo
             </div>
             {loading
-              ? <p style={{ color: '#8a6d6e', fontSize: 12 }}>⏳ Cargando...</p>
+              ? <p style={{ color: '#8a6d6e', fontSize: 12 }}>Cargando...</p>
               : !pedidoActivo
               ? (
                 <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-                  <div style={{ fontSize: '2rem', marginBottom: 6 }}>😴</div>
+                  <Icon name="checkCircle" size={32} color="#c9b6b6" style={{ marginBottom: 6 }} />
                   <div style={{ fontSize: 12, fontWeight: 600, color: '#55393b' }}>Sin pedidos asignados</div>
                   <div style={{ fontSize: 10, color: '#c9b6b6', marginTop: 4 }}>Espera asignación del operador</div>
                 </div>
@@ -329,14 +331,14 @@ export default function DomiciliarioDashboard() {
               : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    { icon: '👤', label: 'Cliente',  value: pedidoActivo.cliente_nombre },
-                    { icon: '📍', label: 'Origen',   value: pedidoActivo.direccion_origen },
-                    { icon: '🏠', label: 'Destino',  value: pedidoActivo.direccion_entrega || pedidoActivo.direccion_destino },
-                    { icon: '📦', label: 'Pedido',   value: pedidoActivo.descripcion },
-                    { icon: '📞', label: 'Teléfono', value: pedidoActivo.telefono },
+                    { icon: 'user',        label: 'Cliente',  value: pedidoActivo.cliente_nombre },
+                    { icon: 'mapPin',      label: 'Origen',   value: pedidoActivo.direccion_origen },
+                    { icon: 'home',        label: 'Destino',  value: pedidoActivo.direccion_entrega || pedidoActivo.direccion_destino },
+                    { icon: 'package',     label: 'Pedido',   value: pedidoActivo.descripcion },
+                    { icon: 'phone',       label: 'Teléfono', value: pedidoActivo.telefono },
                   ].map(r => (
                     <div key={r.label} style={{ display: 'flex', gap: 8 }}>
-                      <span style={{ fontSize: '1rem', flexShrink: 0 }}>{r.icon}</span>
+                      <Icon name={r.icon} size={16} color="#8a6d6e" style={{ flexShrink: 0, marginTop: 2 }} />
                       <div>
                         <div style={{ fontSize: 9, color: '#8a6d6e', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>{r.label}</div>
                         <div style={{ fontSize: 12, color: '#221415', fontWeight: 600, marginTop: 1 }}>{r.value || '—'}</div>
@@ -359,14 +361,15 @@ export default function DomiciliarioDashboard() {
                         fontSize: 13, fontWeight: 700, cursor: 'pointer',
                         boxShadow: '0 4px 14px rgba(208,18,27,.28)',
                         transition: 'all .2s', opacity: updating ? 0.6 : 1,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                       }}
                     >
-                      {updating ? '⏳ Actualizando...' : accion.label}
+                      {updating ? <span className="rv-spinner" /> : <><Icon name={accion.icon} size={14} color="#fff" />{accion.label}</>}
                     </button>
                   )}
                   {!gpsOn && (
-                    <div className="alert alert-warn" style={{ marginTop: 4, fontSize: 10 }}>
-                      ⚠️ Activa el GPS para compartir tu ubicación
+                    <div className="alert alert-warn" style={{ marginTop: 4, fontSize: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <Icon name="mapPin" size={12} />Activa el GPS para compartir tu ubicación
                     </div>
                   )}
                 </div>
@@ -378,13 +381,13 @@ export default function DomiciliarioDashboard() {
               background: '#fff', borderRadius: 20, padding: '.85rem',
               border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)',
             }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#55393b', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.5rem' }}>
-                ✅ Entregas de hoy
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#55393b', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.5rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="checkCircle" size={13} />Entregas de hoy
               </div>
               {pedidosHoy.slice(0, 5).map(p => (
                 <div key={p.id} style={{ padding: '6px 0', borderBottom: '1px solid #f4ebea', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 11, color: '#55393b', fontWeight: 500 }}>{p.cliente_nombre || p.descripcion}</span>
-                  <span style={{ fontSize: 11 }}>✅</span>
+                  <Icon name="checkCircle" size={13} color="#2e9e5b" />
                 </div>
               ))}
             </div>

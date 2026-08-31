@@ -150,8 +150,8 @@ export default function ClienteDashboard() {
         <div style={{ padding: '1.5rem', maxWidth: 600, margin: '0 auto' }}>
           {/* Header */}
           <div style={{ marginBottom: '1.5rem' }}>
-            <button onClick={() => setStep('list')} style={{ background: '#f4ebea', border: '1px solid #e9dcdb', color: '#55393b', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', marginBottom: 12 }}>
-              ← Volver
+            <button onClick={() => setStep('list')} style={{ background: '#f4ebea', border: '1px solid #e9dcdb', color: '#55393b', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <Icon name="arrowLeft" size={13} />Volver
             </button>
             <div style={{ fontSize: 20, fontWeight: 800, color: '#221415', marginBottom: 4, fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <Icon name="building" size={18} />¿A qué empresa quieres hacerle el pedido?
@@ -206,7 +206,7 @@ export default function ClienteDashboard() {
                       Toca para seleccionar
                     </div>
                   </div>
-                  <div style={{ fontSize: 20, color: '#d0121b' }}>→</div>
+                  <Icon name="chevronRight" size={20} color="#d0121b" />
                 </button>
               ))}
             </div>
@@ -222,7 +222,7 @@ export default function ClienteDashboard() {
       <DashboardLayout role="cliente" pageTitle="Nuevo pedido">
         {/* Chip empresa seleccionada */}
         <div style={{ padding: '8px 1rem', background: '#fff', borderBottom: '1px solid #e9dcdb', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button onClick={() => setStep('empresa')} style={{ background: '#f4ebea', border: 'none', color: '#55393b', borderRadius: 99, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Poppins,sans-serif' }}>← Cambiar empresa</button>
+          <button onClick={() => setStep('empresa')} style={{ background: '#f4ebea', border: 'none', color: '#55393b', borderRadius: 99, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="arrowLeft" size={11} />Cambiar empresa</button>
           <div style={{ fontSize: 12, color: '#221415', fontWeight: 600 }}>
             {empresaSeleccionada?.emoji} {empresaSeleccionada?.nombre}
           </div>
@@ -345,7 +345,7 @@ export default function ClienteDashboard() {
 
             {!domiPos && selected?.estado === 'en_camino' && (
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 14px', background: 'rgba(255,255,255,.9)', fontSize: 11, color: '#d9820b', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500, zIndex: 10 }}>
-                ⏳ Esperando señal GPS del domiciliario...
+                <Icon name="clock" size={13} />Esperando señal GPS del domiciliario...
               </div>
             )}
           </div>
@@ -428,8 +428,8 @@ export default function ClienteDashboard() {
                 <button type="button" onClick={() => setStep('list')} style={{ flex: 1, height: 44, borderRadius: 12, background: '#f4ebea', border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#55393b', cursor: 'pointer' }}>
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} style={{ flex: 2, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#d0121b,#a80e17)', border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
-                  {saving ? '⏳ Creando...' : '🚀 Pedir ahora'}
+                <button type="submit" disabled={saving} style={{ flex: 2, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#d0121b,#a80e17)', border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'pointer', opacity: saving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  {saving ? <span className="rv-spinner" /> : <Icon name="send" size={14} color="#fff" />}{saving ? 'Creando...' : 'Pedir ahora'}
                 </button>
               </div>
             </form>

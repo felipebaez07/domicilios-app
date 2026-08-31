@@ -6,14 +6,17 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
 import AppMap from '../../components/AppMap';
+import Icon from '../../components/Icon';
 
 const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
 
+const SVG_SCOOTER = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="2.2"/><circle cx="18.5" cy="18.5" r="2.2"/><path d="M7.5 18.5H12L15 10H18"/><path d="M12 18.5L9.5 12H6.5"/><path d="M15 10L17 6"/></svg>`;
+
 function makeDomiIcon(nombre, activo) {
   const c = activo ? '#1a9c53' : '#94a3b8';
   return new L.DivIcon({
-    html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="width:28px;height:28px;border-radius:50%;background:${c};border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.2);">🛵</div><div style="background:white;color:#221415;font-size:8px;padding:1px 5px;border-radius:2px;white-space:nowrap;font-family:monospace;box-shadow:0 2px 6px rgba(0,0,0,0.12);">${nombre}</div></div>`,
+    html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="width:28px;height:28px;border-radius:50%;background:${c};border:2px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.2);">${SVG_SCOOTER}</div><div style="background:white;color:#221415;font-size:8px;padding:1px 5px;border-radius:2px;white-space:nowrap;font-family:monospace;box-shadow:0 2px 6px rgba(0,0,0,0.12);">${nombre}</div></div>`,
     iconSize: [70, 46], iconAnchor: [35, 46], className: '',
   });
 }
@@ -56,7 +59,7 @@ export default function OperadorDomiciliarios() {
             <AppMap center={[4.4389, -75.2322]} zoom={13}>
               {Object.entries(positions).filter(([,d]) => d.lat && d.lng).map(([id, d]) => (
                 <Marker key={id} position={[d.lat, d.lng]} icon={makeDomiIcon(d.nombre || `Dom-${id}`, d.activo)}>
-                  <Popup><div style={{ fontFamily: 'monospace', fontSize: 11, lineHeight: 1.6 }}><strong>{d.nombre}</strong><br />{d.activo ? '🟢 En línea' : '⚫ Sin señal'}</div></Popup>
+                  <Popup><div style={{ fontFamily: 'monospace', fontSize: 11, lineHeight: 1.6 }}><strong>{d.nombre}</strong><br />{d.activo ? 'En línea' : 'Sin señal'}</div></Popup>
                 </Marker>
               ))}
             </AppMap>
@@ -69,11 +72,11 @@ export default function OperadorDomiciliarios() {
             const pos = positions[d.id]; const activo = pos?.activo || false;
             return (
               <div key={d.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <div style={{ width: 30, height: 30, borderRadius: '50%', background: activo ? '#e7f9ee' : 'var(--bg-hover)', border: `1px solid ${activo ? '#a6e8bf' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', flexShrink: 0 }}>🛵</div>
+                <div style={{ width: 30, height: 30, borderRadius: '50%', background: activo ? '#e7f9ee' : 'var(--bg-hover)', border: `1px solid ${activo ? '#a6e8bf' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name="scooter" size={15} color={activo ? '#1a9c53' : 'var(--txt-3)'} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.nombre}</div>
-                  <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: activo ? '#1a9c53' : 'var(--txt-3)', letterSpacing: '0.06em', marginTop: 1 }}>
-                    {activo ? '● GPS ACTIVO' : '○ SIN SEÑAL'}
+                  <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: activo ? '#1a9c53' : 'var(--txt-3)', letterSpacing: '0.06em', marginTop: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', display: 'inline-block', flexShrink: 0 }} />{activo ? 'GPS ACTIVO' : 'SIN SEÑAL'}
                   </div>
                   {pos?.lat && <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 1 }}>{pos.lat.toFixed(4)}, {pos.lng.toFixed(4)}</div>}
                 </div>

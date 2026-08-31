@@ -6,12 +6,13 @@ import io from 'socket.io-client';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
 import AppMap from '../../components/AppMap';
+import Icon from '../../components/Icon';
 
 const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
 const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 
 const domiIcon = new L.DivIcon({
-  html: `<div style="width:36px;height:36px;border-radius:50%;background:#d0121b;border:3px solid rgba(208,18,27,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;">🛵</div>`,
+  html: `<div style="width:36px;height:36px;border-radius:50%;background:#d0121b;border:3px solid rgba(208,18,27,0.4);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="2.2"/><circle cx="18.5" cy="18.5" r="2.2"/><path d="M7.5 18.5H12L15 10H18"/><path d="M12 18.5L9.5 12H6.5"/><path d="M15 10L17 6"/></svg></div>`,
   iconSize: [36, 36], iconAnchor: [18, 18], className: '',
 });
 
@@ -89,12 +90,12 @@ export default function ClienteRastreo() {
             </div>
             <div style={{ height: 340 }}>
               <AppMap center={domiPos || [4.4389, -75.2322]} zoom={13}>
-                {domiPos && <Marker position={domiPos} icon={domiIcon}><Popup>🛵 Domiciliario en camino</Popup></Marker>}
+                {domiPos && <Marker position={domiPos} icon={domiIcon}><Popup>Domiciliario en camino</Popup></Marker>}
               </AppMap>
             </div>
             {!domiPos && (
-              <div style={{ padding: '0.6rem 1.1rem', background: 'rgba(217,130,11,0.08)', borderTop: '1px solid var(--border-subtle)', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: '#d9820b' }}>
-                ⏳ Esperando señal GPS del domiciliario...
+              <div style={{ padding: '0.6rem 1.1rem', background: 'rgba(217,130,11,0.08)', borderTop: '1px solid var(--border-subtle)', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: '#d9820b', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="clock" size={12} />Esperando señal GPS del domiciliario...
               </div>
             )}
           </div>
@@ -120,7 +121,7 @@ export default function ClienteRastreo() {
                         fontSize: '0.6rem', color: done ? '#fff' : 'var(--text-tertiary)', fontWeight: 600,
                         boxShadow: current ? `0 0 0 4px rgba(139,92,246,0.2)` : 'none',
                       }}>
-                        {done ? '✓' : i + 1}
+                        {done ? <Icon name="checkCircle" size={11} color="#fff" strokeWidth={2.4} /> : i + 1}
                       </div>
                       <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', color: done ? ROLE_COLOR : 'var(--text-tertiary)', textAlign: 'center', fontWeight: current ? 600 : 400 }}>
                         {LABELS[paso]}
