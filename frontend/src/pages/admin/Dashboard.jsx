@@ -66,12 +66,12 @@ export default function AdminDashboard() {
           const n = counts[k]||0;
           const pct = total > 0 ? (n/total)*100 : 0;
           return (
-            <div key={k} style={{ background:'rgba(255,255,255,0.2)', borderRadius:14, padding:'0.75rem', border:'1px solid rgba(255,255,255,0.3)', textAlign:'center' }}>
+            <div key={k} style={{ background:'#fff', borderRadius:14, padding:'0.75rem', border:'1px solid #e9dcdb', boxShadow:'0 2px 8px rgba(34,20,21,0.04)', textAlign:'center' }}>
               <div style={{ fontSize:'1.2rem', marginBottom:4 }}>{v.emoji}</div>
-              <div style={{ fontSize:'1.2rem', fontWeight:800, color:'#fff', lineHeight:1 }}>{n}</div>
-              <div style={{ fontSize:9, color:'rgba(255,255,255,0.7)', fontWeight:500, marginTop:2 }}>{v.label}</div>
-              <div style={{ height:4, background:'rgba(255,255,255,0.15)', borderRadius:4, marginTop:6 }}>
-                <div style={{ height:'100%', background:'rgba(255,255,255,0.7)', borderRadius:4, width:`${pct}%`, transition:'width 0.8s ease' }} />
+              <div style={{ fontSize:'1.2rem', fontWeight:800, color:'#221415', lineHeight:1 }}>{n}</div>
+              <div style={{ fontSize:9, color:'#8a6d6e', fontWeight:500, marginTop:2 }}>{v.label}</div>
+              <div style={{ height:4, background:'#f4ebea', borderRadius:4, marginTop:6 }}>
+                <div style={{ height:'100%', background:'linear-gradient(90deg,#d0121b,#a80e17)', borderRadius:4, width:`${pct}%`, transition:'width 0.8s ease' }} />
               </div>
             </div>
           );
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
                       <td className="m">#{String(p.id).slice(-6)}</td>
                       <td className="p">{p.cliente_nombre||p.descripcion}</td>
                       <td>{p.descripcion}</td>
-                      <td style={{color:p.domiciliario_nombre?'#10b981':'#ccc'}}>{p.domiciliario_nombre||'—'}</td>
+                      <td style={{color:p.domiciliario_nombre?'#1a9c53':'#c9b6b6'}}>{p.domiciliario_nombre||'—'}</td>
                       <td><span className={`badge ${est.cls}`}><span className="badge-dot"/>{est.emoji} {est.label}</span></td>
                       <td className="m">{p.created_at?new Date(p.created_at).toLocaleDateString('es-CO'):'—'}</td>
                     </tr>
@@ -113,7 +113,7 @@ export default function AdminDashboard() {
           </table>
         </div>
         {pages>1 && (
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'0.75rem 1.25rem',borderTop:'2px solid #f0f0ff'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'0.75rem 1.25rem',borderTop:'2px solid #e9dcdb'}}>
             <span style={{fontSize:11,color:'#aaa'}}>Página {page} de {pages}</span>
             <div style={{display:'flex',gap:6}}>
               <button onClick={()=>setPage(v=>v-1)} disabled={page===1} className="btn btn-white" style={{fontSize:11,padding:'4px 12px',opacity:page===1?0.4:1}}>← Anterior</button>

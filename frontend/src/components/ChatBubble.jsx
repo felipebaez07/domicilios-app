@@ -6,10 +6,13 @@ import { useAuth } from '../context/AuthContext';
 
 const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 
+// Acentos para distinguir de un vistazo a OTROS usuarios en el chat.
+// El color de marca (rojo) se reserva para la propia burbuja/cabecera.
 const ROL_COLOR = {
-  distribuidor: '#667eea', cliente: '#8b5cf6',
-  domiciliario: '#10b981', operador: '#f59e0b', admin: '#ef4444',
+  distribuidor: '#0c7ec4', cliente: '#7d5ba6',
+  domiciliario: '#1a9c53', operador: '#d9820b', admin: '#4a3538',
 };
+const BRAND = '#d0121b';
 const ROL_EMOJI = {
   distribuidor: '📦', cliente: '👤',
   domiciliario: '🛵', operador: '🗺️', admin: '⚡',
@@ -37,13 +40,13 @@ export default function ChatBubble() {
 
   const myId  = user?.id;
   const myRol = user?.rol;
-  const myColor = ROL_COLOR[myRol] || '#667eea';
+  const myColor = BRAND;
 
-  useEffect(() => {
+useEffect(() => {
     if (!token) return;
     socketRef.current = io(TRACKING_URL, {
       auth: { token },
-      transports: ['polling', 'websocket'],
+      transports: ['polling'],
     });
 
     socketRef.current.on('usuarios_conectados', (lista) => {
@@ -130,7 +133,7 @@ export default function ChatBubble() {
           <span style={{
             position: 'absolute', top: -4, right: -4,
             width: 20, height: 20, borderRadius: '50%',
-            background: '#ef4444', color: '#fff',
+            background: '#d0121b', color: '#fff',
             fontSize: 10, fontWeight: 700,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             border: '2px solid #fff', fontFamily: 'Poppins, sans-serif',
@@ -177,13 +180,13 @@ export default function ChatBubble() {
           {!chatWith ? (
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {usuarios.length === 0 ? (
-                <div style={{ padding: '2rem', textAlign: 'center', color: '#aaa' }}>
+                <div style={{ padding: '2rem', textAlign: 'center', color: '#8a6d6e' }}>
                   <div style={{ fontSize: '2rem', marginBottom: 8 }}>😴</div>
                   <div style={{ fontSize: 12 }}>No hay otros usuarios conectados</div>
                 </div>
               ) : (
                 <>
-                  <div style={{ padding: '10px 14px 4px', fontSize: 10, fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <div style={{ padding: '10px 14px 4px', fontSize: 10, fontWeight: 600, color: '#8a6d6e', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     Usuarios conectados
                   </div>
                   {usuarios.map(u => (
@@ -191,7 +194,7 @@ export default function ChatBubble() {
                       width: '100%', padding: '10px 14px',
                       display: 'flex', alignItems: 'center', gap: 10,
                       background: 'transparent', border: 'none',
-                      borderBottom: '1px solid #f5f5f5', cursor: 'pointer',
+                      borderBottom: '1px solid #f4ebea', cursor: 'pointer',
                       textAlign: 'left', transition: 'background 0.15s',
                       fontFamily: 'Poppins, sans-serif',
                     }}>
@@ -199,10 +202,10 @@ export default function ChatBubble() {
                         {ROL_EMOJI[u.rol] || '👤'}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.nombre}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#221415', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.nombre}</div>
                         <div style={{ fontSize: 10, color: ROL_COLOR[u.rol], fontWeight: 500, marginTop: 1 }}>{ROL_EMOJI[u.rol]} {u.rol}</div>
                       </div>
-                      <span style={{ fontSize: 10, color: '#10b981', fontWeight: 600 }}>● En línea</span>
+                      <span style={{ fontSize: 10, color: '#1a9c53', fontWeight: 600 }}>● En línea</span>
                     </button>
                   ))}
                 </>
@@ -211,11 +214,11 @@ export default function ChatBubble() {
           ) : (
             <>
               {/* Mensajes */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 4px', display: 'flex', flexDirection: 'column', gap: 8, background: '#f8f9ff' }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 4px', display: 'flex', flexDirection: 'column', gap: 8, background: '#f4ebea' }}>
                 {loadingMsgs ? (
-                  <div style={{ textAlign: 'center', color: '#aaa', fontSize: 12, padding: '2rem' }}>⏳ Cargando...</div>
+                  <div style={{ textAlign: 'center', color: '#8a6d6e', fontSize: 12, padding: '2rem' }}>⏳ Cargando...</div>
                 ) : chatMsgs.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: '#aaa', fontSize: 12, padding: '2rem' }}>
+                  <div style={{ textAlign: 'center', color: '#8a6d6e', fontSize: 12, padding: '2rem' }}>
                     <div style={{ fontSize: '2rem', marginBottom: 8 }}>👋</div>
                     ¡Inicia la conversación!
                   </div>
@@ -229,19 +232,19 @@ export default function ChatBubble() {
                         </div>
                       )}
                       <div style={{ maxWidth: '72%', display: 'flex', flexDirection: 'column', alignItems: mine ? 'flex-end' : 'flex-start', gap: 2 }}>
-                        {!mine && <span style={{ fontSize: 9, color: '#aaa', fontWeight: 600, marginLeft: 4 }}>{m.from_nombre}</span>}
+                        {!mine && <span style={{ fontSize: 9, color: '#8a6d6e', fontWeight: 600, marginLeft: 4 }}>{m.from_nombre}</span>}
                         <div style={{
                           padding: '8px 12px',
                           borderRadius: mine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
                           background: mine ? myColor : '#fff',
-                          color: mine ? '#fff' : '#1a1a2e',
+                          color: mine ? '#fff' : '#221415',
                           fontSize: 13, lineHeight: 1.4,
                           boxShadow: mine ? `0 2px 8px ${myColor}40` : '0 1px 4px rgba(0,0,0,.08)',
                           wordBreak: 'break-word',
                         }}>
                           {m.mensaje}
                         </div>
-                        <span style={{ fontSize: 9, color: '#bbb', marginLeft: 4, marginRight: 4 }}>{timeAgo(m.timestamp)}</span>
+                        <span style={{ fontSize: 9, color: '#c9b6b6', marginLeft: 4, marginRight: 4 }}>{timeAgo(m.timestamp)}</span>
                       </div>
                     </div>
                   );
@@ -250,7 +253,7 @@ export default function ChatBubble() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div style={{ padding: '8px 14px', borderRadius: '18px 18px 18px 4px', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,.08)', display: 'flex', gap: 4, alignItems: 'center' }}>
                       {[0,1,2].map(i => (
-                        <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#ccc', display: 'inline-block', animation: `bounce 1.2s ${i*0.2}s infinite` }}/>
+                        <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#c9b6b6', display: 'inline-block', animation: `bounce 1.2s ${i*0.2}s infinite` }}/>
                       ))}
                     </div>
                   </div>
@@ -259,23 +262,23 @@ export default function ChatBubble() {
               </div>
 
               {/* Input */}
-              <form onSubmit={enviar} style={{ padding: '10px 12px', borderTop: '1px solid #f0f0f0', display: 'flex', gap: 8, background: '#fff' }}>
+              <form onSubmit={enviar} style={{ padding: '10px 12px', borderTop: '1px solid #e9dcdb', display: 'flex', gap: 8, background: '#fff' }}>
                 <input
                   value={texto} onChange={onType}
                   placeholder="Escribe un mensaje..."
                   autoComplete="off"
                   style={{
                     flex: 1, height: 40, borderRadius: 99,
-                    border: '2px solid #f0f0ff', padding: '0 14px',
+                    border: '2px solid #e9dcdb', padding: '0 14px',
                     fontSize: 13, fontFamily: 'Poppins, sans-serif',
-                    outline: 'none', background: '#f8f9ff',
+                    outline: 'none', background: '#f4ebea',
                   }}
                   onFocus={e => e.target.style.borderColor = myColor}
-                  onBlur={e  => e.target.style.borderColor = '#f0f0ff'}
+                  onBlur={e  => e.target.style.borderColor = '#e9dcdb'}
                 />
                 <button type="submit" disabled={!texto.trim()} style={{
                   width: 40, height: 40, borderRadius: '50%',
-                  background: texto.trim() ? myColor : '#e0e0f0',
+                  background: texto.trim() ? myColor : '#e9dcdb',
                   border: 'none', cursor: texto.trim() ? 'pointer' : 'default',
                   color: '#fff', fontSize: '1rem',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',

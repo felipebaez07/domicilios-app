@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
@@ -49,32 +49,26 @@ const RC = {
   superadmin:   { label: 'Superadmin',   emoji: '👑' },
 };
 
-const GRADIENTS = {
-  distribuidor: 'linear-gradient(135deg, #667eea, #764ba2)',
-  cliente:      'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-  domiciliario: 'linear-gradient(135deg, #10b981, #059669)',
-  operador:     'linear-gradient(135deg, #f59e0b, #d97706)',
-  admin:        'linear-gradient(135deg, #ef4444, #dc2626)',
-  superadmin:   'linear-gradient(135deg, #1a1a2e, #16213e)',
-};
+// Una sola marca (rojo carmesí) para todos los roles — el color ya no
+// distingue el portal, la navegación y el texto se encargan de eso.
+const BRAND_GRAD = 'linear-gradient(135deg, #d0121b, #a80e17)';
+const BRAND_C1 = '#d0121b';
+const BRAND_C2 = '#a80e17';
 
 export default function DashboardLayout({ role, children, pageTitle }) {
   const { user, logout } = useAuth();
   const navigate  = useNavigate();
   const location  = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const lineRef   = useRef(null);
   const nav  = NAV[role] || [];
   const rc   = RC[role] || {};
   // Usar colores de empresa si el admin/operador/domiciliario los tiene configurados
   const empresaColor1 = user?.empresa_color1
   const empresaColor2 = user?.empresa_color2
   const usarEmpresa = ['admin','operador','domiciliario','distribuidor'].includes(role) && empresaColor1 && empresaColor2
-  const grad = usarEmpresa
-    ? `linear-gradient(135deg, ${empresaColor1}, ${empresaColor2})`
-    : GRADIENTS[role] || GRADIENTS.distribuidor;
-  const c1 = usarEmpresa ? empresaColor1 : (role === 'admin' ? '#ef4444' : role === 'operador' ? '#f59e0b' : role === 'domiciliario' ? '#10b981' : role === 'distribuidor' ? '#667eea' : role === 'cliente' ? '#8b5cf6' : '#1a1a2e')
-  const c2 = usarEmpresa ? empresaColor2 : (role === 'admin' ? '#dc2626' : role === 'operador' ? '#d97706' : role === 'domiciliario' ? '#059669' : role === 'distribuidor' ? '#764ba2' : role === 'cliente' ? '#6d28d9' : '#16213e')
+  const grad = usarEmpresa ? `linear-gradient(135deg, ${empresaColor1}, ${empresaColor2})` : BRAND_GRAD
+  const c1 = usarEmpresa ? empresaColor1 : BRAND_C1
+  const c2 = usarEmpresa ? empresaColor2 : BRAND_C2
 
   const initials = (user?.nombre || user?.email || 'U')
     .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -84,26 +78,16 @@ export default function DashboardLayout({ role, children, pageTitle }) {
     (n.path !== `/${role}` && location.pathname.startsWith(n.path))
   );
 
-  function triggerLine(cb) {
-    const line = lineRef.current;
-    if (!line) { cb?.(); return; }
-    line.style.transition = 'none'; line.style.left = '-4px';
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      line.style.transition = 'left 0.48s cubic-bezier(0.76,0,0.24,1)';
-      line.style.left = '110%';
-      setTimeout(() => cb?.(), 460);
-    }));
-  }
-
   function handleNav(path) {
     setMenuOpen(false);
     if (location.pathname === path) return;
-    triggerLine(() => navigate(path));
+    navigate(path);
   }
 
   function handleLogout() {
     setMenuOpen(false);
-    triggerLine(() => { logout(); navigate('/login'); });
+    logout();
+    navigate('/login');
   }
 
   const labelClean = (lbl) => lbl.replace(/^\S+\s/, '');
@@ -181,7 +165,7 @@ export default function DashboardLayout({ role, children, pageTitle }) {
             cursor: 'pointer', color: 'rgba(255,255,255,0.8)', width: '100%', textAlign: 'left',
             fontSize: 14, fontWeight: 500, fontFamily: 'Poppins, sans-serif', transition: 'all 0.15s',
           }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.25)'; e.currentTarget.style.color = '#fff'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.22)'; e.currentTarget.style.color = '#fff'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
           >
             <span style={{ fontSize: '1.2rem' }}>🚪</span>
@@ -196,10 +180,8 @@ export default function DashboardLayout({ role, children, pageTitle }) {
   return (
     <>
       {menuPortal}
-      <div style={{ minHeight: '100vh', background: grad }} data-role={role}>
+      <div style={{ minHeight: '100vh', background: 'var(--canvas, #faf5f4)' }} data-role={role}>
         <div className="app-wrap" data-role={role} style={{ '--c1': c1, '--c2': c2, '--grad': grad, '--grad-bg': grad }}>
-          <div ref={lineRef} className="page-line" />
-
           {/* TOPBAR */}
           <header className="topbar">
             <div className="topbar-left">

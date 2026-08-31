@@ -11,13 +11,13 @@ const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
 const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 
 const domiIcon = new L.DivIcon({
-  html: `<div style="width:36px;height:36px;border-radius:50%;background:#10b981;border:3px solid rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;">🛵</div>`,
+  html: `<div style="width:36px;height:36px;border-radius:50%;background:#d0121b;border:3px solid rgba(208,18,27,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;">🛵</div>`,
   iconSize: [36, 36], iconAnchor: [18, 18], className: '',
 });
 
 const PASOS = ['pendiente','asignado','en_camino','entregado'];
 const LABELS = { pendiente:'Pendiente', asignado:'Asignado', en_camino:'En camino', entregado:'Entregado', cancelado:'Cancelado' };
-const ROLE_COLOR = '#8b5cf6';
+const ROLE_COLOR = '#d0121b';
 
 export default function ClienteRastreo() {
   const { token } = useAuth();
@@ -32,7 +32,7 @@ export default function ClienteRastreo() {
       .then(r => { setPedidos(r.data); if (r.data.length) setSelected(r.data[0]); })
       .catch(() => {}).finally(() => setLoading(false));
 
-    socketRef.current = io(TRACKING_URL, { auth: { token }, transports: ['websocket'] });
+    socketRef.current = io(TRACKING_URL, { auth: { token }, transports: ['polling'] });
     socketRef.current.on('location_update', ({ pedido_id, lat, lng }) => {
       setDomiPos(prev => selected?.id === pedido_id ? [lat, lng] : prev);
     });
@@ -63,7 +63,7 @@ export default function ClienteRastreo() {
             <div className="card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Cargando...</div>
           ) : pedidos.map(p => (
             <button key={p.id} onClick={() => setSelected(p)} style={{
-              background: selected?.id === p.id ? 'rgba(139,92,246,0.1)' : 'var(--bg-surface)',
+              background: selected?.id === p.id ? 'rgba(208,18,27,0.08)' : 'var(--bg-surface)',
               border: `1px solid ${selected?.id === p.id ? 'rgba(139,92,246,0.35)' : 'var(--border-subtle)'}`,
               borderRadius: 'var(--radius-md)', padding: '0.85rem 1rem',
               cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s', width: '100%',
@@ -93,7 +93,7 @@ export default function ClienteRastreo() {
               </AppMap>
             </div>
             {!domiPos && (
-              <div style={{ padding: '0.6rem 1.1rem', background: 'rgba(245,158,11,0.05)', borderTop: '1px solid var(--border-subtle)', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: '#fbbf24' }}>
+              <div style={{ padding: '0.6rem 1.1rem', background: 'rgba(217,130,11,0.08)', borderTop: '1px solid var(--border-subtle)', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: '#d9820b' }}>
                 ⏳ Esperando señal GPS del domiciliario...
               </div>
             )}

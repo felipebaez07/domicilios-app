@@ -21,11 +21,11 @@ const ESTADO = {
 };
 
 function makeDomiIcon(nombre, activo) {
-  const c = activo ? '#10b981' : '#94a3b8';
+  const c = activo ? '#1a9c53' : '#94a3b8';
   return new L.DivIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
       <div style="width:36px;height:36px;border-radius:50%;background:${c};border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,0.2);">🛵</div>
-      <div style="background:white;color:#1a1a2e;font-size:9px;padding:2px 7px;border-radius:99px;white-space:nowrap;font-family:Poppins,sans-serif;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.15);">${nombre}</div>
+      <div style="background:white;color:#221415;font-size:9px;padding:2px 7px;border-radius:99px;white-space:nowrap;font-family:Poppins,sans-serif;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.15);">${nombre}</div>
     </div>`,
     iconSize:[70,52], iconAnchor:[35,52], className:'',
   });
@@ -53,7 +53,7 @@ export default function OperadorDashboard() {
 
   useEffect(() => {
     fetchData();
-    socketRef.current = io(TRACKING_URL, { auth: { token }, transports: ['websocket'] });
+    socketRef.current = io(TRACKING_URL, { auth: { token }, transports: ['polling'] });
     socketRef.current.on('location_update', ({ domiciliario_id, lat, lng, nombre }) => {
       setPositions(prev => ({ ...prev, [domiciliario_id]: { lat, lng, nombre: nombre || prev[domiciliario_id]?.nombre || 'Dom', activo: true } }));
     });
@@ -95,9 +95,9 @@ export default function OperadorDashboard() {
 
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', height:'calc(100vh - 260px)', minHeight:380 }}>
         {/* Mapa */}
-        <div style={{ borderRight:'1px solid rgba(255,255,255,.15)', position:'relative', overflow:'hidden' }}>
-          <div style={{ position:'absolute', top:10, left:12, zIndex:10, background:'rgba(255,255,255,.9)', borderRadius:99, padding:'4px 12px', fontSize:11, fontWeight:600, color:'#1a1a2e', display:'flex', alignItems:'center', gap:6, boxShadow:'0 2px 10px rgba(0,0,0,.1)' }}>
-            <span style={{width:7,height:7,borderRadius:'50%',background:'#10b981',display:'inline-block',boxShadow:'0 0 6px #10b981'}}/>
+        <div style={{ borderRight:'1px solid #e9dcdb', position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', top:10, left:12, zIndex:10, background:'rgba(255,255,255,.9)', borderRadius:99, padding:'4px 12px', fontSize:11, fontWeight:600, color:'#221415', display:'flex', alignItems:'center', gap:6, boxShadow:'0 2px 10px rgba(0,0,0,.1)' }}>
+            <span style={{width:7,height:7,borderRadius:'50%',background:'#1a9c53',display:'inline-block',boxShadow:'0 0 6px #1a9c53'}}/>
             Mapa en vivo · {domisActivos} activos
           </div>
           <div style={{ width:'100%', height:'100%' }}>
@@ -112,10 +112,10 @@ export default function OperadorDashboard() {
         </div>
 
         {/* Tabla pedidos */}
-        <div style={{ display:'flex', flexDirection:'column', background:'rgba(255,255,255,.08)', overflow:'hidden' }}>
-          <div style={{ display:'flex', gap:4, padding:'8px 12px', borderBottom:'1px solid rgba(255,255,255,.12)', flexWrap:'wrap' }}>
+        <div style={{ display:'flex', flexDirection:'column', background:'#faf5f4', overflow:'hidden' }}>
+          <div style={{ display:'flex', gap:4, padding:'8px 12px', borderBottom:'1px solid #e9dcdb', flexWrap:'wrap' }}>
             {['todos','pendiente','asignado','en_camino','entregado'].map(f => (
-              <button key={f} onClick={() => setFilter(f)} style={{ padding:'4px 10px', borderRadius:99, fontSize:10, fontWeight:600, border:'none', cursor:'pointer', background:filter===f?'rgba(255,255,255,.3)':'rgba(255,255,255,.1)', color:'#fff', transition:'all .15s' }}>
+              <button key={f} onClick={() => setFilter(f)} style={{ padding:'4px 10px', borderRadius:99, fontSize:10, fontWeight:600, border:'none', cursor:'pointer', background:filter===f?'linear-gradient(135deg,#d0121b,#a80e17)':'#f4ebea', color:filter===f?'#fff':'#55393b', transition:'all .15s' }}>
                 {f==='todos'?'Todos':`${ESTADO[f]?.emoji} ${ESTADO[f]?.label}`}
               </button>
             ))}
@@ -123,18 +123,18 @@ export default function OperadorDashboard() {
           <div style={{ flex:1, overflowY:'auto' }}>
             <div style={{ display:'flex', flexDirection:'column', gap:6, padding:10 }}>
               {loading
-                ? <div style={{textAlign:'center',padding:'2rem',color:'rgba(255,255,255,.5)',fontSize:12}}>⏳ Cargando...</div>
+                ? <div style={{textAlign:'center',padding:'2rem',color:'#8a6d6e',fontSize:12}}>⏳ Cargando...</div>
                 : pedidosFilt.map(p => {
                   const est = ESTADO[p.estado]||{label:p.estado,cls:'badge-neutral',emoji:'📌'};
                   return (
-                    <div key={p.id} style={{ background:'rgba(255,255,255,.12)', borderRadius:14, padding:'10px 12px', border:'1px solid rgba(255,255,255,.2)', display:'flex', alignItems:'center', gap:10 }}>
+                    <div key={p.id} style={{ background:'#fff', borderRadius:14, padding:'10px 12px', border:'1px solid #e9dcdb', boxShadow:'0 2px 8px rgba(34,20,21,0.04)', display:'flex', alignItems:'center', gap:10 }}>
                       <div style={{ flex:1, minWidth:0 }}>
-                        <div style={{ fontSize:12, fontWeight:700, color:'#fff', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p.cliente_nombre||p.descripcion||'—'}</div>
-                        <div style={{ fontSize:10, color:'rgba(255,255,255,.6)', marginTop:2 }}>{p.direccion_entrega||p.direccion_destino||'—'}</div>
+                        <div style={{ fontSize:12, fontWeight:700, color:'#221415', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p.cliente_nombre||p.descripcion||'—'}</div>
+                        <div style={{ fontSize:10, color:'#8a6d6e', marginTop:2 }}>{p.direccion_entrega||p.direccion_destino||'—'}</div>
                       </div>
                       <span className={`badge ${est.cls}`}><span className="badge-dot"/>{est.emoji} {est.label}</span>
                       {p.estado === 'pendiente' && (
-                        <button onClick={() => setSelected(p)} style={{ padding:'4px 10px', borderRadius:99, background:'rgba(255,255,255,.25)', border:'1px solid rgba(255,255,255,.4)', color:'#fff', fontSize:10, fontWeight:600, cursor:'pointer', whiteSpace:'nowrap', fontFamily:'Poppins,sans-serif' }}>
+                        <button onClick={() => setSelected(p)} style={{ padding:'4px 10px', borderRadius:99, background:'linear-gradient(135deg,#d0121b,#a80e17)', border:'none', color:'#fff', fontSize:10, fontWeight:600, cursor:'pointer', whiteSpace:'nowrap', fontFamily:'Poppins,sans-serif' }}>
                           Asignar →
                         </button>
                       )}
@@ -153,15 +153,15 @@ export default function OperadorDashboard() {
             <div className="modal-sub">Pedido #{String(selected.id).slice(-6)} · {selected.cliente_nombre||selected.descripcion}</div>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {domisInfo.length === 0
-                ? <p style={{textAlign:'center',padding:'1rem',color:'#aaa',fontSize:12}}>Sin domiciliarios registrados 😔</p>
+                ? <p style={{textAlign:'center',padding:'1rem',color:'#8a6d6e',fontSize:12}}>Sin domiciliarios registrados 😔</p>
                 : domisInfo.map(d => {
                   const enLinea = positions[d.id]?.activo;
                   return (
-                    <button key={d.id} onClick={() => asignar(selected.id, d.id)} disabled={asignando} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:14, background:enLinea?'linear-gradient(135deg,rgba(16,185,129,0.1),rgba(5,150,105,0.1))':'#f8f9ff', border:`2px solid ${enLinea?'#10b981':'#e8eaff'}`, cursor:'pointer', textAlign:'left', width:'100%', transition:'all .2s', fontFamily:'Poppins,sans-serif', opacity:asignando?0.6:1 }}>
+                    <button key={d.id} onClick={() => asignar(selected.id, d.id)} disabled={asignando} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:14, background:enLinea?'linear-gradient(135deg,rgba(26,156,83,0.1),rgba(5,150,105,0.1))':'#f4ebea', border:`2px solid ${enLinea?'#1a9c53':'#e9dcdb'}`, cursor:'pointer', textAlign:'left', width:'100%', transition:'all .2s', fontFamily:'Poppins,sans-serif', opacity:asignando?0.6:1 }}>
                       <span style={{fontSize:'1.4rem'}}>🛵</span>
                       <div style={{flex:1}}>
-                        <div style={{fontSize:13,fontWeight:700,color:'#1a1a2e'}}>{d.nombre}</div>
-                        <div style={{fontSize:10,color:enLinea?'#10b981':'#aaa',fontWeight:500}}>{enLinea?'🟢 GPS activo':'⚫ Sin señal'}</div>
+                        <div style={{fontSize:13,fontWeight:700,color:'#221415'}}>{d.nombre}</div>
+                        <div style={{fontSize:10,color:enLinea?'#1a9c53':'#8a6d6e',fontWeight:500}}>{enLinea?'🟢 GPS activo':'⚫ Sin señal'}</div>
                       </div>
                       <span style={{fontSize:16}}>→</span>
                     </button>

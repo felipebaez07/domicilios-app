@@ -11,9 +11,9 @@ const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
 
 function makeDomiIcon(nombre, activo) {
-  const c = activo ? '#b8cfe8' : '#5a7a9a';
+  const c = activo ? '#1a9c53' : '#94a3b8';
   return new L.DivIcon({
-    html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="width:28px;height:28px;border-radius:50%;background:${c};border:2px solid ${c}55;display:flex;align-items:center;justify-content:center;font-size:13px;">🛵</div><div style="background:rgba(22,45,74,0.9);color:#c8dcf0;font-size:8px;padding:1px 5px;border-radius:2px;white-space:nowrap;font-family:monospace;">${nombre}</div></div>`,
+    html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="width:28px;height:28px;border-radius:50%;background:${c};border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.2);">🛵</div><div style="background:white;color:#221415;font-size:8px;padding:1px 5px;border-radius:2px;white-space:nowrap;font-family:monospace;box-shadow:0 2px 6px rgba(0,0,0,0.12);">${nombre}</div></div>`,
     iconSize: [70, 46], iconAnchor: [35, 46], className: '',
   });
 }
@@ -27,7 +27,7 @@ export default function OperadorDomiciliarios() {
   useEffect(() => {
     axios.get(`${PEDIDOS_URL}/usuarios/domiciliarios`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => setDomisInfo(r.data)).catch(() => {});
-    socketRef.current = io(TRACKING_URL, { auth: { token }, transports: ['websocket'] });
+    socketRef.current = io(TRACKING_URL, { auth: { token }, transports: ['polling'] });
     socketRef.current.on('location_update', ({ domiciliario_id, lat, lng, nombre }) => {
       setPositions(prev => ({ ...prev, [domiciliario_id]: { lat, lng, nombre, activo: true, lastSeen: Date.now() } }));
     });
@@ -48,8 +48,8 @@ export default function OperadorDomiciliarios() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', height: 'calc(100vh - 200px)', minHeight: 380 }}>
         {/* Mapa */}
         <div style={{ borderRight: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 8, left: 10, zIndex: 10, fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', letterSpacing: '0.1em', textTransform: 'uppercase', background: 'rgba(22,45,74,0.85)', padding: '3px 7px', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', animation: 'blink 2s infinite' }} />
+          <div style={{ position: 'absolute', top: 8, left: 10, zIndex: 10, fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-2)', letterSpacing: '0.1em', textTransform: 'uppercase', background: 'rgba(255,255,255,.9)', boxShadow: '0 2px 10px rgba(0,0,0,.1)', padding: '3px 7px', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1a9c53', display: 'inline-block', animation: 'blink 2s infinite' }} />
             MAPA EN VIVO
           </div>
           <div style={{ width: '100%', height: '100%' }}>
@@ -69,10 +69,10 @@ export default function OperadorDomiciliarios() {
             const pos = positions[d.id]; const activo = pos?.activo || false;
             return (
               <div key={d.id} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <div style={{ width: 30, height: 30, borderRadius: '50%', background: activo ? 'rgba(184,207,232,0.15)' : 'var(--bg-hover)', border: `1px solid ${activo ? 'var(--border-md)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', flexShrink: 0 }}>🛵</div>
+                <div style={{ width: 30, height: 30, borderRadius: '50%', background: activo ? '#e7f9ee' : 'var(--bg-hover)', border: `1px solid ${activo ? '#a6e8bf' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', flexShrink: 0 }}>🛵</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.nombre}</div>
-                  <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: activo ? 'var(--accent)' : 'var(--txt-3)', letterSpacing: '0.06em', marginTop: 1 }}>
+                  <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: activo ? '#1a9c53' : 'var(--txt-3)', letterSpacing: '0.06em', marginTop: 1 }}>
                     {activo ? '● GPS ACTIVO' : '○ SIN SEÑAL'}
                   </div>
                   {pos?.lat && <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 1 }}>{pos.lat.toFixed(4)}, {pos.lng.toFixed(4)}</div>}

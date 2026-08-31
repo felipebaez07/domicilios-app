@@ -130,10 +130,10 @@ export default function DistribuidorDashboard() {
                 </div>
               ))}
               <div style={{ display:'flex', gap:'.5rem', marginTop:'.25rem' }}>
-                <button type="button" onClick={() => setModal(false)} style={{ flex:1,height:44,borderRadius:12,background:'#f0f2ff',border:'none',fontFamily:'Poppins,sans-serif',fontWeight:600,fontSize:13,color:'#4a4a6a',cursor:'pointer' }}>
+                <button type="button" onClick={() => setModal(false)} style={{ flex:1,height:44,borderRadius:12,background:'#f4ebea',border:'none',fontFamily:'Poppins,sans-serif',fontWeight:600,fontSize:13,color:'#55393b',cursor:'pointer' }}>
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} style={{ flex:1,height:44,borderRadius:12,background:'linear-gradient(135deg,#667eea,#764ba2)',border:'none',fontFamily:'Poppins,sans-serif',fontWeight:700,fontSize:13,color:'#fff',cursor:'pointer',opacity:saving?0.7:1 }}>
+                <button type="submit" disabled={saving} style={{ flex:1,height:44,borderRadius:12,background:'linear-gradient(135deg,#d0121b,#a80e17)',border:'none',fontFamily:'Poppins,sans-serif',fontWeight:700,fontSize:13,color:'#fff',cursor:'pointer',opacity:saving?0.7:1 }}>
                   {saving ? '⏳ Creando...' : '🚀 Crear pedido'}
                 </button>
               </div>

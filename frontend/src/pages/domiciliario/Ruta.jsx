@@ -12,7 +12,7 @@ const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
 
 const myIcon = new L.DivIcon({
-  html: `<div style="width:34px;height:34px;border-radius:50%;background:#b8cfe8;border:3px solid rgba(184,207,232,0.35);display:flex;align-items:center;justify-content:center;font-size:16px;">🛵</div>`,
+  html: `<div style="width:34px;height:34px;border-radius:50%;background:#d0121b;border:3px solid rgba(208,18,27,0.35);display:flex;align-items:center;justify-content:center;font-size:16px;">🛵</div>`,
   iconSize: [34, 34], iconAnchor: [17, 17], className: '',
 });
 
@@ -38,7 +38,7 @@ export default function DomiciliarioRuta() {
     axios.get(`${PEDIDOS_URL}/pedidos/mis-entregas`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => setPedidoActivo(r.data.find(p => p.estado === 'asignado' || p.estado === 'en_camino') || null))
       .catch(() => {});
-    socketRef.current = io(TRACKING_URL, { auth: { token }, transports: ['websocket'] });
+    socketRef.current = io(TRACKING_URL, { auth: { token }, transports: ['polling'] });
     if (localStorage.getItem('dom_gps_active') === 'true') setTimeout(() => startWatch(), 600);
     return () => { socketRef.current?.disconnect(); if (watchRef.current) navigator.geolocation.clearWatch(watchRef.current); };
   }, []);
@@ -74,22 +74,22 @@ export default function DomiciliarioRuta() {
           <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--txt-1)' }}>Mi ruta activa</div>
           <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 2, letterSpacing: '0.08em' }}>COMPARTE TU UBICACIÓN GPS EN TIEMPO REAL</div>
         </div>
-        <button onClick={toggleGPS} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '7px 14px', background: gpsOn ? 'var(--bg-active)' : 'transparent', border: `1px solid ${gpsOn ? 'var(--border-md)' : 'var(--border)'}`, color: gpsOn ? 'var(--accent)' : 'var(--txt-2)', fontSize: 8, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s' }}>
-          {gpsOn ? <><span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', animation: 'blink 2s infinite' }} /> GPS ACTIVO</> : <>📍 ACTIVAR GPS</>}
+        <button onClick={toggleGPS} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '7px 14px', background: gpsOn ? '#e7f9ee' : 'transparent', border: `1px solid ${gpsOn ? '#a6e8bf' : 'var(--border)'}`, color: gpsOn ? '#1a9c53' : 'var(--txt-2)', fontSize: 8, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s' }}>
+          {gpsOn ? <><span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1a9c53', display: 'inline-block', animation: 'blink 2s infinite' }} /> GPS ACTIVO</> : <>📍 ACTIVAR GPS</>}
         </button>
       </div>
       {gpsErr && <div className="alert alert-err" style={{ margin: '0.75rem 1.25rem 0' }}>⚠ {gpsErr}</div>}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', height: 'calc(100vh - 190px)', minHeight: 380 }}>
         <div style={{ borderRight: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
-          {myPos && <div style={{ position: 'absolute', bottom: 8, right: 10, zIndex: 10, fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', background: 'rgba(22,45,74,0.85)', padding: '3px 7px', letterSpacing: '0.04em' }}>{myPos[0].toFixed(4)}, {myPos[1].toFixed(4)}</div>}
+          {myPos && <div style={{ position: 'absolute', bottom: 8, right: 10, zIndex: 10, fontSize: 7, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,.8)', background: 'rgba(34,20,21,0.85)', padding: '3px 7px', letterSpacing: '0.04em' }}>{myPos[0].toFixed(4)}, {myPos[1].toFixed(4)}</div>}
           <div style={{ width: '100%', height: '100%' }}>
             <AppMap center={myPos || [4.4389, -75.2322]} zoom={14}>
               {myPos && <Marker position={myPos} icon={myIcon}><Popup>📍 Tu ubicación</Popup></Marker>}
             </AppMap>
           </div>
           {!myPos && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(22,45,74,0.5)', zIndex: 5 }}>
-              <div style={{ textAlign: 'center', color: 'var(--txt-3)', fontSize: 9, fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,.75)', backdropFilter: 'blur(4px)', zIndex: 5 }}>
+              <div style={{ textAlign: 'center', color: 'var(--txt-2)', fontSize: 9, fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>
                 <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>📍</div>ACTIVA EL GPS
               </div>
             </div>

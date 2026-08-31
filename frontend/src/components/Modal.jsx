@@ -44,7 +44,7 @@ export default function Modal({ onClose, children, width = 420, fullscreen = fal
         {/* Handle para mobile */}
         {(isMobile || fullscreen) && (
           <div style={{ display:'flex', justifyContent:'center', padding:'10px 0 4px' }}>
-            <div style={{ width:36, height:4, borderRadius:2, background:'#e0e0ff' }} />
+            <div style={{ width:36, height:4, borderRadius:2, background:'#e9dcdb' }} />
           </div>
         )}
         {children}

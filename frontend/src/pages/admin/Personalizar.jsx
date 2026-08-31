@@ -8,24 +8,24 @@ const AUTH_URL = import.meta.env.VITE_AUTH_URL;
 const EMOJIS_EMPRESA = ['🏢','🚀','⚡','🌟','💎','🔥','🛵','📦','🎯','🦅','🐉','🏆'];
 
 const PALETAS = [
+  { nombre:'Carmesí',   c1:'#d0121b', c2:'#a80e17' },
   { nombre:'Índigo',    c1:'#667eea', c2:'#764ba2' },
   { nombre:'Violeta',   c1:'#8b5cf6', c2:'#6d28d9' },
   { nombre:'Verde',     c1:'#10b981', c2:'#059669' },
   { nombre:'Ámbar',     c1:'#f59e0b', c2:'#d97706' },
-  { nombre:'Rojo',      c1:'#ef4444', c2:'#dc2626' },
   { nombre:'Azul',      c1:'#3b82f6', c2:'#1d4ed8' },
   { nombre:'Rosa',      c1:'#ec4899', c2:'#be185d' },
   { nombre:'Naranja',   c1:'#f97316', c2:'#c2410c' },
   { nombre:'Cian',      c1:'#06b6d4', c2:'#0e7490' },
-  { nombre:'Oscuro',    c1:'#1a1a2e', c2:'#16213e' },
+  { nombre:'Oscuro',    c1:'#221415', c2:'#16213e' },
 ];
 
 export default function AdminPersonalizar() {
   const { token, user, login } = useAuth();
   const [form, setForm]   = useState({
     nombre:  user?.empresa_nombre || '',
-    color1:  user?.empresa_color1 || '#667eea',
-    color2:  user?.empresa_color2 || '#764ba2',
+    color1:  user?.empresa_color1 || '#d0121b',
+    color2:  user?.empresa_color2 || '#a80e17',
     emoji:   user?.empresa_emoji  || '🏢',
   });
   const [saving, setSaving]   = useState(false);
@@ -73,26 +73,26 @@ export default function AdminPersonalizar() {
           {success && <div className="alert alert-ok">{success}</div>}
 
           {/* Nombre */}
-          <div style={{ background: 'rgba(255,255,255,.15)', borderRadius: 20, padding: '1.25rem', border: '1px solid rgba(255,255,255,.25)' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 12 }}>🏢 Nombre de la empresa</div>
+          <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#221415', marginBottom: 12 }}>🏢 Nombre de la empresa</div>
             <input
               type="text"
               placeholder="Nombre de tu empresa"
               value={form.nombre}
               onChange={e => setForm(v => ({...v, nombre: e.target.value}))}
-              style={{ background: 'rgba(255,255,255,.9)', border: 'none', fontSize: 14, fontWeight: 600 }}
+              style={{ fontSize: 14, fontWeight: 600 }}
             />
           </div>
 
           {/* Emoji */}
-          <div style={{ background: 'rgba(255,255,255,.15)', borderRadius: 20, padding: '1.25rem', border: '1px solid rgba(255,255,255,.25)' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 12 }}>✨ Ícono de la empresa</div>
+          <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#221415', marginBottom: 12 }}>✨ Ícono de la empresa</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {EMOJIS_EMPRESA.map(em => (
                 <button key={em} type="button" onClick={() => setForm(v => ({...v, emoji: em}))} style={{
                   width: 48, height: 48, borderRadius: 12, fontSize: '1.5rem',
-                  background: form.emoji === em ? 'rgba(255,255,255,.35)' : 'rgba(255,255,255,.15)',
-                  border: `2px solid ${form.emoji === em ? 'rgba(255,255,255,.7)' : 'rgba(255,255,255,.2)'}`,
+                  background: form.emoji === em ? '#fff1f0' : '#f4ebea',
+                  border: `2px solid ${form.emoji === em ? '#ffb8b2' : '#e9dcdb'}`,
                   cursor: 'pointer', transition: 'all .15s',
                   transform: form.emoji === em ? 'scale(1.15)' : 'scale(1)',
                 }}>
@@ -103,8 +103,8 @@ export default function AdminPersonalizar() {
           </div>
 
           {/* Paletas predefinidas */}
-          <div style={{ background: 'rgba(255,255,255,.15)', borderRadius: 20, padding: '1.25rem', border: '1px solid rgba(255,255,255,.25)' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 12 }}>🎨 Paleta de colores</div>
+          <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#221415', marginBottom: 12 }}>🎨 Paleta de colores</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 16 }}>
               {PALETAS.map(p => (
                 <button key={p.nombre} type="button" onClick={() => setForm(v => ({...v, color1: p.c1, color2: p.c2}))} style={{
@@ -129,19 +129,19 @@ export default function AdminPersonalizar() {
                 { k: 'color2', l: '🎨 Color secundario' },
               ].map(f => (
                 <div key={f.k}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,.8)', marginBottom: 6 }}>{f.l}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#55393b', marginBottom: 6 }}>{f.l}</div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <input
                       type="color"
                       value={form[f.k]}
                       onChange={e => setForm(v => ({...v, [f.k]: e.target.value}))}
-                      style={{ width: 44, height: 44, borderRadius: 10, border: '2px solid rgba(255,255,255,.3)', cursor: 'pointer', background: 'none', padding: 2 }}
+                      style={{ width: 44, height: 44, borderRadius: 10, border: '2px solid #e9dcdb', cursor: 'pointer', background: 'none', padding: 2 }}
                     />
                     <input
                       type="text"
                       value={form[f.k]}
                       onChange={e => setForm(v => ({...v, [f.k]: e.target.value}))}
-                      style={{ flex: 1, background: 'rgba(255,255,255,.9)', border: 'none', fontSize: 12, fontWeight: 600, fontFamily: 'monospace' }}
+                      style={{ flex: 1, fontSize: 12, fontWeight: 600, fontFamily: 'monospace' }}
                     />
                   </div>
                 </div>
@@ -164,39 +164,39 @@ export default function AdminPersonalizar() {
 
         {/* Preview */}
         <div style={{ position: 'sticky', top: 20 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,.6)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#8a6d6e', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>
             👁️ Vista previa
           </div>
 
           {/* Mini dashboard preview */}
-          <div style={{ borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,.3)', border: '1px solid rgba(255,255,255,.2)' }}>
+          <div style={{ borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 50px rgba(34,20,21,0.12)', border: '1px solid #e9dcdb' }}>
             {/* Topbar */}
-            <div style={{ background: previewGrad, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ background: '#fff', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #e9dcdb' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(255,255,255,.5)' }}/>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>RAVEN</div>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: form.color1 }}/>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#221415' }}>RAVEN</div>
               </div>
-              <div style={{ padding: '3px 10px', borderRadius: 99, background: 'rgba(255,255,255,.2)', fontSize: 10, color: '#fff', fontWeight: 600 }}>
+              <div style={{ padding: '3px 10px', borderRadius: 99, background: `${form.color1}18`, fontSize: 10, color: form.color1, fontWeight: 700 }}>
                 {form.emoji} Admin
               </div>
             </div>
 
             {/* Subnav */}
-            <div style={{ background: `${form.color1}30`, padding: '8px 12px', display: 'flex', gap: 6 }}>
+            <div style={{ background: '#fff', padding: '8px 12px', display: 'flex', gap: 6, borderBottom: '1px solid #e9dcdb' }}>
               {['📈 Métricas','📦 Pedidos','👥 Equipo'].map((item, i) => (
-                <div key={i} style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 600, background: i === 0 ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.1)', color: '#fff' }}>
+                <div key={i} style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 600, background: i === 0 ? previewGrad : '#f4ebea', color: i === 0 ? '#fff' : '#55393b' }}>
                   {item}
                 </div>
               ))}
             </div>
 
             {/* Stats */}
-            <div style={{ background: previewGrad, padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+            <div style={{ background: '#faf5f4', padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
               {[{e:'📦',v:'24',l:'Pedidos'},{e:'🛵',v:'3',l:'En ruta'},{e:'✅',v:'18',l:'Entregados'}].map((s,i) => (
-                <div key={i} style={{ background: 'rgba(255,255,255,.2)', borderRadius: 10, padding: '8px', textAlign: 'center' }}>
+                <div key={i} style={{ background: '#fff', borderRadius: 10, padding: '8px', textAlign: 'center', border: '1px solid #e9dcdb' }}>
                   <div style={{ fontSize: '1rem' }}>{s.e}</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{s.v}</div>
-                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{s.l}</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: '#221415' }}>{s.v}</div>
+                  <div style={{ fontSize: 8, color: '#8a6d6e', textTransform: 'uppercase', letterSpacing: '.05em' }}>{s.l}</div>
                 </div>
               ))}
             </div>
@@ -207,8 +207,8 @@ export default function AdminPersonalizar() {
                 {form.emoji}
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a2e' }}>{form.nombre || 'Mi Empresa'}</div>
-                <div style={{ fontSize: 10, color: '#9090b0' }}>Panel de administración</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#221415' }}>{form.nombre || 'Mi Empresa'}</div>
+                <div style={{ fontSize: 10, color: '#8a6d6e' }}>Panel de administración</div>
               </div>
             </div>
           </div>

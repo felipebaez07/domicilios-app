@@ -8,21 +8,21 @@ import './Login.css';
 const AUTH_URL = import.meta.env.VITE_AUTH_URL;
 
 const ROL_INFO = {
-  distribuidor: { emoji: '📦', label: 'Distribuidor',  color: '#667eea', desc: 'Gestiona tus envíos' },
-  cliente:      { emoji: '👤', label: 'Cliente',       color: '#8b5cf6', desc: 'Rastrea tus pedidos' },
-  domiciliario: { emoji: '🛵', label: 'Domiciliario',  color: '#10b981', desc: 'Gestiona tus entregas' },
-  operador:     { emoji: '🗺️', label: 'Operador',      color: '#f59e0b', desc: 'Centro de control' },
-  admin:        { emoji: '⚡', label: 'Administrador', color: '#ef4444', desc: 'Panel de empresa' },
-  superadmin:   { emoji: '👑', label: 'Superadmin',    color: '#1a1a2e', desc: 'Plataforma RAVEN' },
+  distribuidor: { emoji: '📦', label: 'Distribuidor',  desc: 'Gestiona tus envíos' },
+  cliente:      { emoji: '👤', label: 'Cliente',       desc: 'Rastrea tus pedidos' },
+  domiciliario: { emoji: '🛵', label: 'Domiciliario',  desc: 'Gestiona tus entregas' },
+  operador:     { emoji: '🗺️', label: 'Operador',      desc: 'Centro de control' },
+  admin:        { emoji: '⚡', label: 'Administrador', desc: 'Panel de empresa' },
+  superadmin:   { emoji: '👑', label: 'Superadmin',    desc: 'Plataforma RAVEN' },
 };
 
 // Pantalla de bienvenida
 function WelcomeScreen({ usuario }) {
-  const info = ROL_INFO[usuario?.rol] || { emoji: '👤', label: usuario?.rol, color: '#667eea' };
+  const info = ROL_INFO[usuario?.rol] || { emoji: '👤', label: usuario?.rol };
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 9999,
-      background: `linear-gradient(135deg, ${info.color}, ${info.color}cc)`,
+      background: 'linear-gradient(135deg, #d0121b, #a80e17)',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       fontFamily: 'Poppins, sans-serif',
@@ -149,11 +149,11 @@ export default function Login() {
   if (welcome) return <WelcomeScreen usuario={welcome} />;
 
   return (
-    <div className="lv-root" style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', transition: 'background 0.5s ease', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+    <div className="lv-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
 
       {/* Burbujas decorativas */}
-      <div className="lv-bubble lv-bubble-1" style={{ background: 'rgba(255,255,255,0.08)' }} />
-      <div className="lv-bubble lv-bubble-2" style={{ background: 'rgba(255,255,255,0.05)' }} />
+      <div className="lv-bubble lv-bubble-1" />
+      <div className="lv-bubble lv-bubble-2" />
 
       <div className="lv-card" style={{ maxHeight: '95vh', overflowY: 'auto' }}>
         {/* Header */}
@@ -171,11 +171,11 @@ export default function Login() {
           ].map(tab => (
             <button key={tab.id} onClick={() => { setVista(tab.id); setError(''); }} style={{
               flex: 1, padding: '10px 0', borderRadius: 12,
-              background: vista === tab.id ? 'linear-gradient(135deg,#667eea,#764ba2)' : '#f0f2ff',
-              color: vista === tab.id ? '#fff' : '#4a4a6a',
+              background: vista === tab.id ? 'linear-gradient(135deg,#d0121b,#a80e17)' : '#f4ebea',
+              color: vista === tab.id ? '#fff' : '#55393b',
               border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 700,
               fontSize: 13, cursor: 'pointer', transition: 'all .2s',
-              boxShadow: vista === tab.id ? '0 4px 15px rgba(102,126,234,.4)' : 'none',
+              boxShadow: vista === tab.id ? '0 4px 15px rgba(208,18,27,.35)' : 'none',
             }}>
               {tab.label}
             </button>
@@ -193,18 +193,18 @@ export default function Login() {
               <label className="lv-field-label">🔒 Contraseña</label>
               <div style={{ position: 'relative' }}>
                 <input type={showPw ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingRight: '2.5rem' }} />
-                <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#aaa' }}>
+                <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#c9b6b6' }}>
                   {showPw ? '🙈' : '👁️'}
                 </button>
               </div>
             </div>
             {error && <div className="alert alert-err">{error}</div>}
-            <button type="submit" disabled={loading} className="lv-submit" style={{ background: 'linear-gradient(135deg,#667eea,#764ba2)', boxShadow: '0 4px 20px rgba(102,126,234,.5)', opacity: loading ? 0.7 : 1 }}>
+            <button type="submit" disabled={loading} className="lv-submit" style={{ background: 'linear-gradient(135deg,#d0121b,#a80e17)', boxShadow: '0 4px 20px rgba(208,18,27,.45)', opacity: loading ? 0.7 : 1 }}>
               {loading ? <span className="rv-spinner" /> : '🚀 Entrar a RAVEN'}
             </button>
-            <p style={{ textAlign: 'center', fontSize: 12, color: '#9090b0', marginTop: 12 }}>
+            <p style={{ textAlign: 'center', fontSize: 12, color: '#8a6d6e', marginTop: 12 }}>
               ¿No tienes cuenta?{' '}
-              <button type="button" onClick={() => { setVista('registro'); setError(''); }} style={{ background: 'none', border: 'none', color: '#667eea', fontWeight: 700, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', fontSize: 12 }}>
+              <button type="button" onClick={() => { setVista('registro'); setError(''); }} style={{ background: 'none', border: 'none', color: '#d0121b', fontWeight: 700, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', fontSize: 12 }}>
                 Regístrate aquí
               </button>
             </p>
@@ -246,7 +246,7 @@ export default function Login() {
                 max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
               />
               {reg.fechaNac && (
-                <div style={{ fontSize: 11, marginTop: 4, fontWeight: 600, color: edadOk ? '#10b981' : '#ef4444' }}>
+                <div style={{ fontSize: 11, marginTop: 4, fontWeight: 600, color: edadOk ? '#1a9c53' : '#a80e17' }}>
                   {edadOk ? `✅ ${edad} años — Mayor de edad` : `❌ ${edad} años — Debes ser mayor de 18 años`}
                 </div>
               )}
@@ -262,13 +262,13 @@ export default function Login() {
                 ].map(r => (
                   <button key={r.id} type="button" onClick={() => setReg(v => ({...v, rol: r.id}))} style={{
                     padding: '12px 10px', borderRadius: 14, textAlign: 'center',
-                    background: reg.rol === r.id ? 'linear-gradient(135deg,#667eea,#764ba2)' : '#f0f2ff',
-                    border: `2px solid ${reg.rol === r.id ? '#764ba2' : '#e8eaff'}`,
+                    background: reg.rol === r.id ? 'linear-gradient(135deg,#d0121b,#a80e17)' : '#f4ebea',
+                    border: `2px solid ${reg.rol === r.id ? '#a80e17' : '#e9dcdb'}`,
                     cursor: 'pointer', transition: 'all .2s', fontFamily: 'Poppins,sans-serif',
                   }}>
                     <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>{r.emoji}</div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: reg.rol === r.id ? '#fff' : '#1a1a2e' }}>{r.label}</div>
-                    <div style={{ fontSize: 10, color: reg.rol === r.id ? 'rgba(255,255,255,.8)' : '#9090b0', marginTop: 2 }}>{r.desc}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: reg.rol === r.id ? '#fff' : '#221415' }}>{r.label}</div>
+                    <div style={{ fontSize: 10, color: reg.rol === r.id ? 'rgba(255,255,255,.8)' : '#8a6d6e', marginTop: 2 }}>{r.desc}</div>
                   </button>
                 ))}
               </div>
@@ -284,10 +284,10 @@ export default function Login() {
                 <div className="lv-field-label">🔒 Confirmar</div>
                 <input type="password" placeholder="••••••••" value={reg.confirmar} onChange={e => setReg(v => ({...v, confirmar: e.target.value}))} required />
                 {reg.confirmar && reg.password !== reg.confirmar && (
-                  <div style={{ fontSize: 10, color: '#ef4444', marginTop: 3, fontWeight: 600 }}>❌ No coinciden</div>
+                  <div style={{ fontSize: 10, color: '#a80e17', marginTop: 3, fontWeight: 600 }}>❌ No coinciden</div>
                 )}
                 {reg.confirmar && reg.password === reg.confirmar && reg.confirmar.length >= 6 && (
-                  <div style={{ fontSize: 10, color: '#10b981', marginTop: 3, fontWeight: 600 }}>✅ Coinciden</div>
+                  <div style={{ fontSize: 10, color: '#1a9c53', marginTop: 3, fontWeight: 600 }}>✅ Coinciden</div>
                 )}
               </div>
             </div>
@@ -296,19 +296,19 @@ export default function Login() {
 
             <button type="submit" disabled={loading || edadErr} style={{
               height: 48, borderRadius: 14, marginTop: 4,
-              background: edadErr ? '#e0e0f0' : 'linear-gradient(135deg,#667eea,#764ba2)',
+              background: edadErr ? '#e9dcdb' : 'linear-gradient(135deg,#d0121b,#a80e17)',
               border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 700,
-              fontSize: 14, color: edadErr ? '#aaa' : '#fff',
+              fontSize: 14, color: edadErr ? '#c9b6b6' : '#fff',
               cursor: edadErr ? 'not-allowed' : 'pointer',
-              boxShadow: edadErr ? 'none' : '0 4px 20px rgba(102,126,234,.5)',
+              boxShadow: edadErr ? 'none' : '0 4px 20px rgba(208,18,27,.45)',
               opacity: loading ? 0.7 : 1,
             }}>
               {loading ? <span className="rv-spinner" /> : '✨ Crear mi cuenta'}
             </button>
 
-            <p style={{ textAlign: 'center', fontSize: 12, color: '#9090b0', marginTop: 4 }}>
+            <p style={{ textAlign: 'center', fontSize: 12, color: '#8a6d6e', marginTop: 4 }}>
               ¿Ya tienes cuenta?{' '}
-              <button type="button" onClick={() => { setVista('login'); setError(''); }} style={{ background: 'none', border: 'none', color: '#667eea', fontWeight: 700, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', fontSize: 12 }}>
+              <button type="button" onClick={() => { setVista('login'); setError(''); }} style={{ background: 'none', border: 'none', color: '#d0121b', fontWeight: 700, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', fontSize: 12 }}>
                 Inicia sesión
               </button>
             </p>

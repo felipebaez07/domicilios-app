@@ -57,7 +57,7 @@ export default function AdminPedidos() {
                   <td className="p">{p.cliente_nombre}</td>
                   <td style={{ maxWidth: 140 }}>{p.descripcion}</td>
                   <td style={{ maxWidth: 160 }}>{p.direccion_entrega}</td>
-                  <td style={{ color: p.domiciliario_nombre ? 'var(--accent)' : 'var(--txt-3)' }}>{p.domiciliario_nombre || '—'}</td>
+                  <td style={{ color: p.domiciliario_nombre ? '#1a9c53' : 'var(--txt-3)' }}>{p.domiciliario_nombre || '—'}</td>
                   <td><span className={`badge ${est.cls}`}>{est.label}</span></td>
                   <td className="m">{p.created_at ? new Date(p.created_at).toLocaleDateString('es-CO') : '—'}</td>
                 </tr>

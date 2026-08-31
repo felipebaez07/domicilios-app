@@ -10,8 +10,8 @@ const pinIcon = (color, emoji) => new L.DivIcon({
   iconSize:[36,50], iconAnchor:[18,50], className:'',
 });
 
-const origenIcon  = pinIcon('#10b981','📦');
-const destinoIcon = pinIcon('#ef4444','🏠');
+const origenIcon  = pinIcon('#1a9c53','📦');
+const destinoIcon = pinIcon('#d0121b','🏠');
 
 function ClickHandler({ onTap }) {
   useMapEvents({ click: e => onTap(e.latlng) });
@@ -56,12 +56,12 @@ export default function MapPicker({ onConfirm, onCancel, gradiente }) {
 
   function reset() { setOrigen(null); setDestino(null); setStep('origen'); }
 
-  const grad = gradiente || 'linear-gradient(135deg,#8b5cf6,#6d28d9)';
+  const grad = gradiente || 'linear-gradient(135deg,#d0121b,#a80e17)';
 
   const INSTRUCCIONES = {
-    origen:  { emoji:'📦', texto:'Toca el mapa para marcar el punto de RECOGIDA', color:'#10b981' },
-    destino: { emoji:'🏠', texto:'Ahora marca el punto de ENTREGA',               color:'#ef4444' },
-    confirm: { emoji:'✅', texto:'¡Perfecto! Confirma las ubicaciones',            color:'#8b5cf6' },
+    origen:  { emoji:'📦', texto:'Toca el mapa para marcar el punto de RECOGIDA', color:'#1a9c53' },
+    destino: { emoji:'🏠', texto:'Ahora marca el punto de ENTREGA',               color:'#d0121b' },
+    confirm: { emoji:'✅', texto:'¡Perfecto! Confirma las ubicaciones',            color:'#a80e17' },
   };
 
   const inst = INSTRUCCIONES[step];
@@ -81,7 +81,7 @@ export default function MapPicker({ onConfirm, onCancel, gradiente }) {
         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
           {['origen','destino','confirm'].map((s,i) => (
             <div key={s} style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <div style={{ width:24, height:24, borderRadius:'50%', background: step===s||(['destino','confirm'].includes(step)&&s==='origen')||(step==='confirm'&&s==='destino') ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color: step===s ? '#6d28d9' : '#fff', transition:'all .3s' }}>
+              <div style={{ width:24, height:24, borderRadius:'50%', background: step===s||(['destino','confirm'].includes(step)&&s==='origen')||(step==='confirm'&&s==='destino') ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color: step===s ? '#a80e17' : '#fff', transition:'all .3s' }}>
                 {i+1}
               </div>
               <span style={{ fontSize:10, color:'rgba(255,255,255,.85)', fontWeight:500 }}>
@@ -124,27 +124,27 @@ export default function MapPicker({ onConfirm, onCancel, gradiente }) {
 
       {/* Panel de confirmación */}
       {step === 'confirm' && (
-        <div style={{ padding:'1rem 1.25rem', background:'#fff', flexShrink:0, borderTop:'2px solid #f0f0ff' }}>
+        <div style={{ padding:'1rem 1.25rem', background:'#fff', flexShrink:0, borderTop:'2px solid #e9dcdb' }}>
           <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:12 }}>
-            <div style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'8px 10px', background:'#f0faf5', borderRadius:10, border:'1px solid #86efac' }}>
+            <div style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'8px 10px', background:'#e7f9ee', borderRadius:10, border:'1px solid #a6e8bf' }}>
               <span style={{ fontSize:'1.1rem', flexShrink:0 }}>📦</span>
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:9, fontWeight:700, color:'#10b981', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:2 }}>Recogida</div>
-                <div style={{ fontSize:12, color:'#1a1a2e', fontWeight:500, wordBreak:'break-word' }}>{origen?.label}</div>
+                <div style={{ fontSize:9, fontWeight:700, color:'#1a9c53', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:2 }}>Recogida</div>
+                <div style={{ fontSize:12, color:'#221415', fontWeight:500, wordBreak:'break-word' }}>{origen?.label}</div>
               </div>
-              <button onClick={() => { setOrigen(null); setStep('origen'); }} style={{ fontSize:10, color:'#aaa', background:'none', border:'none', cursor:'pointer', padding:'2px 4px' }}>✏️</button>
+              <button onClick={() => { setOrigen(null); setStep('origen'); }} style={{ fontSize:10, color:'#8a6d6e', background:'none', border:'none', cursor:'pointer', padding:'2px 4px' }}>✏️</button>
             </div>
-            <div style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'8px 10px', background:'#fef2f2', borderRadius:10, border:'1px solid #fca5a5' }}>
+            <div style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'8px 10px', background:'#fff1f0', borderRadius:10, border:'1px solid #ffb8b2' }}>
               <span style={{ fontSize:'1.1rem', flexShrink:0 }}>🏠</span>
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:9, fontWeight:700, color:'#ef4444', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:2 }}>Entrega</div>
-                <div style={{ fontSize:12, color:'#1a1a2e', fontWeight:500, wordBreak:'break-word' }}>{destino?.label}</div>
+                <div style={{ fontSize:9, fontWeight:700, color:'#d0121b', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:2 }}>Entrega</div>
+                <div style={{ fontSize:12, color:'#221415', fontWeight:500, wordBreak:'break-word' }}>{destino?.label}</div>
               </div>
-              <button onClick={() => { setDestino(null); setStep('destino'); }} style={{ fontSize:10, color:'#aaa', background:'none', border:'none', cursor:'pointer', padding:'2px 4px' }}>✏️</button>
+              <button onClick={() => { setDestino(null); setStep('destino'); }} style={{ fontSize:10, color:'#8a6d6e', background:'none', border:'none', cursor:'pointer', padding:'2px 4px' }}>✏️</button>
             </div>
           </div>
           <div style={{ display:'flex', gap:8 }}>
-            <button onClick={reset} style={{ flex:1, height:44, borderRadius:12, background:'#f0f2ff', border:'none', fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:13, color:'#4a4a6a', cursor:'pointer' }}>
+            <button onClick={reset} style={{ flex:1, height:44, borderRadius:12, background:'#f4ebea', border:'none', fontFamily:'Poppins,sans-serif', fontWeight:600, fontSize:13, color:'#55393b', cursor:'pointer' }}>
               🔄 Reiniciar
             </button>
             <button onClick={() => onConfirm({ origen, destino })} style={{ flex:2, height:44, borderRadius:12, background:grad, border:'none', fontFamily:'Poppins,sans-serif', fontWeight:700, fontSize:13, color:'#fff', cursor:'pointer', boxShadow:'0 4px 15px rgba(0,0,0,.15)' }}>

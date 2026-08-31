@@ -63,30 +63,30 @@ export default function SuperadminDashboard() {
 
       <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,.6)' }}>⏳ Cargando...</div>
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#8a6d6e' }}>⏳ Cargando...</div>
         ) : empresas.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,.6)' }}>
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#8a6d6e' }}>
             <div style={{ fontSize: '3rem', marginBottom: 12 }}>🏢</div>
             <div style={{ fontWeight: 600 }}>No hay empresas aún</div>
-            <button onClick={() => setModal(true)} style={{ marginTop: 16, padding: '10px 24px', borderRadius: 99, background: 'rgba(255,255,255,.25)', border: '1px solid rgba(255,255,255,.3)', color: '#fff', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            <button onClick={() => setModal(true)} style={{ marginTop: 16, padding: '10px 24px', borderRadius: 99, background: 'linear-gradient(135deg,#d0121b,#a80e17)', border: 'none', color: '#fff', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
               ➕ Crear primera empresa
             </button>
           </div>
         ) : empresas.map(emp => (
-          <div key={emp.id} style={{ background: 'rgba(255,255,255,.15)', borderRadius: 20, padding: '1.25rem', border: '1px solid rgba(255,255,255,.25)', display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 50, height: 50, borderRadius: 14, background: 'rgba(255,255,255,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>
+          <div key={emp.id} style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)', display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ width: 50, height: 50, borderRadius: 14, background: '#f4ebea', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>
               🏢
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{emp.nombre}</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#221415' }}>{emp.nombre}</div>
+              <div style={{ fontSize: 11, color: '#8a6d6e', marginTop: 2 }}>
                 ID: {emp.id.slice(0, 8)}... · Creada {new Date(emp.created_at).toLocaleDateString('es-CO')}
               </div>
             </div>
-            <span style={{ padding: '4px 12px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: emp.activa ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)', color: emp.activa ? '#6ee7b7' : '#fca5a5', border: `1px solid ${emp.activa ? '#6ee7b7' : '#fca5a5'}` }}>
+            <span style={{ padding: '4px 12px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: emp.activa ? '#e7f9ee' : '#fff1f0', color: emp.activa ? '#1a9c53' : '#d0121b', border: `1px solid ${emp.activa ? '#a6e8bf' : '#ffb8b2'}` }}>
               {emp.activa ? '● Activa' : '○ Inactiva'}
             </span>
-            <button onClick={() => toggleEmpresa(emp.id, emp.activa)} style={{ padding: '6px 14px', borderRadius: 99, background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.3)', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Poppins,sans-serif' }}>
+            <button onClick={() => toggleEmpresa(emp.id, emp.activa)} style={{ padding: '6px 14px', borderRadius: 99, background: '#f4ebea', border: '1px solid #e9dcdb', color: '#55393b', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Poppins,sans-serif' }}>
               {emp.activa ? '⏸ Pausar' : '▶ Activar'}
             </button>
           </div>
@@ -96,16 +96,16 @@ export default function SuperadminDashboard() {
       {modal && (
         <Modal onClose={() => setModal(false)} width={460}>
           <div style={{ padding: '1.5rem' }}>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#1a1a2e', marginBottom: 4 }}>🏢 Nueva empresa</div>
-            <div style={{ fontSize: 11, color: '#9090b0', marginBottom: '1.25rem' }}>Se creará la empresa y su administrador</div>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#221415', marginBottom: 4 }}>🏢 Nueva empresa</div>
+            <div style={{ fontSize: 11, color: '#8a6d6e', marginBottom: '1.25rem' }}>Se creará la empresa y su administrador</div>
             <form onSubmit={crearEmpresa} style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
-              <div style={{ background: '#f0f7ff', borderRadius: 12, padding: '12px', marginBottom: 4 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#2563eb', marginBottom: 8 }}>🏢 Datos de la empresa</div>
+              <div style={{ background: '#fff1f0', borderRadius: 12, padding: '12px', marginBottom: 4 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#d0121b', marginBottom: 8 }}>🏢 Datos de la empresa</div>
                 <div className="field-label">Nombre de la empresa</div>
                 <input placeholder="Ej: Domicilios Express" value={form.nombre} onChange={e => setForm(v => ({...v, nombre: e.target.value}))} required />
               </div>
-              <div style={{ background: '#f0faf5', borderRadius: 12, padding: '12px' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#10b981', marginBottom: 8 }}>👤 Administrador</div>
+              <div style={{ background: '#e7f9ee', borderRadius: 12, padding: '12px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#1a9c53', marginBottom: 8 }}>👤 Administrador</div>
                 {[
                   { k: 'admin_nombre',   l: 'Nombre del admin',    p: 'Juan García' },
                   { k: 'admin_email',    l: 'Email del admin',     p: 'admin@empresa.com', t: 'email' },
@@ -118,10 +118,10 @@ export default function SuperadminDashboard() {
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" onClick={() => setModal(false)} style={{ flex: 1, height: 44, borderRadius: 12, background: '#f0f2ff', border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#4a4a6a', cursor: 'pointer' }}>
+                <button type="button" onClick={() => setModal(false)} style={{ flex: 1, height: 44, borderRadius: 12, background: '#f4ebea', border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#55393b', cursor: 'pointer' }}>
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} style={{ flex: 2, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#667eea,#764ba2)', border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
+                <button type="submit" disabled={saving} style={{ flex: 2, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#d0121b,#a80e17)', border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
                   {saving ? '⏳ Creando...' : '🚀 Crear empresa'}
                 </button>
               </div>

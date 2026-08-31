@@ -65,7 +65,7 @@ export default function OperadorPedidos() {
                   <td>{p.descripcion}</td>
                   <td style={{ maxWidth: 160 }}>{p.direccion_entrega}</td>
                   <td><span className={`badge ${est.cls}`}>{est.label}</span></td>
-                  <td style={{ color: p.domiciliario_nombre ? 'var(--accent)' : 'var(--txt-3)' }}>{p.domiciliario_nombre || '—'}</td>
+                  <td style={{ color: p.domiciliario_nombre ? '#1a9c53' : 'var(--txt-3)' }}>{p.domiciliario_nombre || '—'}</td>
                   <td>{p.estado === 'pendiente' && <button onClick={() => setSelected(p)} style={{ padding: '2px 8px', fontSize: 7, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.06em', background: 'transparent', border: '1px solid var(--border-md)', color: 'var(--txt-2)', cursor: 'pointer' }}>ASIGNAR →</button>}</td>
                 </tr>
               );})}
@@ -73,7 +73,7 @@ export default function OperadorPedidos() {
         </table>
       </div>
       {selected && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(10,25,50,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }} onClick={e => e.target === e.currentTarget && setSelected(null)}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }} onClick={e => e.target === e.currentTarget && setSelected(null)}>
           <div className="modal">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <div className="modal-title">Asignar #{String(selected.id).slice(-6)}</div>

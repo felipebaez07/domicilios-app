@@ -22,16 +22,16 @@ function InsigniaBadge({ insignia, desbloqueada, nueva }) {
   return (
     <div title={`${insignia.nombre}: ${insignia.desc}`} style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-      opacity: desbloqueada ? 1 : 0.3, filter: desbloqueada ? 'none' : 'grayscale(1)',
+      opacity: desbloqueada ? 1 : 0.35, filter: desbloqueada ? 'none' : 'grayscale(1)',
       transition: 'all .3s',
     }}>
       <div style={{
         width: 48, height: 48, borderRadius: 12,
-        background: desbloqueada ? 'rgba(255,255,255,.2)' : 'rgba(255,255,255,.05)',
-        border: glow ? '2px solid #fbbf24' : '2px solid rgba(255,255,255,.15)',
+        background: desbloqueada ? '#fff1f0' : '#f4ebea',
+        border: glow ? '2px solid #d0121b' : '2px solid #e9dcdb',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 22, cursor: 'pointer', position: 'relative',
-        boxShadow: glow ? '0 0 20px #fbbf24' : 'none',
+        boxShadow: glow ? '0 0 20px rgba(208,18,27,.35)' : 'none',
         animation: glow ? 'pulse 1s infinite' : 'none',
         transition: 'all .3s',
       }}>
@@ -39,13 +39,13 @@ function InsigniaBadge({ insignia, desbloqueada, nueva }) {
         {nueva && glow && (
           <div style={{
             position: 'absolute', top: -8, right: -8,
-            background: '#fbbf24', color: '#000',
+            background: '#d0121b', color: '#fff',
             fontSize: 8, fontWeight: 800, padding: '2px 5px',
             borderRadius: 99, fontFamily: 'Poppins,sans-serif',
           }}>NEW</div>
         )}
       </div>
-      <span style={{ fontSize: 9, color: 'rgba(255,255,255,.6)', fontFamily: 'Poppins,sans-serif', textAlign: 'center', maxWidth: 52 }}>
+      <span style={{ fontSize: 9, color: '#8a6d6e', fontFamily: 'Poppins,sans-serif', textAlign: 'center', maxWidth: 52 }}>
         {insignia.nombre}
       </span>
     </div>
@@ -62,8 +62,9 @@ export default function GamificationPanel({ stats }) {
 
   return (
     <div style={{
-      background: 'rgba(255,255,255,.12)', borderRadius: 20, padding: '1rem',
-      border: '1px solid rgba(255,255,255,.2)', display: 'flex', flexDirection: 'column', gap: 14,
+      background: '#fff', borderRadius: 20, padding: '1rem',
+      border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)',
+      display: 'flex', flexDirection: 'column', gap: 14,
     }}>
       {/* Header nivel */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -83,17 +84,17 @@ export default function GamificationPanel({ stats }) {
                 Nv.{nivel} {nivelCfg.nombre}
               </span>
               {nivel < 6 && (
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', marginLeft: 6 }}>
+                <span style={{ fontSize: 10, color: '#8a6d6e', marginLeft: 6 }}>
                   → {nivelSig.emoji} {nivelSig.nombre}
                 </span>
               )}
             </div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.7)', fontFamily: 'Poppins,sans-serif' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#55393b', fontFamily: 'Poppins,sans-serif' }}>
               {xp} XP
             </span>
           </div>
           {/* Barra XP */}
-          <div style={{ height: 8, borderRadius: 99, background: 'rgba(255,255,255,.1)', overflow: 'hidden' }}>
+          <div style={{ height: 8, borderRadius: 99, background: '#f4ebea', overflow: 'hidden' }}>
             <div style={{
               height: '100%', borderRadius: 99, width: `${progreso}%`,
               background: `linear-gradient(90deg, ${nivelCfg.color}, ${nivelSig.color})`,
@@ -102,7 +103,7 @@ export default function GamificationPanel({ stats }) {
             }}/>
           </div>
           {nivel < 6 && (
-            <div style={{ fontSize: 9, color: 'rgba(255,255,255,.4)', marginTop: 3, fontFamily: 'Poppins,sans-serif' }}>
+            <div style={{ fontSize: 9, color: '#c9b6b6', marginTop: 3, fontFamily: 'Poppins,sans-serif' }}>
               {xpEnNivel}/{xpParaSig} XP para {nivelSig.nombre}
             </div>
           )}
@@ -117,12 +118,12 @@ export default function GamificationPanel({ stats }) {
           { emoji: '🔥', value: `${rachaActual}d`, label: 'Racha' },
         ].map(s => (
           <div key={s.label} style={{
-            background: 'rgba(255,255,255,.08)', borderRadius: 12, padding: '8px 6px',
-            textAlign: 'center', border: '1px solid rgba(255,255,255,.1)',
+            background: '#f4ebea', borderRadius: 12, padding: '8px 6px',
+            textAlign: 'center', border: '1px solid #e9dcdb',
           }}>
             <div style={{ fontSize: 16 }}>{s.emoji}</div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', fontFamily: 'Poppins,sans-serif' }}>{s.value}</div>
-            <div style={{ fontSize: 9, color: 'rgba(255,255,255,.5)', fontFamily: 'Poppins,sans-serif' }}>{s.label}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#221415', fontFamily: 'Poppins,sans-serif' }}>{s.value}</div>
+            <div style={{ fontSize: 9, color: '#8a6d6e', fontFamily: 'Poppins,sans-serif' }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -139,7 +140,7 @@ export default function GamificationPanel({ stats }) {
             <div style={{ fontSize: 12, fontWeight: 700, color: '#fb923c', fontFamily: 'Poppins,sans-serif' }}>
               ¡{rachaActual} día{rachaActual !== 1 ? 's' : ''} de racha!
             </div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', fontFamily: 'Poppins,sans-serif' }}>
+            <div style={{ fontSize: 10, color: '#8a6d6e', fontFamily: 'Poppins,sans-serif' }}>
               {rachaActual >= 7 ? '¡Imparable! Sigue así 💪' : `${7 - rachaActual} días más para la insignia Imparable`}
             </div>
           </div>
@@ -148,7 +149,7 @@ export default function GamificationPanel({ stats }) {
 
       {/* Insignias */}
       <div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,.6)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10, fontFamily: 'Poppins,sans-serif' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: '#8a6d6e', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10, fontFamily: 'Poppins,sans-serif' }}>
           🏅 Insignias ({insignias.length}/{INSIGNIAS.length})
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>

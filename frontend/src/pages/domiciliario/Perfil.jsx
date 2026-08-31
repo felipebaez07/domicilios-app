@@ -48,15 +48,15 @@ export default function DomiciliarioPerfil() {
       <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: 480 }}>
 
         {/* Info usuario */}
-        <div style={{ background: 'rgba(255,255,255,.15)', borderRadius: 20, padding: '1.25rem', border: '1px solid rgba(255,255,255,.25)' }}>
+        <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: '1rem' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,.25)', border: '3px solid rgba(255,255,255,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg,#d0121b,#a80e17)', border: '3px solid #fff', boxShadow: '0 4px 14px rgba(208,18,27,.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
               🛵
             </div>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>{user?.nombre}</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>{user?.email}</div>
-              <div style={{ fontSize: 11, color: '#10b981', fontWeight: 600, marginTop: 2 }}>● Domiciliario activo</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#221415' }}>{user?.nombre}</div>
+              <div style={{ fontSize: 12, color: '#8a6d6e' }}>{user?.email}</div>
+              <div style={{ fontSize: 11, color: '#1a9c53', fontWeight: 600, marginTop: 2 }}>● Domiciliario activo</div>
             </div>
           </div>
         </div>
@@ -66,11 +66,11 @@ export default function DomiciliarioPerfil() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '1rem' }}>
             <span style={{ fontSize: '1.5rem' }}>📲</span>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e' }}>Notificaciones Telegram</div>
-              <div style={{ fontSize: 11, color: '#9090b0' }}>Recibe alertas de pedidos en tu Telegram</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#221415' }}>Notificaciones Telegram</div>
+              <div style={{ fontSize: 11, color: '#8a6d6e' }}>Recibe alertas de pedidos en tu Telegram</div>
             </div>
             {perfil?.telegram_chat_id && (
-              <span style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: 99, background: '#dcfce7', color: '#16a34a', fontSize: 10, fontWeight: 700 }}>✅ Vinculado</span>
+              <span style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: 99, background: '#e7f9ee', color: '#1a9c53', fontSize: 10, fontWeight: 700 }}>✅ Vinculado</span>
             )}
           </div>
 
@@ -105,7 +105,7 @@ export default function DomiciliarioPerfil() {
             </div>
             <button type="submit" disabled={saving} style={{
               height: 44, borderRadius: 12,
-              background: 'linear-gradient(135deg,#10b981,#059669)',
+              background: 'linear-gradient(135deg,#d0121b,#a80e17)',
               border: 'none', fontFamily: 'Poppins,sans-serif',
               fontWeight: 700, fontSize: 13, color: '#fff',
               cursor: 'pointer', opacity: saving ? 0.7 : 1,
@@ -116,15 +116,15 @@ export default function DomiciliarioPerfil() {
         </div>
 
         {/* Qué notificaciones recibirá */}
-        <div style={{ background: 'rgba(255,255,255,.1)', borderRadius: 20, padding: '1.25rem', border: '1px solid rgba(255,255,255,.2)' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: '.75rem' }}>🔔 Notificaciones que recibirás:</div>
+        <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#221415', marginBottom: '.75rem' }}>🔔 Notificaciones que recibirás:</div>
           {[
             { emoji: '🛵', texto: 'Nuevo pedido asignado — con dirección y datos del cliente' },
             { emoji: '📍', texto: 'Recordatorio de recogida — cuando llevas mucho tiempo sin marcar en camino' },
           ].map((n, i) => (
-            <div key={i} style={{ display: 'flex', gap: 10, padding: '8px 0', borderBottom: i === 0 ? '1px solid rgba(255,255,255,.1)' : 'none' }}>
+            <div key={i} style={{ display: 'flex', gap: 10, padding: '8px 0', borderBottom: i === 0 ? '1px solid #f4ebea' : 'none' }}>
               <span style={{ fontSize: '1rem', flexShrink: 0 }}>{n.emoji}</span>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,.8)', lineHeight: 1.5 }}>{n.texto}</span>
+              <span style={{ fontSize: 11, color: '#55393b', lineHeight: 1.5 }}>{n.texto}</span>
             </div>
           ))}
         </div>

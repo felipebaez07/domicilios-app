@@ -7,9 +7,9 @@ import Modal from '../../components/Modal';
 const AUTH_URL = import.meta.env.VITE_AUTH_URL;
 
 const ROL_INFO = {
-  operador:     { emoji: '🗺️', label: 'Operador',     color: '#f59e0b' },
-  domiciliario: { emoji: '🛵', label: 'Domiciliario', color: '#10b981' },
-  distribuidor: { emoji: '📦', label: 'Distribuidor', color: '#667eea' },
+  operador:     { emoji: '🗺️', label: 'Operador',     color: '#d9820b' },
+  domiciliario: { emoji: '🛵', label: 'Domiciliario', color: '#1a9c53' },
+  distribuidor: { emoji: '📦', label: 'Distribuidor', color: '#0c7ec4' },
 };
 
 export default function AdminEquipo() {
@@ -65,10 +65,10 @@ export default function AdminEquipo() {
       {/* Stats por rol */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, padding: '1.25rem 1.5rem', paddingBottom: 0 }}>
         {Object.entries(ROL_INFO).map(([rol, info]) => (
-          <div key={rol} style={{ background: 'rgba(255,255,255,.2)', borderRadius: 16, padding: '1rem', border: '1px solid rgba(255,255,255,.3)', textAlign: 'center' }}>
+          <div key={rol} style={{ background: '#fff', borderRadius: 16, padding: '1rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)', textAlign: 'center' }}>
             <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>{info.emoji}</div>
-            <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff' }}>{usuarios.filter(u => u.rol === rol).length}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.7)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '.06em' }}>{info.label}s</div>
+            <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#221415' }}>{usuarios.filter(u => u.rol === rol).length}</div>
+            <div style={{ fontSize: 10, color: '#8a6d6e', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '.06em' }}>{info.label}s</div>
           </div>
         ))}
       </div>
@@ -95,13 +95,13 @@ export default function AdminEquipo() {
           ) : filtrados.map(u => {
             const info = ROL_INFO[u.rol] || { emoji: '👤', label: u.rol, color: '#aaa' };
             return (
-              <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 1.25rem', borderBottom: '1px solid #f0f0ff' }}>
+              <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 1.25rem', borderBottom: '1px solid #e9dcdb' }}>
                 <div style={{ width: 42, height: 42, borderRadius: 12, background: `${info.color}20`, border: `2px solid ${info.color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
                   {info.emoji}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e' }}>{u.nombre}</div>
-                  <div style={{ fontSize: 11, color: '#9090b0', marginTop: 1 }}>{u.email}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#221415' }}>{u.nombre}</div>
+                  <div style={{ fontSize: 11, color: '#8a6d6e', marginTop: 1 }}>{u.email}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {u.telegram_chat_id && <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: '#e0f2fe', color: '#0284c7', fontWeight: 600 }}>📲 TG</span>}
@@ -118,8 +118,8 @@ export default function AdminEquipo() {
       {modal && (
         <Modal onClose={() => setModal(false)} width={420}>
           <div style={{ padding: '1.5rem' }}>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#1a1a2e', marginBottom: 4 }}>➕ Agregar miembro</div>
-            <div style={{ fontSize: 11, color: '#9090b0', marginBottom: '1.25rem' }}>El usuario podrá iniciar sesión en RAVEN</div>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#221415', marginBottom: 4 }}>➕ Agregar miembro</div>
+            <div style={{ fontSize: 11, color: '#8a6d6e', marginBottom: '1.25rem' }}>El usuario podrá iniciar sesión en RAVEN</div>
             <form onSubmit={agregarUsuario} style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
               <div>
                 <div className="field-label">👤 Nombre completo</div>
@@ -142,10 +142,10 @@ export default function AdminEquipo() {
                 </select>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                <button type="button" onClick={() => setModal(false)} style={{ flex: 1, height: 44, borderRadius: 12, background: '#f0f2ff', border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#4a4a6a', cursor: 'pointer' }}>
+                <button type="button" onClick={() => setModal(false)} style={{ flex: 1, height: 44, borderRadius: 12, background: '#f4ebea', border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#55393b', cursor: 'pointer' }}>
                   Cancelar
                 </button>
-                <button type="submit" disabled={saving} style={{ flex: 2, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#ef4444,#dc2626)', border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
+                <button type="submit" disabled={saving} style={{ flex: 2, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#d0121b,#a80e17)', border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
                   {saving ? '⏳ Agregando...' : '✅ Agregar al equipo'}
                 </button>
               </div>

@@ -18,8 +18,8 @@ const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
 
 const myIcon = new L.DivIcon({
   html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-    <div style="width:40px;height:40px;border-radius:50%;background:#10b981;border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px rgba(16,185,129,0.4);">🛵</div>
-    <div style="background:white;color:#059669;font-size:9px;padding:2px 8px;border-radius:99px;font-family:Poppins,sans-serif;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.1);">Tú</div>
+    <div style="width:40px;height:40px;border-radius:50%;background:#d0121b;border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px rgba(208,18,27,0.4);">🛵</div>
+    <div style="background:white;color:#a80e17;font-size:9px;padding:2px 8px;border-radius:99px;font-family:Poppins,sans-serif;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.1);">Tú</div>
   </div>`,
   iconSize:[70,52], iconAnchor:[35,52], className:'',
 });
@@ -97,7 +97,7 @@ function WazeBtn({ pedido }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <button
         onClick={() => setEtapa('origen')}
-        style={{ ...btnBase, background: 'rgba(255,255,255,.15)', color: '#fff', border: '1px solid rgba(255,255,255,.3)', fontSize: 11 }}
+        style={{ ...btnBase, background: '#f4ebea', color: '#55393b', border: '1px solid #e9dcdb', fontSize: 11 }}
       >
         ← Volver al origen
       </button>
@@ -196,9 +196,9 @@ export default function DomiciliarioDashboard() {
 
   function toggleGPS() { gpsRef.current ? stopWatch() : startWatch(); }
 
-  useEffect(() => {
+ useEffect(() => {
     fetchData();
-    socketRef.current = io(TRACKING_URL, { auth: { token }, transports: ['polling', 'websocket'] });
+    socketRef.current = io(TRACKING_URL, { auth: { token }, transports: ['polling'] });
     if (localStorage.getItem('dom_gps_active') === 'true') setTimeout(() => startWatch(), 600);
     return () => {
       socketRef.current?.disconnect();
@@ -232,15 +232,15 @@ export default function DomiciliarioDashboard() {
           <div className="page-subtitle">Gestiona tu ruta y comparte tu ubicación GPS · auto-sync 15s</div>
         </div>
         <button onClick={toggleGPS} style={{
-          padding: '8px 20px', borderRadius: 99, border: 'none', cursor: 'pointer',
+          padding: '8px 20px', borderRadius: 99, border: gpsOn ? '2px solid #a6e8bf' : '2px solid #e9dcdb',
+          cursor: 'pointer',
           fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 700,
-          background: gpsOn ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.25)',
-          color: gpsOn ? '#10b981' : '#fff',
-          boxShadow: gpsOn ? '0 4px 15px rgba(16,185,129,.3)' : 'none',
+          background: gpsOn ? '#e7f9ee' : '#f4ebea',
+          color: gpsOn ? '#1a9c53' : '#55393b',
           transition: 'all .2s', display: 'flex', alignItems: 'center', gap: 8,
         }}>
           {gpsOn
-            ? <><span style={{ width:8, height:8, borderRadius:'50%', background:'#10b981', display:'inline-block', boxShadow:'0 0 8px #10b981', animation:'blink 2s infinite' }}/>GPS activo</>
+            ? <><span style={{ width:8, height:8, borderRadius:'50%', background:'#1a9c53', display:'inline-block', boxShadow:'0 0 8px #1a9c53', animation:'blink 2s infinite' }}/>GPS activo</>
             : <>📍 Activar GPS</>}
         </button>
       </div>
@@ -255,12 +255,12 @@ export default function DomiciliarioDashboard() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px 280px', height: 'calc(100vh - 290px)', minHeight: 360 }}>
         {/* Mapa */}
-        <div style={{ borderRight: '1px solid rgba(255,255,255,.15)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ borderRight: '1px solid #e9dcdb', position: 'relative', overflow: 'hidden' }}>
           {myPos && (
             <div style={{
               position: 'absolute', bottom: 10, right: 10, zIndex: 10,
               background: 'rgba(255,255,255,.9)', borderRadius: 99, padding: '4px 12px',
-              fontSize: 10, fontWeight: 600, color: '#1a1a2e', boxShadow: '0 2px 10px rgba(0,0,0,.1)',
+              fontSize: 10, fontWeight: 600, color: '#221415', boxShadow: '0 2px 10px rgba(0,0,0,.1)',
             }}>
               📍 {(Array.isArray(myPos) ? myPos[0] : myPos.lat).toFixed(4)}, {(Array.isArray(myPos) ? myPos[1] : myPos.lng).toFixed(4)}
             </div>
@@ -289,17 +289,17 @@ export default function DomiciliarioDashboard() {
                 </Marker>
               )}
               {routeCoords.length > 0 && (
-                <Polyline positions={routeCoords} color="#10b981" weight={4} dashArray="8,4" />
+                <Polyline positions={routeCoords} color="#d0121b" weight={4} dashArray="8,4" />
               )}
             </AppMap>
           </div>
           {!myPos && (
             <div style={{
               position: 'absolute', inset: 0, display: 'flex', alignItems: 'center',
-              justifyContent: 'center', background: 'rgba(255,255,255,.1)',
+              justifyContent: 'center', background: 'rgba(255,255,255,.75)',
               backdropFilter: 'blur(4px)', zIndex: 5,
             }}>
-              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,.8)' }}>
+              <div style={{ textAlign: 'center', color: '#55393b' }}>
                 <div style={{ fontSize: '3rem', marginBottom: 8 }}>📍</div>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>Activa el GPS para ver tu posición</div>
               </div>
@@ -310,20 +310,20 @@ export default function DomiciliarioDashboard() {
         {/* Panel pedido activo */}
         <div style={{ overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{
-            background: 'rgba(255,255,255,.15)', borderRadius: 20, padding: '1rem',
-            border: '1px solid rgba(255,255,255,.25)',
+            background: '#fff', borderRadius: 20, padding: '1rem',
+            border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)',
           }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.75rem' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#55393b', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.75rem' }}>
               📦 Pedido activo
             </div>
             {loading
-              ? <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 12 }}>⏳ Cargando...</p>
+              ? <p style={{ color: '#8a6d6e', fontSize: 12 }}>⏳ Cargando...</p>
               : !pedidoActivo
               ? (
                 <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                   <div style={{ fontSize: '2rem', marginBottom: 6 }}>😴</div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,.7)' }}>Sin pedidos asignados</div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 4 }}>Espera asignación del operador</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#55393b' }}>Sin pedidos asignados</div>
+                  <div style={{ fontSize: 10, color: '#c9b6b6', marginTop: 4 }}>Espera asignación del operador</div>
                 </div>
               )
               : (
@@ -338,8 +338,8 @@ export default function DomiciliarioDashboard() {
                     <div key={r.label} style={{ display: 'flex', gap: 8 }}>
                       <span style={{ fontSize: '1rem', flexShrink: 0 }}>{r.icon}</span>
                       <div>
-                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,.5)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>{r.label}</div>
-                        <div style={{ fontSize: 12, color: '#fff', fontWeight: 600, marginTop: 1 }}>{r.value || '—'}</div>
+                        <div style={{ fontSize: 9, color: '#8a6d6e', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>{r.label}</div>
+                        <div style={{ fontSize: 12, color: '#221415', fontWeight: 600, marginTop: 1 }}>{r.value || '—'}</div>
                       </div>
                     </div>
                   ))}
@@ -353,10 +353,11 @@ export default function DomiciliarioDashboard() {
                       disabled={updating}
                       style={{
                         padding: '10px 0', borderRadius: 12,
-                        background: 'rgba(255,255,255,.25)',
-                        border: '2px solid rgba(255,255,255,.4)',
+                        background: 'linear-gradient(135deg,#d0121b,#a80e17)',
+                        border: 'none',
                         color: '#fff', fontFamily: 'Poppins,sans-serif',
                         fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                        boxShadow: '0 4px 14px rgba(208,18,27,.28)',
                         transition: 'all .2s', opacity: updating ? 0.6 : 1,
                       }}
                     >
@@ -374,15 +375,15 @@ export default function DomiciliarioDashboard() {
 
           {pedidosHoy.length > 0 && (
             <div style={{
-              background: 'rgba(255,255,255,.1)', borderRadius: 20, padding: '.85rem',
-              border: '1px solid rgba(255,255,255,.2)',
+              background: '#fff', borderRadius: 20, padding: '.85rem',
+              border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)',
             }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.5rem' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#55393b', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.5rem' }}>
                 ✅ Entregas de hoy
               </div>
               {pedidosHoy.slice(0, 5).map(p => (
-                <div key={p.id} style={{ padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,.8)', fontWeight: 500 }}>{p.cliente_nombre || p.descripcion}</span>
+                <div key={p.id} style={{ padding: '6px 0', borderBottom: '1px solid #f4ebea', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: '#55393b', fontWeight: 500 }}>{p.cliente_nombre || p.descripcion}</span>
                   <span style={{ fontSize: 11 }}>✅</span>
                 </div>
               ))}
@@ -390,7 +391,7 @@ export default function DomiciliarioDashboard() {
           )}
         </div>
         {/* Columna gamificación */}
-        <div style={{ overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 12, borderLeft: '1px solid rgba(255,255,255,.15)' }}>
+        <div style={{ overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 12, borderLeft: '1px solid #e9dcdb' }}>
           <GamificationPanel stats={gamStats} />
           <Leaderboard />
         </div>
