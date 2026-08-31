@@ -6,6 +6,9 @@ const cors    = require('cors')
 const app = express()
 app.use(cors())
 app.use(express.json())
+// Nunca cachear respuestas de la API: un proxy delante que ignore
+// Authorization podria servirle a un usuario la respuesta de otro.
+app.use((req, res, next) => { res.set('Cache-Control', 'no-store, private'); next() })
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const AUTH_URL           = process.env.AUTH_URL || 'https://raven-auth.onrender.com'
