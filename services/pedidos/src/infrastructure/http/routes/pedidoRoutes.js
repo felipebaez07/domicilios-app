@@ -10,6 +10,7 @@ function pedidoRoutes(pedidoController) {
   router.get('/pedidos/mis-pedidos', verificarToken, (req, res) => pedidoController.misPedidos(req, res))
   router.get('/pedidos/mis-entregas', verificarToken, (req, res) => pedidoController.misEntregas(req, res))
   router.get('/pedidos/todos',        verificarToken, (req, res) => pedidoController.todos(req, res))
+  router.get('/pedidos/ranking',      verificarToken, (req, res) => pedidoController.ranking(req, res))
 
   router.post('/pedidos',                    verificarToken, (req, res) => pedidoController.crear(req, res))
   router.get('/pedidos',                     verificarToken, (req, res) => pedidoController.listar(req, res))

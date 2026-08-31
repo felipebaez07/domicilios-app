@@ -126,6 +126,7 @@ export default function DomiciliarioDashboard() {
   const [myPos,     setMyPos]     = useState(lastPos);
   const [gpsErr,    setGpsErr]    = useState('');
   const [updating,  setUpdating]  = useState(false);
+  const [estadoErr, setEstadoErr] = useState('');
   const [loading,   setLoading]   = useState(true);
   const [routeCoords, setRouteCoords] = useState([]);
 
@@ -213,6 +214,7 @@ export default function DomiciliarioDashboard() {
   async function actualizarEstado(nuevoEstado) {
     if (!pedidoActivo) return;
     setUpdating(true);
+    setEstadoErr('');
     try {
       await axios.patch(
         `${PEDIDOS_URL}/pedidos/${pedidoActivo.id}/estado`,
@@ -220,7 +222,10 @@ export default function DomiciliarioDashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       await fetchData();
-    } catch {} finally { setUpdating(false); }
+    } catch (e) {
+      setEstadoErr(e.response?.data?.error || 'No se pudo actualizar el pedido, intenta de nuevo');
+      await fetchData();
+    } finally { setUpdating(false); }
   }
 
   const accion = pedidoActivo ? ESTADOS_SIG[pedidoActivo.estado] : null;
@@ -366,6 +371,11 @@ export default function DomiciliarioDashboard() {
                     >
                       {updating ? <span className="rv-spinner" /> : <><Icon name={accion.icon} size={14} color="#fff" />{accion.label}</>}
                     </button>
+                  )}
+                  {estadoErr && (
+                    <div className="alert alert-err" style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Icon name="x" size={12} />{estadoErr}
+                    </div>
                   )}
                   {!gpsOn && (
                     <div className="alert alert-warn" style={{ marginTop: 4, fontSize: 10, display: 'flex', alignItems: 'center', gap: 5 }}>

@@ -11,6 +11,7 @@ class IPedidoRepository {
   async create(datos)                       { throw new Error('Not implemented') }
   async updateEstado(id, estado)            { throw new Error('Not implemented') }
   async asignarDomiciliario(id, domId)      { throw new Error('Not implemented') }
+  async getRanking(empresaId)               { throw new Error('Not implemented') }
 }
 
 module.exports = IPedidoRepository

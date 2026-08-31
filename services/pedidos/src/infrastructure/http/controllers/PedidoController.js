@@ -2,6 +2,7 @@ const CrearPedido        = require('../../../application/usecases/CrearPedido')
 const AsignarDomiciliario = require('../../../application/usecases/AsignarDomiciliario')
 const ActualizarEstado   = require('../../../application/usecases/ActualizarEstado')
 const ListarPedidos      = require('../../../application/usecases/ListarPedidos')
+const ObtenerRanking     = require('../../../application/usecases/ObtenerRanking')
 
 class PedidoController {
   constructor({ pedidoRepository, usuarioRepository, notificacionService, eventoService }) {
@@ -9,6 +10,7 @@ class PedidoController {
     this.asignarUC   = new AsignarDomiciliario({ pedidoRepository, notificacionService, eventoService })
     this.estadoUC    = new ActualizarEstado({ pedidoRepository, notificacionService, eventoService })
     this.listarUC    = new ListarPedidos({ pedidoRepository })
+    this.rankingUC   = new ObtenerRanking({ pedidoRepository })
     this.pedidoRepo  = pedidoRepository
   }
 
@@ -60,6 +62,13 @@ class PedidoController {
       const pedido = await this.estadoUC.execute({ pedido_id: req.params.id, estado: req.body.estado })
       res.json(pedido)
     } catch (e) { res.status(400).json({ error: e.message }) }
+  }
+
+  async ranking(req, res) {
+    try {
+      const ranking = await this.rankingUC.execute(req.usuario.empresa_id)
+      res.json(ranking)
+    } catch (e) { res.status(500).json({ error: e.message }) }
   }
 
   async asignar(req, res) {

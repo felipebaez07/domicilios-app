@@ -78,6 +78,20 @@ class MySqlPedidoRepository extends IPedidoRepository {
     return this.findById(id)
   }
 
+  async getRanking(empresaId) {
+    const [rows] = await this.pool.query(
+      `SELECT u.id, u.nombre, COUNT(p.id) AS entregas
+       FROM usuarios u
+       LEFT JOIN pedidos p ON p.domiciliario_id = u.id AND p.estado = 'entregado'
+       WHERE u.rol = 'domiciliario' AND u.empresa_id = ?
+       GROUP BY u.id, u.nombre
+       ORDER BY entregas DESC
+       LIMIT 20`,
+      [empresaId]
+    )
+    return rows.map(r => ({ id: r.id, nombre: r.nombre, entregas: r.entregas, xp: r.entregas * 10 }))
+  }
+
   _toEntity(row) {
     return new Pedido(row)
   }
