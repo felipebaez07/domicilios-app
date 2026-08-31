@@ -160,7 +160,6 @@ export default function Login() {
         {/* Header */}
         <div className="lv-card-top">
           <RavenMark size={64} />
-          <div className="lv-app-name">RAVEN</div>
           <div className="lv-app-tag">Plataforma de domicilios · Ibagué</div>
         </div>
 
@@ -189,7 +188,7 @@ export default function Login() {
           <form className="lv-form" onSubmit={handleLogin} style={{ padding: '0 1.5rem 1.5rem' }}>
             <div className="lv-field">
               <label className="lv-field-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="mail" size={13} />Correo electrónico</label>
-              <input type="email" placeholder="usuario@raven.co" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
+              <input type="email" placeholder="Ingresa tu correo electrónico" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
             </div>
             <div className="lv-field">
               <label className="lv-field-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="lock" size={13} />Contraseña</label>
@@ -221,24 +220,24 @@ export default function Login() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
                 <div className="lv-field-label">Nombre</div>
-                <input placeholder="Juan" value={reg.nombre} onChange={e => setReg(v => ({...v, nombre: e.target.value}))} required />
+                <input placeholder="Ingresa tu nombre" value={reg.nombre} onChange={e => setReg(v => ({...v, nombre: e.target.value}))} required />
               </div>
               <div>
                 <div className="lv-field-label">Apellido</div>
-                <input placeholder="García" value={reg.apellido} onChange={e => setReg(v => ({...v, apellido: e.target.value}))} required />
+                <input placeholder="Ingresa tu apellido" value={reg.apellido} onChange={e => setReg(v => ({...v, apellido: e.target.value}))} required />
               </div>
             </div>
 
             {/* Email */}
             <div>
               <div className="lv-field-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="mail" size={13} />Correo electrónico</div>
-              <input type="email" placeholder="juan@ejemplo.com" value={reg.email} onChange={e => setReg(v => ({...v, email: e.target.value}))} required />
+              <input type="email" placeholder="Ingresa tu correo electrónico" value={reg.email} onChange={e => setReg(v => ({...v, email: e.target.value}))} required />
             </div>
 
             {/* Teléfono */}
             <div>
               <div className="lv-field-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="phone" size={13} />Teléfono</div>
-              <input type="tel" placeholder="300 000 0000" value={reg.telefono} onChange={e => setReg(v => ({...v, telefono: e.target.value}))} />
+              <input type="tel" placeholder="Ingresa tu número de teléfono" value={reg.telefono} onChange={e => setReg(v => ({...v, telefono: e.target.value}))} />
             </div>
 
             {/* Fecha nacimiento */}
@@ -318,8 +317,6 @@ export default function Login() {
             </p>
           </form>
         )}
-
-        <p className="lv-footer">RAVEN · Arquitectura de Software · 2025 🐦</p>
       </div>
     </div>
   );

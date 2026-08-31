@@ -94,10 +94,10 @@ export default function DomiciliarioPerfil() {
 
           <form onSubmit={vincularTelegram} style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
             <div>
-              <div className="field-label">🔢 Tu Chat ID de Telegram</div>
+              <div className="field-label">Tu Chat ID de Telegram</div>
               <input
                 type="number"
-                placeholder="Ej: 123456789"
+                placeholder="Ingresa tu Chat ID de Telegram"
                 value={chatId}
                 onChange={e => setChatId(e.target.value)}
                 required

@@ -1,18 +1,37 @@
-// Insignia RAVEN — monograma "R" en carmesí, pensado para verse nítido
-// a cualquier tamaño (topbar, avatar, favicon), sin depender de una imagen.
-export default function RavenMark({ size = 34, radius, mono = false }) {
+import ravenLogo from '../assets/raven_logo.png';
+
+// El archivo original trae el ícono (cuervo + brújula) arriba y el
+// wordmark "RAVEN" debajo, separados por muy poco margen real. Para que
+// el texto quede totalmente fuera del recorte, el ícono debe llenar el
+// cuadro casi al borde (fill >= ~1) — un pelín de la brújula/cola puede
+// recortarse, pero ninguna letra se asoma.
+const IMG_W = 2400, IMG_H = 1315;
+const BBOX = { x: 836, y: 196, w: 692, h: 605 };
+const BBOX_CX = BBOX.x + BBOX.w / 2;
+const BBOX_CY = BBOX.y + BBOX.h / 2;
+
+// Insignia RAVEN — solo el cuervo y la brújula, sin texto ni animación.
+export default function RavenMark({ size = 34, radius, mono = false, fill = 1.05 }) {
   const r = radius ?? size * 0.28;
+  const scale = (size * fill) / BBOX.w;
+  const bgX = size / 2 - BBOX_CX * scale;
+  const bgY = size / 2 - BBOX_CY * scale;
+
   return (
     <div style={{
       width: size, height: size, borderRadius: r, flexShrink: 0,
-      background: mono ? 'rgba(255,255,255,0.2)' : 'linear-gradient(135deg,#d0121b,#a80e17)',
-      border: mono ? '1px solid rgba(255,255,255,0.3)' : 'none',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: mono ? 'rgba(255,255,255,0.92)' : 'linear-gradient(135deg,#d0121b,#a80e17)',
+      border: mono ? '1px solid rgba(255,255,255,0.5)' : 'none',
+      overflow: 'hidden', position: 'relative',
     }}>
-      <svg width={size * 0.52} height={size * 0.52} viewBox="0 0 24 24" fill="none">
-        <path d="M6 20V4h8.5a4.5 4.5 0 0 1 2.6 8.18L21 20h-4l-3.6-7H9.5v7H6Z" fill="#fff" />
-        <path d="M9.5 7v4.5h4a2.25 2.25 0 0 0 0-4.5h-4Z" fill={mono ? '#fff' : '#d0121b'} fillOpacity={mono ? 0.35 : 1} />
-      </svg>
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: `url(${ravenLogo})`,
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: `${IMG_W * scale}px ${IMG_H * scale}px`,
+        backgroundPosition: `${bgX}px ${bgY}px`,
+        filter: mono ? 'none' : 'brightness(10)',
+      }} />
     </div>
   );
 }

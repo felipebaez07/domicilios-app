@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
+import Icon from '../../components/Icon';
 
 const AUTH_URL = import.meta.env.VITE_AUTH_URL;
 
@@ -74,10 +75,10 @@ export default function AdminPersonalizar() {
 
           {/* Nombre */}
           <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#221415', marginBottom: 12 }}>🏢 Nombre de la empresa</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#221415', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="building" size={14} />Nombre de la empresa</div>
             <input
               type="text"
-              placeholder="Nombre de tu empresa"
+              placeholder="Ingresa el nombre de tu empresa"
               value={form.nombre}
               onChange={e => setForm(v => ({...v, nombre: e.target.value}))}
               style={{ fontSize: 14, fontWeight: 600 }}

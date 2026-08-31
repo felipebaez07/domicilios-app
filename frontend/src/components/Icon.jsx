@@ -38,6 +38,11 @@ const PATHS = {
   rocket:       <><path d="M12 3C15 4 17 8 16.5 13L19 15.5L15.5 15A9 9 0 0 1 7.5 21L8 17.5L4.5 19L7 15.5C7 12 9.5 6.5 12 3Z" /><circle cx="13" cy="9" r="1.4" fill="currentColor" stroke="none" /></>,
   sparkles:     <><path d="M12 3L13.2 8.8L19 10L13.2 11.2L12 17L10.8 11.2L5 10L10.8 8.8L12 3Z" /><path d="M19 15L19.6 17.4L22 18L19.6 18.6L19 21L18.4 18.6L16 18L18.4 17.4L19 15Z" /></>,
   gauge:        <><path d="M4 15A8 8 0 1 1 20 15" /><path d="M12 15L16 10" /><circle cx="12" cy="15" r="1.4" fill="currentColor" stroke="none" /></>,
+  refresh:      <><path d="M20 12A8 8 0 1 1 17.5 6.2" /><path d="M20 4V9H15" /></>,
+  clock:        <><circle cx="12" cy="12" r="9" /><path d="M12 7V12L15.5 14.5" /></>,
+  filter:       <path d="M4 5H20L14 12.5V19L10 17V12.5L4 5Z" />,
+  arrowLeft:    <path d="M19 12H5M5 12L11 6M5 12L11 18" />,
+  arrowRight:   <path d="M5 12H19M19 12L13 6M19 12L13 18" />,
 };
 
 export default function Icon({ name, size = 18, color = 'currentColor', strokeWidth = 1.8, style, className }) {

@@ -419,7 +419,7 @@ export default function ClienteDashboard() {
             <form onSubmit={crearPedido} style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
               <div>
                 <div className="field-label">📝 ¿Qué vas a enviar?</div>
-                <input type="text" placeholder="Documentos, mercado, ropa..." value={form.descripcion} onChange={e => setForm(v => ({ ...v, descripcion: e.target.value }))} required />
+                <input type="text" placeholder="Describe qué vas a enviar" value={form.descripcion} onChange={e => setForm(v => ({ ...v, descripcion: e.target.value }))} required />
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" onClick={() => setStep('list')} style={{ flex: 1, height: 44, borderRadius: 12, background: '#f4ebea', border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 600, fontSize: 13, color: '#55393b', cursor: 'pointer' }}>

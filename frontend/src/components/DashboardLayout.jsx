@@ -68,13 +68,11 @@ export default function DashboardLayout({ role, children, pageTitle }) {
   const nav  = NAV[role] || [];
   const tabs = nav.slice(0, TAB_LIMIT);
   const rc   = RC[role] || {};
-  // Usar colores de empresa si el admin/operador/domiciliario los tiene configurados
-  const empresaColor1 = user?.empresa_color1
-  const empresaColor2 = user?.empresa_color2
-  const usarEmpresa = ['admin','operador','domiciliario','distribuidor'].includes(role) && empresaColor1 && empresaColor2
-  const grad = usarEmpresa ? `linear-gradient(135deg, ${empresaColor1}, ${empresaColor2})` : BRAND_GRAD
-  const c1 = usarEmpresa ? empresaColor1 : BRAND_C1
-  const c2 = usarEmpresa ? empresaColor2 : BRAND_C2
+  // La navegación (topbar, menú, pestañas) es siempre la misma marca en
+  // todas las empresas y roles — así toda vista se ve consistente.
+  const grad = BRAND_GRAD
+  const c1 = BRAND_C1
+  const c2 = BRAND_C2
 
   const initials = (user?.nombre || user?.email || 'U')
     .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -118,8 +116,7 @@ export default function DashboardLayout({ role, children, pageTitle }) {
         {/* Header */}
         <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <RavenMark size={30} mono />
-            <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '0.05em', fontFamily: "'Bricolage Grotesque', sans-serif" }}>RAVEN</span>
+            <RavenMark size={38} mono />
           </div>
           <button onClick={() => setMenuOpen(false)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="x" size={16} />
