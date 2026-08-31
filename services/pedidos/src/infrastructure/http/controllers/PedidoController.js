@@ -30,7 +30,7 @@ class PedidoController {
 
   async misPedidos(req, res) {
     try {
-      const pedidos = await this.listarUC.execute({ ...req.usuario, rol: 'distribuidor' })
+      const pedidos = await this.listarUC.execute(req.usuario)
       res.json(pedidos)
     } catch (e) { res.status(500).json({ error: e.message }) }
   }
