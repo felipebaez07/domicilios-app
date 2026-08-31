@@ -8,6 +8,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import AppMap from '../../components/AppMap';
 import Modal from '../../components/Modal';
 import MapPicker from '../../components/MapPicker';
+import Icon from '../../components/Icon';
 import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 import { useRoute, formatDistancia, formatDuracion } from '../../hooks/useRoute';
 
@@ -240,11 +241,11 @@ export default function ClienteDashboard() {
       {/* Header */}
       <div className="page-header">
         <div>
-          <div className="page-title">🛍️ Mis pedidos</div>
+          <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="bag" size={18} />Mis pedidos</div>
           <div className="page-subtitle">Rastrea tu domicilio en tiempo real</div>
         </div>
-        <button className="btn btn-ghost" style={{ flexShrink: 0 }} onClick={handleNuevoPedido}>
-          ➕ Nuevo pedido
+        <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={handleNuevoPedido}>
+          <Icon name="plus" size={14} color="#fff" />Nuevo pedido
         </button>
       </div>
 
@@ -267,14 +268,13 @@ export default function ClienteDashboard() {
           </div>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#8a6d6e', fontSize: 12 }}>⏳ Cargando...</div>
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#8a6d6e', fontSize: 12 }}>Cargando...</div>
           ) : pedidos.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '2rem', color: '#8a6d6e', fontSize: 12 }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>📭</div>
-              Sin pedidos aún
-              <br/>
-              <button onClick={handleNuevoPedido} style={{ marginTop: 10, padding: '8px 16px', borderRadius: 99, background: '#f4ebea', border: '1px solid #e9dcdb', color: '#55393b', fontSize: 12, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', fontWeight: 600 }}>
-                ➕ Crear pedido
+              <Icon name="bag" size={34} color="#c9b6b6" style={{ marginBottom: 8 }} />
+              <div>Sin pedidos aún</div>
+              <button onClick={handleNuevoPedido} style={{ marginTop: 10, padding: '8px 16px', borderRadius: 99, background: '#f4ebea', border: '1px solid #e9dcdb', color: '#55393b', fontSize: 12, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="plus" size={13} />Crear pedido
               </button>
             </div>
           ) : pedidos.map(p => (

@@ -2,51 +2,52 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
-import ravenLogo from '../assets/raven_logo.png';
+import RavenMark from './RavenMark';
+import Icon from './Icon';
 import ChatBubble from './ChatBubble';
 import '../styles/design-system.css';
 
 const NAV = {
   distribuidor: [
-    { label: '📊 Dashboard',    path: '/distribuidor' },
-    { label: '➕ Nuevo pedido', path: '/distribuidor/nuevo' },
-    { label: '📋 Historial',    path: '/distribuidor/historial' },
+    { icon: 'barChart', label: 'Dashboard',    path: '/distribuidor' },
+    { icon: 'plus',     label: 'Nuevo pedido', path: '/distribuidor/nuevo' },
+    { icon: 'list',     label: 'Historial',    path: '/distribuidor/historial' },
   ],
   cliente: [
-    { label: '🛍️ Mis pedidos', path: '/cliente' },
-    { label: '📍 Rastrear',    path: '/cliente/rastreo' },
-    { label: '📋 Historial',   path: '/cliente/historial' },
+    { icon: 'bag',    label: 'Mis pedidos', path: '/cliente' },
+    { icon: 'mapPin', label: 'Rastrear',    path: '/cliente/rastreo' },
+    { icon: 'list',   label: 'Historial',   path: '/cliente/historial' },
   ],
   domiciliario: [
-    { label: '🏠 Mi turno',     path: '/domiciliario' },
-    { label: '🗺️ Ruta activa',  path: '/domiciliario/ruta' },
-    { label: '✅ Entregas',     path: '/domiciliario/historial' },
-    { label: '📲 Telegram',    path: '/domiciliario/perfil' },
+    { icon: 'home',    label: 'Mi turno',    path: '/domiciliario' },
+    { icon: 'map',     label: 'Ruta activa', path: '/domiciliario/ruta' },
+    { icon: 'checkCircle', label: 'Entregas', path: '/domiciliario/historial' },
+    { icon: 'send',    label: 'Telegram',    path: '/domiciliario/perfil' },
   ],
   operador: [
-    { label: '🎮 Control',       path: '/operador' },
-    { label: '📦 Pedidos',       path: '/operador/pedidos' },
-    { label: '🛵 Domiciliarios', path: '/operador/domiciliarios' },
+    { icon: 'gauge',   label: 'Control',       path: '/operador' },
+    { icon: 'package', label: 'Pedidos',       path: '/operador/pedidos' },
+    { icon: 'scooter', label: 'Domiciliarios', path: '/operador/domiciliarios' },
   ],
   admin: [
-    { label: '📈 Métricas',    path: '/admin' },
-    { label: '📦 Pedidos',     path: '/admin/pedidos' },
-    { label: '👥 Mi equipo',   path: '/admin/equipo' },
-    { label: '👤 Usuarios',    path: '/admin/usuarios' },
-    { label: '🎨 Personalizar', path: '/admin/personalizar' },
+    { icon: 'barChart', label: 'Métricas',     path: '/admin' },
+    { icon: 'package',  label: 'Pedidos',      path: '/admin/pedidos' },
+    { icon: 'users',    label: 'Mi equipo',    path: '/admin/equipo' },
+    { icon: 'user',     label: 'Usuarios',     path: '/admin/usuarios' },
+    { icon: 'palette',  label: 'Personalizar', path: '/admin/personalizar' },
   ],
   superadmin: [
-    { label: '🏢 Empresas', path: '/superadmin' },
+    { icon: 'building', label: 'Empresas', path: '/superadmin' },
   ],
 };
 
 const RC = {
-  distribuidor: { label: 'Distribuidor', emoji: '📦' },
-  cliente:      { label: 'Cliente',      emoji: '👤' },
-  domiciliario: { label: 'Domiciliario', emoji: '🛵' },
-  operador:     { label: 'Operador',     emoji: '🗺️' },
-  admin:        { label: 'Admin',        emoji: '⚡' },
-  superadmin:   { label: 'Superadmin',   emoji: '👑' },
+  distribuidor: { label: 'Distribuidor', icon: 'package' },
+  cliente:      { label: 'Cliente',      icon: 'user' },
+  domiciliario: { label: 'Domiciliario', icon: 'scooter' },
+  operador:     { label: 'Operador',     icon: 'map' },
+  admin:        { label: 'Admin',        icon: 'bolt' },
+  superadmin:   { label: 'Superadmin',   icon: 'crown' },
 };
 
 // Una sola marca (rojo carmesí) para todos los roles — el color ya no
@@ -55,12 +56,17 @@ const BRAND_GRAD = 'linear-gradient(135deg, #d0121b, #a80e17)';
 const BRAND_C1 = '#d0121b';
 const BRAND_C2 = '#a80e17';
 
+// La barra inferior es mobile-first: como mucho 4 accesos directos,
+// el resto vive en el menú completo (hamburguesa).
+const TAB_LIMIT = 4;
+
 export default function DashboardLayout({ role, children, pageTitle }) {
   const { user, logout } = useAuth();
   const navigate  = useNavigate();
   const location  = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const nav  = NAV[role] || [];
+  const tabs = nav.slice(0, TAB_LIMIT);
   const rc   = RC[role] || {};
   // Usar colores de empresa si el admin/operador/domiciliario los tiene configurados
   const empresaColor1 = user?.empresa_color1
@@ -73,10 +79,10 @@ export default function DashboardLayout({ role, children, pageTitle }) {
   const initials = (user?.nombre || user?.email || 'U')
     .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
-  const currentNav = nav.find(n =>
-    n.path === location.pathname ||
-    (n.path !== `/${role}` && location.pathname.startsWith(n.path))
-  );
+  function isActivePath(path) {
+    return location.pathname === path || (path !== `/${role}` && location.pathname.startsWith(path));
+  }
+  const currentNav = nav.find(n => isActivePath(n.path));
 
   function handleNav(path) {
     setMenuOpen(false);
@@ -89,8 +95,6 @@ export default function DashboardLayout({ role, children, pageTitle }) {
     logout();
     navigate('/login');
   }
-
-  const labelClean = (lbl) => lbl.replace(/^\S+\s/, '');
 
   const menuPortal = menuOpen && createPortal(
     <div
@@ -114,10 +118,12 @@ export default function DashboardLayout({ role, children, pageTitle }) {
         {/* Header */}
         <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src={ravenLogo} alt="Raven" style={{ height: 28, filter: 'brightness(10)' }} />
-            <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '0.05em' }}>RAVEN</span>
+            <RavenMark size={30} mono />
+            <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '0.05em', fontFamily: "'Bricolage Grotesque', sans-serif" }}>RAVEN</span>
           </div>
-          <button onClick={() => setMenuOpen(false)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <button onClick={() => setMenuOpen(false)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="x" size={16} />
+          </button>
         </div>
 
         {/* Usuario */}
@@ -125,8 +131,8 @@ export default function DashboardLayout({ role, children, pageTitle }) {
           <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(255,255,255,0.25)', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff', flexShrink: 0 }}>{initials}</div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{user?.nombre || user?.email?.split('@')[0]}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 1 }}>{rc.emoji} {rc.label}</div>
-            {user?.empresa_nombre && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>🏢 {user.empresa_nombre}</div>}
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 5 }}><Icon name={rc.icon} size={12} /> {rc.label}</div>
+            {user?.empresa_nombre && <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="building" size={11} /> {user.empresa_nombre}</div>}
           </div>
         </div>
 
@@ -134,8 +140,7 @@ export default function DashboardLayout({ role, children, pageTitle }) {
         <nav style={{ padding: '0.75rem', flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0 0.75rem', marginBottom: 4 }}>Navegación</div>
           {nav.map(item => {
-            const isActive = location.pathname === item.path ||
-              (item.path !== `/${role}` && location.pathname.startsWith(item.path));
+            const isActive = isActivePath(item.path);
             return (
               <button key={item.path} onClick={() => handleNav(item.path)} style={{
                 display: 'flex', alignItems: 'center', gap: 12,
@@ -149,9 +154,9 @@ export default function DashboardLayout({ role, children, pageTitle }) {
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
               >
-                <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>{item.label.split(' ')[0]}</span>
-                <span>{item.label.replace(/^\S+\s/, '')}</span>
-                {isActive && <span style={{ marginLeft: 'auto', fontSize: 10 }}>◉</span>}
+                <Icon name={item.icon} size={18} style={{ flexShrink: 0 }} />
+                <span>{item.label}</span>
+                {isActive && <span style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />}
               </button>
             );
           })}
@@ -168,7 +173,7 @@ export default function DashboardLayout({ role, children, pageTitle }) {
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.22)'; e.currentTarget.style.color = '#fff'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
           >
-            <span style={{ fontSize: '1.2rem' }}>🚪</span>
+            <Icon name="logOut" size={18} />
             <span>Cerrar sesión</span>
           </button>
         </div>
@@ -188,34 +193,48 @@ export default function DashboardLayout({ role, children, pageTitle }) {
               <button className="topbar-hamburger" onClick={() => setMenuOpen(true)}>
                 <span /><span /><span />
               </button>
-              <img src={ravenLogo} alt="Raven" className="topbar-logo" />
+              <RavenMark size={26} />
               <span className="topbar-sep">/</span>
-              <span className="topbar-page">{pageTitle || (currentNav ? labelClean(currentNav.label) : 'Dashboard')}</span>
+              <span className="topbar-page">{pageTitle || (currentNav ? currentNav.label : 'Dashboard')}</span>
             </div>
             <div className="topbar-right">
               <div className="topbar-live"><div className="topbar-live-dot" />En línea</div>
-              <div className="topbar-badge">{rc.emoji} {rc.label}</div>
+              <div className="topbar-badge"><Icon name={rc.icon} size={11} style={{ marginRight: 4, verticalAlign: -2 }} />{rc.label}</div>
               <div className="topbar-avatar">{initials}</div>
             </div>
           </header>
 
-          {/* SUBNAV */}
-          <nav className="subnav">
+          {/* SUBNAV (desktop) */}
+          <nav className="subnav subnav-desktop">
             {nav.map(item => {
-              const active = location.pathname === item.path ||
-                (item.path !== `/${role}` && location.pathname.startsWith(item.path));
+              const active = isActivePath(item.path);
               return (
                 <button key={item.path} className={`subnav-btn ${active ? 'active' : ''}`} onClick={() => handleNav(item.path)}>
-                  {item.label}
+                  <Icon name={item.icon} size={14} style={{ marginRight: 6, verticalAlign: -2 }} />{item.label}
                 </button>
               );
             })}
           </nav>
 
           {/* CONTENIDO */}
-          <main className="main-content page-enter">
+          <main className="main-content page-enter" style={{ paddingBottom: tabs.length ? 70 : 0 }}>
             {children}
           </main>
+
+          {/* BARRA DE PESTAÑAS (mobile): reemplaza el menú hamburguesa como acceso principal */}
+          {tabs.length > 0 && (
+            <nav className="tabbar">
+              {tabs.map(item => {
+                const active = isActivePath(item.path);
+                return (
+                  <button key={item.path} className={`tabbar-btn ${active ? 'active' : ''}`} onClick={() => handleNav(item.path)}>
+                    <Icon name={item.icon} size={21} strokeWidth={active ? 2 : 1.8} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          )}
         </div>
       </div>
 

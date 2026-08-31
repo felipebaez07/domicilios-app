@@ -2,23 +2,24 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import ravenLogo from '../../assets/raven_logo.png';
+import RavenMark from '../../components/RavenMark';
+import Icon from '../../components/Icon';
 import './Login.css';
 
 const AUTH_URL = import.meta.env.VITE_AUTH_URL;
 
 const ROL_INFO = {
-  distribuidor: { emoji: '📦', label: 'Distribuidor',  desc: 'Gestiona tus envíos' },
-  cliente:      { emoji: '👤', label: 'Cliente',       desc: 'Rastrea tus pedidos' },
-  domiciliario: { emoji: '🛵', label: 'Domiciliario',  desc: 'Gestiona tus entregas' },
-  operador:     { emoji: '🗺️', label: 'Operador',      desc: 'Centro de control' },
-  admin:        { emoji: '⚡', label: 'Administrador', desc: 'Panel de empresa' },
-  superadmin:   { emoji: '👑', label: 'Superadmin',    desc: 'Plataforma RAVEN' },
+  distribuidor: { icon: 'package', label: 'Distribuidor',  desc: 'Gestiona tus envíos' },
+  cliente:      { icon: 'user',    label: 'Cliente',       desc: 'Rastrea tus pedidos' },
+  domiciliario: { icon: 'scooter', label: 'Domiciliario',  desc: 'Gestiona tus entregas' },
+  operador:     { icon: 'map',     label: 'Operador',      desc: 'Centro de control' },
+  admin:        { icon: 'bolt',    label: 'Administrador', desc: 'Panel de empresa' },
+  superadmin:   { icon: 'crown',   label: 'Superadmin',    desc: 'Plataforma RAVEN' },
 };
 
 // Pantalla de bienvenida
 function WelcomeScreen({ usuario }) {
-  const info = ROL_INFO[usuario?.rol] || { emoji: '👤', label: usuario?.rol };
+  const info = ROL_INFO[usuario?.rol] || { icon: 'user', label: usuario?.rol };
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 9999,
@@ -29,11 +30,11 @@ function WelcomeScreen({ usuario }) {
       animation: 'fadeIn .4s ease both',
     }}>
       {/* Logo */}
-      <img src={ravenLogo} alt="RAVEN" style={{ height: 60, filter: 'brightness(10)', marginBottom: 24, animation: 'bounceIn .6s ease both' }} />
+      <div style={{ marginBottom: 24, animation: 'bounceIn .6s ease both' }}><RavenMark size={72} mono /></div>
 
-      {/* Rol emoji grande */}
-      <div style={{ fontSize: '5rem', marginBottom: 16, animation: 'bounceIn .5s .1s ease both' }}>
-        {info.emoji}
+      {/* Ícono de rol grande */}
+      <div style={{ width: 84, height: 84, borderRadius: 24, background: 'rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, animation: 'bounceIn .5s .1s ease both' }}>
+        <Icon name={info.icon} size={42} color="#fff" strokeWidth={1.6} />
       </div>
 
       {/* Bienvenida */}
@@ -44,7 +45,7 @@ function WelcomeScreen({ usuario }) {
         {usuario?.nombre}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 20px', borderRadius: 99, background: 'rgba(255,255,255,.2)', border: '1px solid rgba(255,255,255,.3)', animation: 'fadeUp .4s .4s ease both', opacity: 0, animationFillMode: 'forwards' }}>
-        <span style={{ fontSize: 16 }}>{info.emoji}</span>
+        <Icon name={info.icon} size={15} color="#fff" />
         <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Accediendo como {info.label}</span>
       </div>
 
@@ -158,7 +159,7 @@ export default function Login() {
       <div className="lv-card" style={{ maxHeight: '95vh', overflowY: 'auto' }}>
         {/* Header */}
         <div className="lv-card-top">
-          <img src={ravenLogo} alt="Raven" className="lv-logo" />
+          <RavenMark size={64} />
           <div className="lv-app-name">RAVEN</div>
           <div className="lv-app-tag">Plataforma de domicilios · Ibagué</div>
         </div>
@@ -166,8 +167,8 @@ export default function Login() {
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 6, padding: '0 1.5rem', marginBottom: '1.25rem' }}>
           {[
-            { id: 'login',    label: '🔑 Iniciar sesión' },
-            { id: 'registro', label: '✨ Registrarme' },
+            { id: 'login',    label: 'Iniciar sesión', icon: 'lock' },
+            { id: 'registro', label: 'Registrarme',    icon: 'sparkles' },
           ].map(tab => (
             <button key={tab.id} onClick={() => { setVista(tab.id); setError(''); }} style={{
               flex: 1, padding: '10px 0', borderRadius: 12,
@@ -176,8 +177,9 @@ export default function Login() {
               border: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 700,
               fontSize: 13, cursor: 'pointer', transition: 'all .2s',
               boxShadow: vista === tab.id ? '0 4px 15px rgba(208,18,27,.35)' : 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
             }}>
-              {tab.label}
+              <Icon name={tab.icon} size={14} />{tab.label}
             </button>
           ))}
         </div>
@@ -186,21 +188,21 @@ export default function Login() {
         {vista === 'login' && (
           <form className="lv-form" onSubmit={handleLogin} style={{ padding: '0 1.5rem 1.5rem' }}>
             <div className="lv-field">
-              <label className="lv-field-label">✉️ Correo electrónico</label>
+              <label className="lv-field-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="mail" size={13} />Correo electrónico</label>
               <input type="email" placeholder="usuario@raven.co" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
             </div>
             <div className="lv-field">
-              <label className="lv-field-label">🔒 Contraseña</label>
+              <label className="lv-field-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="lock" size={13} />Contraseña</label>
               <div style={{ position: 'relative' }}>
                 <input type={showPw ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingRight: '2.5rem' }} />
-                <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#c9b6b6' }}>
-                  {showPw ? '🙈' : '👁️'}
+                <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#c9b6b6', display: 'flex' }}>
+                  <Icon name={showPw ? 'eyeOff' : 'eye'} size={16} />
                 </button>
               </div>
             </div>
             {error && <div className="alert alert-err">{error}</div>}
             <button type="submit" disabled={loading} className="lv-submit" style={{ background: 'linear-gradient(135deg,#d0121b,#a80e17)', boxShadow: '0 4px 20px rgba(208,18,27,.45)', opacity: loading ? 0.7 : 1 }}>
-              {loading ? <span className="rv-spinner" /> : '🚀 Entrar a RAVEN'}
+              {loading ? <span className="rv-spinner" /> : <><Icon name="rocket" size={15} color="#fff" />Entrar a RAVEN</>}
             </button>
             <p style={{ textAlign: 'center', fontSize: 12, color: '#8a6d6e', marginTop: 12 }}>
               ¿No tienes cuenta?{' '}
@@ -218,47 +220,48 @@ export default function Login() {
             {/* Nombre y apellido */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <div className="lv-field-label">👤 Nombre</div>
+                <div className="lv-field-label">Nombre</div>
                 <input placeholder="Juan" value={reg.nombre} onChange={e => setReg(v => ({...v, nombre: e.target.value}))} required />
               </div>
               <div>
-                <div className="lv-field-label">👤 Apellido</div>
+                <div className="lv-field-label">Apellido</div>
                 <input placeholder="García" value={reg.apellido} onChange={e => setReg(v => ({...v, apellido: e.target.value}))} required />
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <div className="lv-field-label">✉️ Correo electrónico</div>
+              <div className="lv-field-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="mail" size={13} />Correo electrónico</div>
               <input type="email" placeholder="juan@ejemplo.com" value={reg.email} onChange={e => setReg(v => ({...v, email: e.target.value}))} required />
             </div>
 
             {/* Teléfono */}
             <div>
-              <div className="lv-field-label">📞 Teléfono</div>
+              <div className="lv-field-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="phone" size={13} />Teléfono</div>
               <input type="tel" placeholder="300 000 0000" value={reg.telefono} onChange={e => setReg(v => ({...v, telefono: e.target.value}))} />
             </div>
 
             {/* Fecha nacimiento */}
             <div>
-              <div className="lv-field-label">🎂 Fecha de nacimiento</div>
+              <div className="lv-field-label">Fecha de nacimiento</div>
               <input type="date" value={reg.fechaNac} onChange={e => setReg(v => ({...v, fechaNac: e.target.value}))} required
                 max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
               />
               {reg.fechaNac && (
-                <div style={{ fontSize: 11, marginTop: 4, fontWeight: 600, color: edadOk ? '#1a9c53' : '#a80e17' }}>
-                  {edadOk ? `✅ ${edad} años — Mayor de edad` : `❌ ${edad} años — Debes ser mayor de 18 años`}
+                <div style={{ fontSize: 11, marginTop: 4, fontWeight: 600, color: edadOk ? '#1a9c53' : '#a80e17', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Icon name={edadOk ? 'checkCircle' : 'x'} size={12} />
+                  {edadOk ? `${edad} años — Mayor de edad` : `${edad} años — Debes ser mayor de 18 años`}
                 </div>
               )}
             </div>
 
             {/* Rol */}
             <div>
-              <div className="lv-field-label">🎭 Tipo de cuenta</div>
+              <div className="lv-field-label">Tipo de cuenta</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {[
-                  { id: 'cliente',      emoji: '👤', label: 'Cliente',      desc: 'Quiero pedir domicilios' },
-                  { id: 'distribuidor', emoji: '📦', label: 'Distribuidor', desc: 'Quiero enviar productos' },
+                  { id: 'cliente',      icon: 'user',    label: 'Cliente',      desc: 'Quiero pedir domicilios' },
+                  { id: 'distribuidor', icon: 'package', label: 'Distribuidor', desc: 'Quiero enviar productos' },
                 ].map(r => (
                   <button key={r.id} type="button" onClick={() => setReg(v => ({...v, rol: r.id}))} style={{
                     padding: '12px 10px', borderRadius: 14, textAlign: 'center',
@@ -266,7 +269,7 @@ export default function Login() {
                     border: `2px solid ${reg.rol === r.id ? '#a80e17' : '#e9dcdb'}`,
                     cursor: 'pointer', transition: 'all .2s', fontFamily: 'Poppins,sans-serif',
                   }}>
-                    <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>{r.emoji}</div>
+                    <Icon name={r.icon} size={22} color={reg.rol === r.id ? '#fff' : '#55393b'} style={{ marginBottom: 4 }} />
                     <div style={{ fontSize: 12, fontWeight: 700, color: reg.rol === r.id ? '#fff' : '#221415' }}>{r.label}</div>
                     <div style={{ fontSize: 10, color: reg.rol === r.id ? 'rgba(255,255,255,.8)' : '#8a6d6e', marginTop: 2 }}>{r.desc}</div>
                   </button>
@@ -277,17 +280,17 @@ export default function Login() {
             {/* Contraseña */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <div className="lv-field-label">🔒 Contraseña</div>
+                <div className="lv-field-label">Contraseña</div>
                 <input type="password" placeholder="••••••••" value={reg.password} onChange={e => setReg(v => ({...v, password: e.target.value}))} required minLength={6} />
               </div>
               <div>
-                <div className="lv-field-label">🔒 Confirmar</div>
+                <div className="lv-field-label">Confirmar</div>
                 <input type="password" placeholder="••••••••" value={reg.confirmar} onChange={e => setReg(v => ({...v, confirmar: e.target.value}))} required />
                 {reg.confirmar && reg.password !== reg.confirmar && (
-                  <div style={{ fontSize: 10, color: '#a80e17', marginTop: 3, fontWeight: 600 }}>❌ No coinciden</div>
+                  <div style={{ fontSize: 10, color: '#a80e17', marginTop: 3, fontWeight: 600 }}>No coinciden</div>
                 )}
                 {reg.confirmar && reg.password === reg.confirmar && reg.confirmar.length >= 6 && (
-                  <div style={{ fontSize: 10, color: '#1a9c53', marginTop: 3, fontWeight: 600 }}>✅ Coinciden</div>
+                  <div style={{ fontSize: 10, color: '#1a9c53', marginTop: 3, fontWeight: 600 }}>Coinciden</div>
                 )}
               </div>
             </div>
@@ -302,8 +305,9 @@ export default function Login() {
               cursor: edadErr ? 'not-allowed' : 'pointer',
               boxShadow: edadErr ? 'none' : '0 4px 20px rgba(208,18,27,.45)',
               opacity: loading ? 0.7 : 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}>
-              {loading ? <span className="rv-spinner" /> : '✨ Crear mi cuenta'}
+              {loading ? <span className="rv-spinner" /> : <><Icon name="sparkles" size={15} color={edadErr ? '#c9b6b6' : '#fff'} />Crear mi cuenta</>}
             </button>
 
             <p style={{ textAlign: 'center', fontSize: 12, color: '#8a6d6e', marginTop: 4 }}>

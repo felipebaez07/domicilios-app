@@ -119,7 +119,7 @@ h1,h2,h3,.font-display{font-family:var(--font-display);}
 }
 
 /* ── APP WRAPPER ── */
-.app-wrap{max-width:1080px;margin:0 auto;min-height:100vh;background:var(--canvas);border-left:1px solid var(--ink-200);border-right:1px solid var(--ink-200);box-shadow:0 0 60px rgba(34,20,21,0.06);display:flex;flex-direction:column;position:relative;z-index:1;}
+.app-wrap{max-width:1080px;margin:0 auto;height:100vh;background:var(--canvas);border-left:1px solid var(--ink-200);border-right:1px solid var(--ink-200);box-shadow:0 0 60px rgba(34,20,21,0.06);display:flex;flex-direction:column;position:relative;z-index:1;}
 
 /* ── TOPBAR (material translúcido: el contenido se desliza debajo) ── */
 .topbar{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;background:rgba(255,255,255,0.78);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid rgba(34,20,21,0.08);position:sticky;top:0;z-index:20;flex-shrink:0;}
@@ -143,6 +143,10 @@ h1,h2,h3,.font-display{font-family:var(--font-display);}
 .subnav-btn{padding:6px 16px;border-radius:99px;font-size:11px;font-weight:600;color:var(--txt-3);background:var(--ink-100);border:none;cursor:pointer;transition:all .2s;}
 .subnav-btn:hover{background:var(--red-50);color:var(--red-700);}
 .subnav-btn.active{background:var(--grad);color:#fff;box-shadow:var(--brand-shadow-sm);}
+
+/* ── BARRA DE PESTAÑAS (mobile) ── */
+.tabbar{display:none;}
+.subnav-desktop{display:flex;}
 
 /* ── MENÚ OVERLAY ── */
 .menu-overlay{position:absolute;inset:0;z-index:50;background:var(--paper);display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--ink-200);}
@@ -258,9 +262,22 @@ h1,h2,h3,.font-display{font-family:var(--font-display);}
   .topbar-live{display:none;}
   .topbar-badge{padding:3px 10px;font-size:10px;}
   .topbar-logo{height:20px;}
-  .subnav{padding:8px 1rem;overflow-x:auto;flex-wrap:nowrap;gap:4px;}
-  .subnav::-webkit-scrollbar{display:none;}
-  .subnav-btn{padding:5px 12px;font-size:10px;white-space:nowrap;flex-shrink:0;}
+  .subnav-desktop{display:none;}
+  .tabbar{
+    display:flex;align-items:center;justify-content:space-around;
+    padding:8px 4px calc(8px + env(safe-area-inset-bottom));
+    background:rgba(255,255,255,0.85);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);
+    border-top:1px solid rgba(34,20,21,0.08);flex-shrink:0;
+  }
+  .tabbar-btn{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:none;border:none;cursor:pointer;padding:4px 8px;
+    color:var(--ink-500);flex:1;
+  }
+  .tabbar-btn span{font-size:9.5px;font-weight:500;font-family:var(--font-ui);}
+  .tabbar-btn.active{color:var(--c1);}
+  .tabbar-btn.active span{font-weight:700;}
+  .tabbar-btn:active{transform:scale(0.94);transition:transform .1s ease-out;}
   .stats-grid-4{grid-template-columns:repeat(2,1fr);padding:1rem;gap:8px;}
   .stats-grid-3{grid-template-columns:repeat(3,1fr);padding:1rem;gap:6px;}
   .stat-card{padding:.85rem;}
