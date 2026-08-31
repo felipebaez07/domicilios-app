@@ -48,7 +48,7 @@ export default function AdminPersonalizar() {
         empresa_emoji:  form.emoji,
       };
       login(token, nuevoUser);
-      setSuccess('✅ ¡Cambios guardados! Recarga para ver los colores aplicados.');
+      setSuccess('¡Cambios guardados! Recarga para ver los colores aplicados.');
       setTimeout(() => setSuccess(''), 4000);
     } catch {
       alert('Error al guardar');
@@ -61,12 +61,12 @@ export default function AdminPersonalizar() {
     <DashboardLayout role="admin" pageTitle="Personalizar">
       <div className="page-header">
         <div>
-          <div className="page-title">🎨 Personalizar empresa</div>
+          <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="palette" size={18} />Personalizar empresa</div>
           <div className="page-subtitle">Configura los colores y la identidad de tu empresa</div>
         </div>
       </div>
 
-      <div style={{ padding: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1.5rem', alignItems: 'start' }}>
+      <div className="responsive-split" style={{ '--split-cols': '1fr 320px', padding: '1.5rem', gap: '1.5rem', alignItems: 'start' }}>
 
         {/* Formulario */}
         <form onSubmit={guardar} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -87,7 +87,7 @@ export default function AdminPersonalizar() {
 
           {/* Emoji */}
           <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#221415', marginBottom: 12 }}>✨ Ícono de la empresa</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#221415', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="sparkles" size={14} />Ícono de la empresa</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {EMOJIS_EMPRESA.map(em => (
                 <button key={em} type="button" onClick={() => setForm(v => ({...v, emoji: em}))} style={{
@@ -105,7 +105,7 @@ export default function AdminPersonalizar() {
 
           {/* Paletas predefinidas */}
           <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#221415', marginBottom: 12 }}>🎨 Paleta de colores</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#221415', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="palette" size={14} />Paleta de colores</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: 16 }}>
               {PALETAS.map(p => (
                 <button key={p.nombre} type="button" onClick={() => setForm(v => ({...v, color1: p.c1, color2: p.c2}))} style={{
@@ -118,7 +118,7 @@ export default function AdminPersonalizar() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 10, color: '#fff', fontWeight: 600, fontFamily: 'Poppins,sans-serif',
                 }}>
-                  {form.color1 === p.c1 ? '✓' : ''}
+                  {form.color1 === p.c1 ? <Icon name="checkCircle" size={16} color="#fff" strokeWidth={2.2} /> : ''}
                 </button>
               ))}
             </div>
@@ -126,8 +126,8 @@ export default function AdminPersonalizar() {
             {/* Colores custom */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {[
-                { k: 'color1', l: '🎨 Color principal' },
-                { k: 'color2', l: '🎨 Color secundario' },
+                { k: 'color1', l: 'Color principal' },
+                { k: 'color2', l: 'Color secundario' },
               ].map(f => (
                 <div key={f.k}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#55393b', marginBottom: 6 }}>{f.l}</div>
@@ -158,15 +158,16 @@ export default function AdminPersonalizar() {
             cursor: 'pointer', opacity: saving ? 0.7 : 1,
             boxShadow: `0 6px 20px ${form.color1}50`,
             transition: 'all .2s',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
-            {saving ? '⏳ Guardando...' : '💾 Guardar cambios'}
+            {saving ? <span className="rv-spinner" /> : <><Icon name="checkCircle" size={15} color="#fff" />Guardar cambios</>}
           </button>
         </form>
 
         {/* Preview */}
         <div style={{ position: 'sticky', top: 20 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#8a6d6e', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>
-            👁️ Vista previa
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#8a6d6e', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Icon name="eye" size={13} />Vista previa
           </div>
 
           {/* Mini dashboard preview */}
@@ -184,18 +185,18 @@ export default function AdminPersonalizar() {
 
             {/* Subnav */}
             <div style={{ background: '#fff', padding: '8px 12px', display: 'flex', gap: 6, borderBottom: '1px solid #e9dcdb' }}>
-              {['📈 Métricas','📦 Pedidos','👥 Equipo'].map((item, i) => (
-                <div key={i} style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 600, background: i === 0 ? previewGrad : '#f4ebea', color: i === 0 ? '#fff' : '#55393b' }}>
-                  {item}
+              {[{icon:'barChart',l:'Métricas'},{icon:'package',l:'Pedidos'},{icon:'users',l:'Equipo'}].map((item, i) => (
+                <div key={i} style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 600, background: i === 0 ? previewGrad : '#f4ebea', color: i === 0 ? '#fff' : '#55393b', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Icon name={item.icon} size={10} />{item.l}
                 </div>
               ))}
             </div>
 
             {/* Stats */}
             <div style={{ background: '#faf5f4', padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-              {[{e:'📦',v:'24',l:'Pedidos'},{e:'🛵',v:'3',l:'En ruta'},{e:'✅',v:'18',l:'Entregados'}].map((s,i) => (
+              {[{icon:'package',v:'24',l:'Pedidos'},{icon:'scooter',v:'3',l:'En ruta'},{icon:'checkCircle',v:'18',l:'Entregados'}].map((s,i) => (
                 <div key={i} style={{ background: '#fff', borderRadius: 10, padding: '8px', textAlign: 'center', border: '1px solid #e9dcdb' }}>
-                  <div style={{ fontSize: '1rem' }}>{s.e}</div>
+                  <Icon name={s.icon} size={14} color="#55393b" />
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#221415' }}>{s.v}</div>
                   <div style={{ fontSize: 8, color: '#8a6d6e', textTransform: 'uppercase', letterSpacing: '.05em' }}>{s.l}</div>
                 </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout';
+import Icon from '../../components/Icon';
 
 const AUTH_URL = import.meta.env.VITE_AUTH_URL;
 
@@ -28,9 +29,9 @@ export default function DomiciliarioPerfil() {
         { telegram_chat_id: chatId.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setMsg('✅ ¡Telegram vinculado! Revisa tu chat para confirmar.');
+      setMsg('¡Telegram vinculado! Revisa tu chat para confirmar.');
     } catch {
-      setError('❌ Error al vincular. Verifica el Chat ID.');
+      setError('Error al vincular. Verifica el Chat ID.');
     } finally { setSaving(false); }
   }
 
@@ -40,7 +41,7 @@ export default function DomiciliarioPerfil() {
     <DashboardLayout role="domiciliario" pageTitle="Mi perfil">
       <div className="page-header">
         <div>
-          <div className="page-title">👤 Mi perfil</div>
+          <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="user" size={18} />Mi perfil</div>
           <div className="page-subtitle">Configura tus notificaciones de Telegram</div>
         </div>
       </div>
@@ -50,8 +51,8 @@ export default function DomiciliarioPerfil() {
         {/* Info usuario */}
         <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: '1rem' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg,#d0121b,#a80e17)', border: '3px solid #fff', boxShadow: '0 4px 14px rgba(208,18,27,.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
-              🛵
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg,#d0121b,#a80e17)', border: '3px solid #fff', boxShadow: '0 4px 14px rgba(208,18,27,.28)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="scooter" size={26} color="#fff" />
             </div>
             <div>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#221415' }}>{user?.nombre}</div>
@@ -64,19 +65,19 @@ export default function DomiciliarioPerfil() {
         {/* Vincular Telegram */}
         <div style={{ background: '#fff', borderRadius: 20, padding: '1.5rem', boxShadow: '0 8px 32px rgba(0,0,0,.1)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '1rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>📲</span>
+            <Icon name="send" size={22} color="#0c7ec4" />
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#221415' }}>Notificaciones Telegram</div>
               <div style={{ fontSize: 11, color: '#8a6d6e' }}>Recibe alertas de pedidos en tu Telegram</div>
             </div>
             {perfil?.telegram_chat_id && (
-              <span style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: 99, background: '#e7f9ee', color: '#1a9c53', fontSize: 10, fontWeight: 700 }}>✅ Vinculado</span>
+              <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 99, background: '#e7f9ee', color: '#1a9c53', fontSize: 10, fontWeight: 700 }}><Icon name="checkCircle" size={11} />Vinculado</span>
             )}
           </div>
 
           {/* Instrucciones */}
           <div style={{ background: '#f0f7ff', borderRadius: 12, padding: '1rem', marginBottom: '1rem', border: '1px solid #bfdbfe' }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#1e40af', marginBottom: 8 }}>📋 Cómo obtener tu Chat ID:</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#1e40af', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="list" size={13} />Cómo obtener tu Chat ID:</div>
             <ol style={{ fontSize: 11, color: '#3b5afe', paddingLeft: '1.2rem', lineHeight: 1.8 }}>
               <li>Abre Telegram y busca <b>@{BOT_NAME}</b></li>
               <li>Presiona <b>Iniciar</b> o escribe <b>/start</b></li>
@@ -85,7 +86,7 @@ export default function DomiciliarioPerfil() {
             </ol>
             <a href={`https://t.me/${BOT_NAME}`} target="_blank" rel="noopener noreferrer"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 10, padding: '6px 14px', borderRadius: 99, background: '#2563eb', color: '#fff', fontSize: 11, fontWeight: 600, textDecoration: 'none' }}>
-              📲 Abrir @{BOT_NAME}
+              <Icon name="send" size={12} color="#fff" />Abrir @{BOT_NAME}
             </a>
           </div>
 
@@ -109,21 +110,22 @@ export default function DomiciliarioPerfil() {
               border: 'none', fontFamily: 'Poppins,sans-serif',
               fontWeight: 700, fontSize: 13, color: '#fff',
               cursor: 'pointer', opacity: saving ? 0.7 : 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}>
-              {saving ? '⏳ Vinculando...' : perfil?.telegram_chat_id ? '🔄 Actualizar Telegram' : '✅ Vincular Telegram'}
+              {saving ? <span className="rv-spinner" /> : perfil?.telegram_chat_id ? <><Icon name="refresh" size={14} color="#fff" />Actualizar Telegram</> : <><Icon name="checkCircle" size={14} color="#fff" />Vincular Telegram</>}
             </button>
           </form>
         </div>
 
         {/* Qué notificaciones recibirá */}
         <div style={{ background: '#fff', borderRadius: 20, padding: '1.25rem', border: '1px solid #e9dcdb', boxShadow: '0 2px 10px rgba(34,20,21,0.05)' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#221415', marginBottom: '.75rem' }}>🔔 Notificaciones que recibirás:</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#221415', marginBottom: '.75rem', display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="bell" size={14} />Notificaciones que recibirás:</div>
           {[
-            { emoji: '🛵', texto: 'Nuevo pedido asignado — con dirección y datos del cliente' },
-            { emoji: '📍', texto: 'Recordatorio de recogida — cuando llevas mucho tiempo sin marcar en camino' },
+            { icon: 'scooter', texto: 'Nuevo pedido asignado — con dirección y datos del cliente' },
+            { icon: 'mapPin', texto: 'Recordatorio de recogida — cuando llevas mucho tiempo sin marcar en camino' },
           ].map((n, i) => (
             <div key={i} style={{ display: 'flex', gap: 10, padding: '8px 0', borderBottom: i === 0 ? '1px solid #f4ebea' : 'none' }}>
-              <span style={{ fontSize: '1rem', flexShrink: 0 }}>{n.emoji}</span>
+              <Icon name={n.icon} size={16} color="#8a6d6e" style={{ flexShrink: 0 }} />
               <span style={{ fontSize: 11, color: '#55393b', lineHeight: 1.5 }}>{n.texto}</span>
             </div>
           ))}

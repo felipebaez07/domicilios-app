@@ -227,6 +227,12 @@ h1,h2,h3,.font-display{font-family:var(--font-display);}
 .split-map{border-right:1px solid var(--ink-200);position:relative;overflow:hidden;}
 .split-data{display:flex;flex-direction:column;background:var(--canvas);overflow:hidden;}
 
+/* Layouts mapa+panel(es) con columnas de ancho fijo en desktop — en
+   mobile siempre se apilan en una sola columna con alto flexible,
+   sin importar cuántas columnas fijas tenga (--split-cols). */
+.responsive-split{display:grid;grid-template-columns:var(--split-cols, 1fr);}
+.responsive-flex{display:flex;}
+
 /* ── UTILS ── */
 .flex-between{display:flex;align-items:center;justify-content:space-between;}
 .flex-center{display:flex;align-items:center;justify-content:center;}
@@ -291,6 +297,13 @@ h1,h2,h3,.font-display{font-family:var(--font-display);}
   .filters-row{flex-wrap:nowrap;overflow-x:auto;padding:.6rem 1rem;}
   .filters-row::-webkit-scrollbar{display:none;}
   .filter-btn{white-space:nowrap;flex-shrink:0;}
+
+  /* Mapa+panel(es): siempre apilados en mobile, sin alturas fijas en vh
+     (rompen con la barra de direcciones del navegador) */
+  .responsive-split{grid-template-columns:1fr !important;height:auto !important;min-height:0 !important;}
+  .responsive-split > *{min-height:280px;}
+  .responsive-flex{flex-direction:column !important;height:auto !important;min-height:0 !important;}
+  .responsive-flex > *{width:auto !important;min-height:200px;}
 }
 
 @media (max-width: 480px) {

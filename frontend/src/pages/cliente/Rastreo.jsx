@@ -53,7 +53,7 @@ export default function ClienteRastreo() {
         <p className="page-subtitle">Sigue la ubicación de tu domiciliario</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '1rem', alignItems: 'start' }}>
+      <div className="responsive-split" style={{ '--split-cols': '300px 1fr', gap: '1rem', alignItems: 'start' }}>
         {/* Lista pedidos */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>

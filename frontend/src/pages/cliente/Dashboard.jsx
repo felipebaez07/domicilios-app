@@ -16,25 +16,29 @@ const PEDIDOS_URL  = import.meta.env.VITE_PEDIDOS_URL;
 const TRACKING_URL = import.meta.env.VITE_TRACKING_URL;
 const AUTH_URL     = import.meta.env.VITE_AUTH_URL;
 
+const SVG_SCOOTER = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="18.5" r="2.2"/><circle cx="18.5" cy="18.5" r="2.2"/><path d="M7.5 18.5H12L15 10H18"/><path d="M12 18.5L9.5 12H6.5"/><path d="M15 10L17 6"/></svg>`;
+const SVG_PACKAGE = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8L12 3L21 8V17L12 22L3 17V8Z"/><path d="M3 8L12 13L21 8"/><path d="M12 13V22"/></svg>`;
+const SVG_HOME = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11L12 4L20 11"/><path d="M6 10V20H18V10"/><path d="M10 20V15H14V20"/></svg>`;
+
 const domiIcon = new L.DivIcon({
   html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-    <div style="width:36px;height:36px;border-radius:50%;background:#d0121b;border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(208,18,27,0.4);">🛵</div>
+    <div style="width:36px;height:36px;border-radius:50%;background:#d0121b;border:3px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(208,18,27,0.4);">${SVG_SCOOTER}</div>
     <div style="background:white;color:#a80e17;font-size:9px;padding:2px 7px;border-radius:99px;font-family:Poppins,sans-serif;font-weight:700;">En camino</div>
   </div>`,
   iconSize:[70,52], iconAnchor:[35,52], className:'',
 });
 const origenIcon = new L.DivIcon({
-  html:`<div style="width:32px;height:32px;border-radius:50%;background:#1a9c53;border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(26,156,83,0.4);">📦</div>`,
+  html:`<div style="width:32px;height:32px;border-radius:50%;background:#1a9c53;border:3px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(26,156,83,0.4);">${SVG_PACKAGE}</div>`,
   iconSize:[32,32], iconAnchor:[16,32], className:'',
 });
 const destinoIcon = new L.DivIcon({
-  html:`<div style="width:32px;height:32px;border-radius:50%;background:#d0121b;border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(208,18,27,0.4);">🏠</div>`,
+  html:`<div style="width:32px;height:32px;border-radius:50%;background:#d0121b;border:3px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(208,18,27,0.4);">${SVG_HOME}</div>`,
   iconSize:[32,32], iconAnchor:[16,32], className:'',
 });
 
 const PASOS  = ['pendiente','asignado','en_camino','entregado'];
 const LABELS = { pendiente:'Pendiente', asignado:'Asignado', en_camino:'En camino', entregado:'Entregado', cancelado:'Cancelado' };
-const EMOJIS = { pendiente:'⏳', asignado:'👤', en_camino:'🛵', entregado:'✅', cancelado:'❌' };
+const ICONS  = { pendiente:'bell', asignado:'user', en_camino:'scooter', entregado:'checkCircle', cancelado:'x' };
 const BADGE  = { pendiente:'badge-warn', asignado:'badge-info', en_camino:'badge-info', entregado:'badge-ok', cancelado:'badge-err' };
 
 export default function ClienteDashboard() {
@@ -124,7 +128,7 @@ export default function ClienteDashboard() {
       setUbicaciones(null);
       setEmpresaSeleccionada(null);
       setForm({ descripcion: '' });
-      setSuccess('¡Pedido creado! 🎉 El operador lo asignará pronto.');
+      setSuccess('¡Pedido creado! El operador lo asignará pronto.');
       fetchData();
       setTimeout(() => setSuccess(''), 4000);
     } catch (err) {
@@ -149,8 +153,8 @@ export default function ClienteDashboard() {
             <button onClick={() => setStep('list')} style={{ background: '#f4ebea', border: '1px solid #e9dcdb', color: '#55393b', borderRadius: 99, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Poppins,sans-serif', marginBottom: 12 }}>
               ← Volver
             </button>
-            <div style={{ fontSize: 20, fontWeight: 800, color: '#221415', marginBottom: 4, fontFamily: 'var(--font-display)' }}>
-              🏢 ¿A qué empresa quieres hacerle el pedido?
+            <div style={{ fontSize: 20, fontWeight: 800, color: '#221415', marginBottom: 4, fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icon name="building" size={18} />¿A qué empresa quieres hacerle el pedido?
             </div>
             <div style={{ fontSize: 12, color: '#8a6d6e' }}>
               Selecciona la empresa que realizará tu entrega
@@ -160,11 +164,11 @@ export default function ClienteDashboard() {
           {/* Lista de empresas */}
           {loadingEmpresas ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#8a6d6e', fontSize: 14 }}>
-              ⏳ Cargando empresas...
+              Cargando empresas...
             </div>
           ) : empresas.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#8a6d6e', fontSize: 14 }}>
-              😔 No hay empresas disponibles
+              No hay empresas disponibles
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -250,8 +254,7 @@ export default function ClienteDashboard() {
       </div>
 
       {/* Layout principal: lista + mapa */}
-      <div style={{
-        display: 'flex',
+      <div className="responsive-flex" style={{
         height: 'calc(100vh - 185px)',
         minHeight: 400,
         overflow: 'hidden',
@@ -288,7 +291,7 @@ export default function ClienteDashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                 <span style={{ fontSize: 9, color: '#8a6d6e', fontWeight: 500 }}>#{String(p.id).slice(-6)}</span>
                 <span className={`badge ${BADGE[p.estado] || 'badge-neutral'}`}>
-                  <span className="badge-dot"/>{EMOJIS[p.estado]} {LABELS[p.estado] || p.estado}
+                  <Icon name={ICONS[p.estado] || 'mapPin'} size={10} />{LABELS[p.estado] || p.estado}
                 </span>
               </div>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#221415', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -307,12 +310,12 @@ export default function ClienteDashboard() {
             <div style={{ position: 'absolute', top: 10, left: 12, zIndex: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <div style={{ background: 'rgba(255,255,255,.9)', borderRadius: 99, padding: '4px 12px', fontSize: 11, fontWeight: 600, color: '#221415', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 10px rgba(0,0,0,.1)' }}>
                 {domiPos
-                  ? <><span style={{ width: 7, height: 7, borderRadius: '50%', background: '#1a9c53', display: 'inline-block', boxShadow: '0 0 6px #1a9c53' }}/>GPS activo 🛵</>
-                  : <>📍 Mapa en vivo</>}
+                  ? <><span style={{ width: 7, height: 7, borderRadius: '50%', background: '#1a9c53', display: 'inline-block', boxShadow: '0 0 6px #1a9c53' }}/>GPS activo</>
+                  : <><Icon name="mapPin" size={12} />Mapa en vivo</>}
               </div>
               {ruta && distancia && (
                 <div style={{ background: 'rgba(208,18,27,.9)', borderRadius: 99, padding: '4px 12px', fontSize: 11, fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 10px rgba(0,0,0,.1)' }}>
-                  🛣️ {formatDistancia(distancia)} · ⏱️ {formatDuracion(duracion)}
+                  <Icon name="map" size={12} color="#fff" />{formatDistancia(distancia)} · <Icon name="clock" size={12} color="#fff" />{formatDuracion(duracion)}
                 </div>
               )}
             </div>
@@ -324,17 +327,17 @@ export default function ClienteDashboard() {
                 )}
                 {tieneOrigen && (
                   <Marker position={[selected.lat_origen, selected.lng_origen]} icon={origenIcon}>
-                    <Popup>📦 Origen: {selected.direccion_origen}</Popup>
+                    <Popup>Origen: {selected.direccion_origen}</Popup>
                   </Marker>
                 )}
                 {tieneDestino && (
                   <Marker position={[selected.lat_destino, selected.lng_destino]} icon={destinoIcon}>
-                    <Popup>🏠 Destino: {selected.direccion_entrega || selected.direccion_destino}</Popup>
+                    <Popup>Destino: {selected.direccion_entrega || selected.direccion_destino}</Popup>
                   </Marker>
                 )}
                 {domiPos && (
                   <Marker position={domiPos} icon={domiIcon}>
-                    <Popup>🛵 Domiciliario en camino</Popup>
+                    <Popup>Domiciliario en camino</Popup>
                   </Marker>
                 )}
               </AppMap>
@@ -362,10 +365,10 @@ export default function ClienteDashboard() {
                         <div style={{ position: 'absolute', top: 11, left: '50%', width: '100%', height: 3, background: done && i < stepIdx ? '#d0121b' : '#e9dcdb', zIndex: 0, borderRadius: 2 }}/>
                       )}
                       <div style={{ width: 22, height: 22, borderRadius: '50%', zIndex: 1, background: done ? '#d0121b' : '#f4ebea', border: `2px solid ${done ? '#d0121b' : '#e9dcdb'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.6rem', color: done ? '#fff' : '#8a6d6e', fontWeight: 700, boxShadow: cur ? '0 0 0 4px rgba(208,18,27,0.15)' : 'none', transition: 'all .3s' }}>
-                        {done ? '✓' : i + 1}
+                        {done ? <Icon name="checkCircle" size={12} color="#fff" strokeWidth={2.4} /> : i + 1}
                       </div>
                       <span style={{ fontSize: 9, color: done ? '#221415' : '#8a6d6e', textAlign: 'center', fontWeight: cur ? 700 : 400 }}>
-                        {EMOJIS[paso]} {LABELS[paso]}
+                        {LABELS[paso]}
                       </span>
                     </div>
                   );
@@ -380,7 +383,7 @@ export default function ClienteDashboard() {
       {step === 'form' && ubicaciones && (
         <Modal onClose={() => setStep('list')} width={420}>
           <div style={{ padding: '1.25rem', overflowY: 'auto', maxHeight: '80vh' }}>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#221415', marginBottom: 4 }}>📦 Detalles del pedido</div>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#221415', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="package" size={16} />Detalles del pedido</div>
 
             {/* Empresa seleccionada */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f4ebea', borderRadius: 10, border: '1px solid #e9dcdb', marginBottom: '1rem' }}>
@@ -399,26 +402,26 @@ export default function ClienteDashboard() {
             {/* Resumen ubicaciones */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: '1rem' }}>
               <div style={{ display: 'flex', gap: 10, padding: '8px 10px', background: '#e7f9ee', borderRadius: 10, border: '1px solid #a6e8bf', alignItems: 'flex-start' }}>
-                <span style={{ flexShrink: 0 }}>📦</span>
+                <Icon name="package" size={14} color="#1a9c53" style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 9, fontWeight: 700, color: '#1a9c53', textTransform: 'uppercase', letterSpacing: '.06em' }}>Recogida</div>
                   <div style={{ fontSize: 11, color: '#221415', fontWeight: 500, marginTop: 1, wordBreak: 'break-word' }}>{ubicaciones.origen.label}</div>
                 </div>
-                <button onClick={() => setStep('picker')} style={{ fontSize: 12, color: '#8a6d6e', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>✏️</button>
+                <button onClick={() => setStep('picker')} style={{ color: '#8a6d6e', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, display: 'flex' }}><Icon name="pencil" size={13} /></button>
               </div>
               <div style={{ display: 'flex', gap: 10, padding: '8px 10px', background: '#fff1f0', borderRadius: 10, border: '1px solid #ffb8b2', alignItems: 'flex-start' }}>
-                <span style={{ flexShrink: 0 }}>🏠</span>
+                <Icon name="home" size={14} color="#d0121b" style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 9, fontWeight: 700, color: '#d0121b', textTransform: 'uppercase', letterSpacing: '.06em' }}>Entrega</div>
                   <div style={{ fontSize: 11, color: '#221415', fontWeight: 500, marginTop: 1, wordBreak: 'break-word' }}>{ubicaciones.destino.label}</div>
                 </div>
-                <button onClick={() => setStep('picker')} style={{ fontSize: 12, color: '#8a6d6e', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>✏️</button>
+                <button onClick={() => setStep('picker')} style={{ color: '#8a6d6e', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, display: 'flex' }}><Icon name="pencil" size={13} /></button>
               </div>
             </div>
 
             <form onSubmit={crearPedido} style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
               <div>
-                <div className="field-label">📝 ¿Qué vas a enviar?</div>
+                <div className="field-label">¿Qué vas a enviar?</div>
                 <input type="text" placeholder="Describe qué vas a enviar" value={form.descripcion} onChange={e => setForm(v => ({ ...v, descripcion: e.target.value }))} required />
               </div>
               <div style={{ display: 'flex', gap: 8 }}>

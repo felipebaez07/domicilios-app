@@ -45,7 +45,7 @@ export default function OperadorDomiciliarios() {
         <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--txt-1)' }}>Domiciliarios en campo</div>
         <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-3)', marginTop: 2, letterSpacing: '0.08em' }}>{activos} CON GPS ACTIVO · {domisInfo.length} REGISTRADOS</div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', height: 'calc(100vh - 200px)', minHeight: 380 }}>
+      <div className="responsive-split" style={{ '--split-cols': '1fr 240px', height: 'calc(100vh - 200px)', minHeight: 380 }}>
         {/* Mapa */}
         <div style={{ borderRight: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 8, left: 10, zIndex: 10, fontSize: 7, fontFamily: 'var(--font-mono)', color: 'var(--txt-2)', letterSpacing: '0.1em', textTransform: 'uppercase', background: 'rgba(255,255,255,.9)', boxShadow: '0 2px 10px rgba(0,0,0,.1)', padding: '3px 7px', display: 'flex', alignItems: 'center', gap: 6 }}>
