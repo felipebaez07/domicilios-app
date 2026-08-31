@@ -96,7 +96,7 @@ export default function OperadorDashboard() {
         <StatCard icon={<Icon name="mapPin" size={20} />} value={String(domisActivos)} label="GPS activos" delay={300} />
       </div>
 
-      <div className="responsive-split" style={{ '--split-cols':'1fr 1fr', height:'calc(100vh - 260px)', minHeight:380 }}>
+      <div className="responsive-split" style={{ '--split-cols':'1fr 1fr', height:'calc(100dvh - 260px)', minHeight:380 }}>
         {/* Mapa */}
         <div style={{ borderRight:'1px solid #e9dcdb', position:'relative', overflow:'hidden' }}>
           <div style={{ position:'absolute', top:10, left:12, zIndex:10, background:'rgba(255,255,255,.9)', borderRadius:99, padding:'4px 12px', fontSize:11, fontWeight:600, color:'#221415', display:'flex', alignItems:'center', gap:6, boxShadow:'0 2px 10px rgba(0,0,0,.1)' }}>

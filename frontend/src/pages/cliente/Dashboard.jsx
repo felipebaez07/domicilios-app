@@ -227,7 +227,7 @@ export default function ClienteDashboard() {
             {empresaSeleccionada?.emoji} {empresaSeleccionada?.nombre}
           </div>
         </div>
-        <div style={{ height: 'calc(100vh - 130px)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ height: 'calc(100dvh - 130px)', display: 'flex', flexDirection: 'column' }}>
           <MapPicker
             gradiente="linear-gradient(135deg,#d0121b,#a80e17)"
             onCancel={() => setStep('empresa')}
@@ -255,7 +255,7 @@ export default function ClienteDashboard() {
 
       {/* Layout principal: lista + mapa */}
       <div className="responsive-flex" style={{
-        height: 'calc(100vh - 185px)',
+        height: 'calc(100dvh - 185px)',
         minHeight: 400,
         overflow: 'hidden',
       }}>

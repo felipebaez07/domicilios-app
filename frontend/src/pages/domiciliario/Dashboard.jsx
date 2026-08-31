@@ -254,7 +254,7 @@ export default function DomiciliarioDashboard() {
         <StatCard icon={<Icon name="checkCircle" size={20} />} value={loading ? '—' : String(pedidosHoy.length)}            label="Entregas hoy"  delay={200} />
       </div>
 
-      <div className="responsive-split" style={{ '--split-cols': '1fr 300px 280px', height: 'calc(100vh - 290px)', minHeight: 360 }}>
+      <div className="responsive-split" style={{ '--split-cols': '1fr 300px 280px', height: 'calc(100dvh - 290px)', minHeight: 360 }}>
         {/* Mapa */}
         <div style={{ borderRight: '1px solid #e9dcdb', position: 'relative', overflow: 'hidden' }}>
           {myPos && (

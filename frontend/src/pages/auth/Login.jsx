@@ -150,7 +150,7 @@ export default function Login() {
   if (welcome) return <WelcomeScreen usuario={welcome} />;
 
   return (
-    <div className="lv-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+    <div className="lv-root" style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
 
       {/* Burbujas decorativas */}
       <div className="lv-bubble lv-bubble-1" />

@@ -80,7 +80,7 @@ export default function DomiciliarioRuta() {
         </button>
       </div>
       {gpsErr && <div className="alert alert-err" style={{ margin: '0.75rem 1.25rem 0' }}>{gpsErr}</div>}
-      <div className="responsive-split" style={{ '--split-cols': '1fr 280px', height: 'calc(100vh - 190px)', minHeight: 380 }}>
+      <div className="responsive-split" style={{ '--split-cols': '1fr 280px', height: 'calc(100dvh - 190px)', minHeight: 380 }}>
         <div style={{ borderRight: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
           {myPos && <div style={{ position: 'absolute', bottom: 8, right: 10, zIndex: 10, fontSize: 7, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,.8)', background: 'rgba(34,20,21,0.85)', padding: '3px 7px', letterSpacing: '0.04em' }}>{myPos[0].toFixed(4)}, {myPos[1].toFixed(4)}</div>}
           <div style={{ width: '100%', height: '100%' }}>

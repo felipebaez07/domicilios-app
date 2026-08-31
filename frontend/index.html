@@ -9,6 +9,18 @@
     <link rel="apple-touch-icon" href="/app-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RAVEN · Domicilios</title>
+    <script>
+      window.addEventListener('load', function () {
+        try {
+          if (sessionStorage.getItem('rv_css_reloaded')) return;
+          var f = getComputedStyle(document.body).fontFamily || '';
+          if (f.indexOf('Poppins') === -1) {
+            sessionStorage.setItem('rv_css_reloaded', '1');
+            location.reload();
+          }
+        } catch (e) {}
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

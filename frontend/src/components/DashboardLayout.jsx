@@ -182,7 +182,7 @@ export default function DashboardLayout({ role, children, pageTitle }) {
   return (
     <>
       {menuPortal}
-      <div style={{ minHeight: '100vh', background: 'var(--canvas, #faf5f4)' }} data-role={role}>
+      <div style={{ minHeight: '100dvh', background: 'var(--canvas, #faf5f4)' }} data-role={role}>
         <div className="app-wrap" data-role={role} style={{ '--c1': c1, '--c2': c2, '--grad': grad, '--grad-bg': grad }}>
           {/* TOPBAR */}
           <header className="topbar">
